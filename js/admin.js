@@ -106,6 +106,8 @@ function route(){
 function renderSidebar(){
   const r = route();
   const activeCat = r.type === "k" ? r.id : r.type === "e" ? (r.id === "neu" ? r.extra : findEntry(r.id)?.cat.id) : null;
+  const hidden = cats.filter(c => !c.visible).length;
+  $("catCount").textContent = `(${cats.length}${hidden ? `, davon ${hidden} ausgeblendet` : ""})`;
   $("catList").innerHTML = cats.map((c, i) => `
     <li class="${c.id === activeCat ? "active" : ""} ${c.visible ? "" : "off"}">
       <input type="checkbox" data-vis="${esc(c.id)}" ${c.visible ? "checked" : ""} title="Auf der Seite sichtbar">
@@ -130,6 +132,7 @@ async function setVisible(table, id, visible){
   render();
 }
 $("newCat").addEventListener("click", () => { location.hash = "#/k/neu"; });
+$("toOverview").addEventListener("click", () => { location.hash = "#/"; });
 
 /* ------------------------------------------------------------------
    KATEGORIE BEARBEITEN
