@@ -6,18 +6,6 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 
 ## Ordnerstruktur
 
-```
-sff/
-├── index.html            # Anzeige (öffentlich). Lädt die Daten per REST, ohne Bibliothek
-├── admin.html            # Verwaltung (Login). Nutzt supabase-js (UMD über jsdelivr)
-├── config.js             # window.SFF_CONFIG = { url, key (anon/publishable), bucket }
-├── supabase/schema.sql   # Tabellen, RLS, Storage-Bucket (im SQL Editor ausführen)
-├── tools/
-│   ├── migration.html    # einmalige Übernahme der alten Daten und Bilder nach Supabase
-│   └── cats-alt.js       # alte Daten (früher `CATS` in index.html), nur für die Migration
-└── bilder/               # alte lokale Bilder und bilder.js, nur für die Migration
-```
-
 `bilder/` und `tools/` braucht es nach der erfolgreichen Migration nicht mehr.
 
 ## Datenmodell (supabase/schema.sql)
@@ -29,12 +17,6 @@ sff/
 - `visible` (bei `categories` und `entries`): Ausgeblendete Zeilen filtert die RLS-Regel «lesen» (`visible or is_admin()`) heraus. `index.html` filtert deshalb nicht selbst. Die Kontrollkästchen stehen im Admin in beiden Listen und in den Formularen.
 - Änderungen am Schema kommen als nummerierte Datei in `supabase/` (z. B. `002_sichtbar.sql`) und werden zusätzlich in `schema.sql` nachgeführt.
 - Neue Uploads aus dem Admin bekommen immer einen neuen Pfad (`<kat>/<entry-id>-<pos>-<zeit>.jpg`), damit kein Cache das alte Bild zeigt. Die alte Datei wird gelöscht.
-
-## Aufbau von index.html
-
-- `loadCats()` holt alles in einer Anfrage (`categories?select=…entries(…images(…))`) und bringt die Daten in die gewohnte Kurzform: Kategorie `id, name, desc, latin, labels, cover, items`, Eintrag `id, n, s, t, f, q, wp, lb, img[0..3]`.
-- Navigation per Hash: `#/` zeigt die Übersicht, `#/<kategorie-id>` eine Kategorie.
-- Karten: 5 Folien (4 Bilder + Text). Pfeile und Punkte erscheinen beim Darüberfahren. Die Pfeiltasten funktionieren, wenn die Karte den Fokus hat.
 
 ## Bilder laden
 
