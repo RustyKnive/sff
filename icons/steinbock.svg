@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#2f6b3a"/>
+  <!-- Fels -->
+  <path d="M40 470 L130 392 L200 410 L262 372 L330 400 L472 470 Z" fill="#8fcf94"/>
+  <g fill="#f3f1ea" stroke="#f3f1ea" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Hörner: grosser Bogen nach hinten -->
+    <path d="M176 196 C168 118 228 70 300 104 C338 122 352 160 346 196 C334 160 312 136 280 128 C236 118 204 146 200 200 Z" stroke-width="4"/>
+    <!-- Körper -->
+    <path d="M196 292 C196 256 236 246 290 248 C342 250 380 258 388 292 C394 322 376 340 346 342 L228 342 C206 340 196 322 196 292 Z" stroke-width="2"/>
+    <!-- Hals und Kopf -->
+    <path d="M222 296 L198 210 C192 190 172 184 158 194 L118 236 C110 246 116 258 128 258 L156 252 L186 312 Z" stroke-width="2"/>
+    <!-- Bart -->
+    <path d="M126 256 L134 282 L148 254 Z" stroke-width="2"/>
+    <!-- Beine -->
+    <path d="M214 330 L208 392 M240 334 L238 396 M346 330 L356 390 M370 322 L382 384" fill="none" stroke-width="18"/>
+    <!-- Schwanz -->
+    <path d="M386 282 L400 272" fill="none" stroke-width="10"/>
+  </g>
+  <!-- Wülste auf den Hörnern -->
+  <path d="M180 178 L200 176 M184 150 L206 158 M196 126 L216 140 M216 106 L230 126 M242 96 L248 120 M270 96 L268 120 M298 104 L288 126 M322 120 L306 138" fill="none" stroke="#2f6b3a" stroke-width="5" stroke-linecap="round"/>
+  <!-- Auge -->
+  <circle cx="170" cy="214" r="6" fill="#2f6b3a"/>
+</svg>

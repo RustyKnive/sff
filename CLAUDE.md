@@ -47,7 +47,7 @@ Die Anzeige lässt sich installieren (Startbildschirm) und funktioniert ohne Int
 - Anfragen mit `Authorization` (Verwaltung, supabase-js) und `admin.html` laufen nie über den Speicher, damit keine Admin-Daten im Cache landen.
 - Neue Datei für die Anzeige (JS, CSS, Symbol): in `FILES` in `sw.js` eintragen und `APP` (z. B. `sff-app-v2`) erhöhen.
 - Knopf «Für offline speichern» in der Fusszeile: lädt alle eigenen Bilder in `sff-bilder` und entfernt dort ersetzte oder gelöschte.
-- `manifest.webmanifest` und `icons/` (Vorlage `icon.svg`; PNG 512 per headless Chrome, 192/180 daraus verkleinert).
+- `manifest.webmanifest` und `icons/` (Steinbock, Vorlage `steinbock.svg`; PNG 512 per headless Chrome, 192/180 daraus verkleinert). Neues Symbol immer unter neuem Dateinamen, sonst zeigen Browser das alte weiter.
 
 ## Neuer Eintrag per Handyfoto (geplant)
 
