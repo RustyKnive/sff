@@ -757,9 +757,9 @@ function render(){
   window.scrollTo(0, 0);
   if(!cat){
     document.body.classList.remove("in-cat");
-    titleEl.textContent = "Natur und Schweiz";
+    titleEl.textContent = "Natur und Schweiz by toj";
     introEl.textContent = "Wähle eine Kategorie.";
-    document.title = "Natur und Schweiz";
+    document.title = "Natur und Schweiz by toj";
     if(!overviewCards) overviewCards = buildOverview();
     grid.append(...overviewCards);
     return;
@@ -767,7 +767,7 @@ function render(){
   document.body.classList.add("in-cat");
   titleEl.textContent = cat.name;
   introEl.textContent = "Mit der Maus auf ein Bild fahren und mit den Pfeilen durch die Bilder und den Steckbrief blättern.";
-  document.title = cat.name + " – Natur und Schweiz";
+  document.title = cat.name + " – Natur und Schweiz by toj";
   if(!catCards.has(cat.id)) catCards.set(cat.id, cat.items.map(it => buildCard(cat, it)));
   grid.append(...catCards.get(cat.id));
 }
