@@ -56,6 +56,13 @@ sff/
 Später als PWA: Ein Service Worker speichert die REST-Antwort von `loadCats()` und die Storage-Bilder zwischen.
 `updated_at` in allen Tabellen ist dafür schon vorhanden. Die Datenquelle deshalb nur über `loadCats()` ansprechen.
 
+## Neuer Eintrag per Handyfoto (geplant)
+
+Mit dem Handy eine Art fotografieren, zum Beispiel einen Baum. Claude erkennt die Art und sucht den Namen (deutsch und lateinisch) und 3 weitere Bilder.
+Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) und legt den Eintrag automatisch in der Datenbank an. Das eigene Foto wird Bild 1.
+- Der Claude-API-Schlüssel darf nicht in den Browser. Den Aufruf deshalb serverseitig machen, zum Beispiel mit einer Supabase Edge Function. Nur Admins dürfen sie aufrufen.
+- Vor dem Speichern soll man den Vorschlag prüfen und korrigieren können, oder der Eintrag wird zuerst mit `visible = false` gespeichert.
+
 ## Konventionen
 
 - Sprache Deutsch, **Schweizer Rechtschreibung: nie «ß», immer «ss»** (auch im Code und in Kommentaren).
