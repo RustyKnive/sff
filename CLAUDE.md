@@ -66,7 +66,7 @@ Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) 
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
 - Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin.
 - In `config.js` nur den öffentlichen Schlüssel eintragen, nie den Service-Key.
-- Kein eingebetteter Code: kein `<script>` mit Inhalt, kein `<style>`, keine `style="…"`- oder `on…="…"`-Attribute. Die Content-Security-Policy (`<meta>` in beiden HTML-Dateien) erlaubt nur eigene Dateien und blockiert alles andere. Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen.
+- Kein eingebetteter Code: kein `<script>` mit Inhalt, kein `<style>`, keine `style="…"`- oder `on…="…"`-Attribute. Die Content-Security-Policy (`<meta>` in beiden HTML-Dateien) erlaubt nur eigene Dateien und blockiert alles andere. Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen. Wikimedia liefert Bilder von `upload.wikimedia.org` und `thumb.wikimedia.org`; beide stehen in der CSP.
 - supabase-js liegt als Datei in `js/lib/` (Version im Dateinamen). Zum Aktualisieren die neue `dist/umd/supabase.min.js` von jsDelivr herunterladen und den Pfad in `admin.html` anpassen.
 - Links aus Daten (z. B. «Quelle») nur mit `http(s)://` verwenden; die Datenbank prüft das zusätzlich.
 

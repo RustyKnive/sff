@@ -418,7 +418,7 @@ async function importImage(cat, e, pos, used, old){
     const r = await fetch(img.src);
     if(!r.ok) throw httpError(r);
     return r;
-  });
+  }, 2);
   await storeImage(cat, e, pos, await resizeImage(await r.blob()), old, sourceUrl(img.page), img.file);
 }
 
