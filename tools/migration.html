@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Migration nach Supabase – Natur und Schweiz</title>
+<style>
+  :root{ --bg:#f3f1ea; --card:#ffffff; --ink:#1f2a1f; --muted:#5d6b5c; --accent:#2f6b3a; --accent-soft:#e3eee0; --err:#a3262a; }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141a15; --card:#1d251e; --ink:#e7eee5; --muted:#a3b3a1; --accent:#8fcf94; --accent-soft:#26352a; --err:#ff8a8a; }
+  }
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+  main{max-width:760px;margin:0 auto;padding:28px 16px}
+  section{background:var(--card);border-radius:12px;padding:16px 20px;margin-bottom:16px}
+  h1{margin-top:0} h2{margin:0 0 .5rem;font-size:1.1rem;color:var(--accent)}
+  label{display:block;margin:.4rem 0}
+  input[type=email],input[type=password]{width:100%;padding:8px;border:1px solid var(--muted);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+  button{padding:8px 16px;border:none;border-radius:99px;background:var(--accent);color:var(--card);font:inherit;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  pre{background:var(--bg);padding:10px;border-radius:8px;max-height:360px;overflow:auto;font-size:.8rem;white-space:pre-wrap}
+  .muted{color:var(--muted)} .err{color:var(--err)}
+  progress{width:100%}
+</style>
+<script src="../config.js"></script>
+<script src="../bilder/bilder.js"></script>
+<script src="cats-alt.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<main>
+  <h1>Migration nach Supabase</h1>
+  <p class="muted">Überträgt die bisherigen Daten (<code>tools/cats-alt.js</code>) und die Bilder aus dem Ordner <code>bilder</code> einmalig in die Datenbank. Vorher <code>supabase/schema.sql</code> ausführen und das eigene Konto als Admin eintragen.</p>
+
+  <section id="login">
+    <h2>1. Anmelden</h2>
+    <form id="loginForm">
+      <label>E-Mail <input type="email" id="email" required autocomplete="username"></label>
+      <label>Passwort <input type="password" id="pw" required autocomplete="current-password"></label>
+      <button>Anmelden</button> <span id="loginMsg"></span>
+    </form>
+  </section>
+
+  <section>
+    <h2>2. Ordner «bilder» wählen</h2>
+    <input type="file" id="folder" webkitdirectory multiple>
+    <p id="folderMsg" class="muted">Noch kein Ordner gewählt.</p>
+  </section>
+
+  <section>
+    <h2>3. Übertragen</h2>
+    <label><input type="checkbox" id="replace"> Vorhandene Kategorien und Einträge in der Datenbank zuerst löschen</label>
+    <p><button id="start" disabled>Migration starten</button></p>
+    <progress id="bar" value="0" max="1" hidden></progress>
+    <pre id="log"></pre>
+  </section>
+</main>
+
+<script>
+const CFG = window.SFF_CONFIG;
+const sb = supabase.createClient(CFG.url, CFG.key);
+const OFFLINE = window.OFFLINE_BILDER || {};
+const $ = id => document.getElementById(id);
+const log = (msg, cls) => {
+  const line = document.createElement("div");
+  line.textContent = msg;
+  if(cls) line.className = cls;
+  $("log").append(line);
+  $("log").scrollTop = 1e9;
+};
+
+// Gleiche Kurzform wie früher in index.html (bestimmt die Dateinamen in «bilder»)
+const slug = s => s.toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue")
+  .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+
+let admin = false;
+const files = new Map();   // "baeume/fichte-rottanne-1" → File
+const ready = () => { $("start").disabled = !(admin && files.size); };
+
+async function checkAdmin(){
+  const { data, error } = await sb.rpc("is_admin");
+  admin = !error && data === true;
+  $("loginMsg").textContent = admin ? "Angemeldet als Admin." : "Angemeldet, aber nicht in der Tabelle «admins».";
+  $("loginMsg").className = admin ? "" : "err";
+  ready();
+}
+
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email:$("email").value, password:$("pw").value });
+  if(error){ $("loginMsg").textContent = error.message; $("loginMsg").className = "err"; return; }
+  checkAdmin();
+});
+sb.auth.getSession().then(({ data }) => { if(data.session) checkAdmin(); });
+
+$("folder").addEventListener("change", e => {
+  files.clear();
+  for(const f of e.target.files){
+    // webkitRelativePath: "bilder/baeume/fichte-rottanne-1.jpg"
+    const m = f.webkitRelativePath.match(/([^/]+)\/([^/]+)\.jpe?g$/i);
+    if(m) files.set(m[1] + "/" + m[2], f);
+  }
+  $("folderMsg").textContent = files.size + " Bilder gefunden.";
+  ready();
+});
+
+// Einfache Warteschlange: höchstens n Aufgaben gleichzeitig
+async function runLimited(tasks, n, onDone){
+  let i = 0;
+  const worker = async () => { while(i < tasks.length){ const t = tasks[i++]; await t(); onDone(); } };
+  await Promise.all(Array.from({ length:n }, worker));
+}
+
+async function must(p){
+  const { data, error } = await p;
+  if(error) throw new Error(error.message);
+  return data;
+}
+
+async function migrate(){
+  $("start").disabled = true;
+  $("log").replaceChildren();
+  try{
+    if($("replace").checked){
+      log("Lösche vorhandene Kategorien …");
+      await must(sb.from("categories").update({ cover_entry_id:null }).neq("id", ""));
+      await must(sb.from("categories").delete().neq("id", ""));
+    }else{
+      const existing = await must(sb.from("categories").select("id"));
+      const clash = CATS.filter(c => existing.some(x => x.id === c.id)).map(c => c.id);
+      if(clash.length) throw new Error("Diese Kategorien gibt es schon: " + clash.join(", ") + ". Häkchen «zuerst löschen» setzen oder abbrechen.");
+    }
+
+    const uploads = [];
+    for(const [ci, cat] of CATS.entries()){
+      await must(sb.from("categories").insert({
+        id:cat.id, name:cat.name, description:cat.desc, latin:!!cat.latin, labels:cat.labels, sort:ci
+      }));
+      const rows = cat.items.map((it, ei) => ({
+        category_id:cat.id, name:it.n, subtitle:it.s, description:it.t,
+        facts:Object.entries(it.f).map(([k, v]) => ({ k, v })),
+        search_terms:it.q, wp:it.wp || null, labels:it.lb || null, sort:ei
+      }));
+      const inserted = await must(sb.from("entries").insert(rows).select("id,sort"));
+      const idOf = ei => inserted.find(r => r.sort === ei).id;
+      await must(sb.from("categories").update({ cover_entry_id:idOf(cat.cover) }).eq("id", cat.id));
+      log(`✓ ${cat.name}: ${rows.length} Einträge`);
+
+      cat.items.forEach((it, ei) => {
+        for(let k = 1; k <= 4; k++){
+          const key = `${cat.id}/${slug(it.n)}-${k}`;
+          const file = files.get(key);
+          const src = OFFLINE[key];
+          if(!file){ log(`– kein Bild: ${key}`, "muted"); continue; }
+          uploads.push(async () => {
+            const path = key + ".jpg";
+            await must(sb.storage.from(CFG.bucket).upload(path, file, { upsert:true, contentType:"image/jpeg" }));
+            await must(sb.from("images").upsert({
+              entry_id:idOf(ei), position:k, storage_path:path,
+              source_page:src ? src.page : null, source_file:src ? src.file : null
+            }));
+          });
+        }
+      });
+    }
+
+    log(`Lade ${uploads.length} Bilder hoch …`);
+    const bar = $("bar");
+    bar.hidden = false; bar.max = uploads.length; bar.value = 0;
+    const failed = [];
+    await runLimited(uploads.map((u, i) => () => u().catch(e => failed.push(i + ": " + e.message))), 4, () => bar.value++);
+    failed.forEach(f => log("Fehler bei Bild " + f, "err"));
+    log(failed.length ? `Fertig mit ${failed.length} Fehlern.` : "Fertig. Alle Daten und Bilder sind in Supabase.");
+  }catch(e){
+    log("Abbruch: " + e.message, "err");
+  }
+  ready();
+}
+$("start").addEventListener("click", migrate);
+</script>
+</body>
+</html>

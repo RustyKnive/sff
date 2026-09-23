@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Verwaltung – Natur und Schweiz</title>
+<style>
+  :root{
+    --bg:#f3f1ea; --card:#ffffff; --ink:#1f2a1f; --muted:#5d6b5c;
+    --accent:#2f6b3a; --accent-soft:#e3eee0; --line:#d6dbd2; --err:#a3262a; --warn:#8a5a00;
+    --radius:12px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141a15; --card:#1d251e; --ink:#e7eee5; --muted:#a3b3a1;
+      --accent:#8fcf94; --accent-soft:#26352a; --line:#34413a; --err:#ff8a8a; --warn:#f0c060; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.45;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:1.2rem;flex:1}
+  header a{color:var(--accent)}
+  .layout{display:grid;grid-template-columns:260px 1fr;gap:20px;max-width:1300px;margin:0 auto;padding:20px}
+  @media (max-width:800px){ .layout{grid-template-columns:1fr} }
+  aside,.panel{background:var(--card);border-radius:var(--radius);padding:16px}
+  aside h2,.panel h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent)}
+  .panel h3{margin:20px 0 8px;font-size:.95rem}
+
+  .list{list-style:none;margin:0 0 12px;padding:0}
+  .list li{display:flex;align-items:center;gap:4px;border-radius:8px}
+  .list li.active{background:var(--accent-soft)}
+  .list a{flex:1;padding:6px 8px;color:inherit;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .list a small{color:var(--muted)}
+  .list li:hover{background:var(--accent-soft)}
+
+  label{display:block;margin:0 0 10px;font-size:.85rem;font-weight:600;color:var(--muted)}
+  label.inline{display:flex;align-items:center;gap:8px;font-weight:400;color:var(--ink)}
+  input[type=text],input[type=email],input[type=password],input[type=url],textarea,select{
+    display:block;width:100%;margin-top:3px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;
+    background:var(--bg);color:var(--ink);font:inherit;font-weight:400}
+  textarea{min-height:110px;resize:vertical}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+  .facts .fact{display:grid;grid-template-columns:1fr 2fr auto;gap:6px;margin-bottom:6px}
+  .facts input{margin:0}
+
+  button{padding:7px 14px;border:1px solid var(--accent);border-radius:99px;background:var(--accent);color:var(--card);
+    font:inherit;font-weight:600;cursor:pointer}
+  button.ghost{background:transparent;color:var(--accent)}
+  button.danger{background:transparent;border-color:var(--err);color:var(--err)}
+  button.icon{padding:2px 7px;border:none;background:transparent;color:var(--muted);font-weight:400}
+  button.icon:hover{color:var(--accent)}
+  button:disabled{opacity:.4;cursor:default}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+
+  .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .slot{border:1px solid var(--line);border-radius:10px;padding:10px}
+  .thumb{aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:var(--accent-soft);display:grid;place-items:center;
+    color:var(--muted);font-size:.8rem;margin-bottom:8px;text-align:center;padding:0}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .slot strong{display:block;margin-bottom:6px;font-size:.9rem}
+  .slot label{font-size:.78rem;margin-bottom:6px}
+  .slot input[type=file]{font-size:.78rem;margin-bottom:6px;max-width:100%}
+
+  .hint{font-size:.82rem;color:var(--muted);margin:4px 0 10px}
+  .warn{color:var(--warn)}
+  #msg{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 18px;border-radius:99px;
+    background:var(--ink);color:var(--bg);font-size:.9rem;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:10}
+  #msg.err{background:var(--err);color:#fff}
+  .login{max-width:380px;margin:60px auto}
+  [hidden]{display:none!important}
+</style>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<header>
+  <h1>Verwaltung · Natur und Schweiz</h1>
+  <a href="index.html" target="_blank">Seite ansehen ↗</a>
+  <span id="who" class="hint"></span>
+  <button id="logout" class="ghost" hidden>Abmelden</button>
+</header>
+
+<div id="loginView" class="panel login" hidden>
+  <h2>Anmelden</h2>
+  <form id="loginForm">
+    <label>E-Mail <input type="email" id="email" required autocomplete="username"></label>
+    <label>Passwort <input type="password" id="pw" required autocomplete="current-password"></label>
+    <button>Anmelden</button>
+  </form>
+  <p id="loginMsg" class="hint"></p>
+</div>
+
+<div id="appView" class="layout" hidden>
+  <aside>
+    <h2>Kategorien</h2>
+    <ul class="list" id="catList"></ul>
+    <button class="ghost" id="newCat">+ Neue Kategorie</button>
+  </aside>
+  <section class="panel" id="main"></section>
+</div>
+
+<div id="msg" hidden></div>
+
+<script>
+const CFG = window.SFF_CONFIG;
+const sb = supabase.createClient(CFG.url, CFG.key);
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const slug = s => s.toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue")
+  .replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const publicUrl = path => sb.storage.from(CFG.bucket).getPublicUrl(path).data.publicUrl;
+const DEFAULT_LABELS = ["Bild 1","Bild 2","Bild 3","Bild 4"];
+
+let cats = [];   // alle Kategorien mit Einträgen und Bildern
+
+/* ------------------------------------------------------------------
+   HILFSFUNKTIONEN
+------------------------------------------------------------------- */
+let msgTimer;
+function msg(text, isErr){
+  const m = $("msg");
+  m.textContent = text;
+  m.className = isErr ? "err" : "";
+  m.hidden = false;
+  clearTimeout(msgTimer);
+  msgTimer = setTimeout(() => { m.hidden = true; }, isErr ? 7000 : 2500);
+}
+async function must(p){
+  const { data, error } = await p;
+  if(error) throw new Error(error.message);
+  return data;
+}
+// Führt eine Änderung aus, lädt danach alles neu und zeigt eine Meldung
+async function act(fn, okText){
+  try{
+    const r = await fn();
+    await reload();
+    if(okText) msg(okText);
+    return r;
+  }catch(e){
+    msg("Fehler: " + e.message, true);
+    throw e;
+  }
+}
+
+async function reload(){
+  cats = await must(sb.from("categories")
+    .select("*, entries(*, images(*))")
+    .order("sort").order("name")
+    .order("sort", { referencedTable:"entries" }).order("name", { referencedTable:"entries" }));
+  renderSidebar();
+}
+const findCat = id => cats.find(c => c.id === id);
+function findEntry(id){
+  for(const c of cats){ const e = c.entries.find(x => x.id === id); if(e) return { cat:c, entry:e }; }
+  return null;
+}
+
+// Reihenfolge ändern: Element um dir (−1/+1) verschieben, danach sort = Position
+async function move(table, list, index, dir){
+  const j = index + dir;
+  if(j < 0 || j >= list.length) return;
+  const order = list.slice();
+  [order[index], order[j]] = [order[j], order[index]];
+  await act(() => Promise.all(order.map((x, i) => x.sort === i ? null
+    : must(sb.from(table).update({ sort:i }).eq("id", x.id)))));
+  render();
+}
+
+// Bild verkleinern (längste Seite max. 1600 px) und als JPEG zurückgeben
+function resizeImage(file, max = 1600){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const f = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * f); c.height = Math.round(img.height * f);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => b ? res(b) : rej(new Error("Bild konnte nicht umgewandelt werden")), "image/jpeg", .85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Datei ist kein lesbares Bild")); };
+    img.src = url;
+  });
+}
+
+// Aus einer Commons-Dateiseite den Dateinamen ableiten
+function commonsFile(page){
+  const m = String(page).match(/\/wiki\/File:([^?#]+)/);
+  return m ? decodeURIComponent(m[1]).replace(/_/g, " ") : "";
+}
+
+/* ------------------------------------------------------------------
+   SEITENLEISTE
+------------------------------------------------------------------- */
+function route(){
+  const [, type, id, extra] = location.hash.split("/");
+  return { type, id, extra };
+}
+
+function renderSidebar(){
+  const r = route();
+  const activeCat = r.type === "k" ? r.id : r.type === "e" ? (r.id === "neu" ? r.extra : findEntry(r.id)?.cat.id) : null;
+  $("catList").innerHTML = cats.map((c, i) => `
+    <li class="${c.id === activeCat ? "active" : ""}">
+      <a href="#/k/${esc(c.id)}">${esc(c.name)} <small>(${c.entries.length})</small></a>
+      <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
+      <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < cats.length - 1 ? "" : "disabled"}>↓</button>
+    </li>`).join("");
+}
+$("catList").addEventListener("click", e => {
+  const b = e.target.closest("[data-move]");
+  if(b) move("categories", cats, +b.dataset.move, +b.dataset.dir);
+});
+$("newCat").addEventListener("click", () => { location.hash = "#/k/neu"; });
+
+/* ------------------------------------------------------------------
+   KATEGORIE BEARBEITEN
+------------------------------------------------------------------- */
+function renderCategory(cat){
+  const isNew = !cat;
+  const c = cat || { id:"", name:"", description:"", latin:false, labels:DEFAULT_LABELS, cover_entry_id:null, entries:[] };
+  const main = $("main");
+  const n = c.entries.length;
+  main.innerHTML = `
+    <h2>${isNew ? "Neue Kategorie" : "Kategorie: " + esc(c.name)}</h2>
+    <form id="catForm">
+      <div class="row">
+        <label>Name <input type="text" name="name" required value="${esc(c.name)}"></label>
+        <label>ID (für die Adresse #/…) <input type="text" name="id" required pattern="[a-z0-9]+(-[a-z0-9]+)*" value="${esc(c.id)}"></label>
+      </div>
+      <label>Beschreibung (Untertitel der Kachel) <input type="text" name="description" value="${esc(c.description)}"></label>
+      <label class="inline"><input type="checkbox" name="latin" ${c.latin ? "checked" : ""}> Untertitel der Einträge ist ein lateinischer Name (kursiv)</label>
+      <h3>Bildbeschriftungen (Standard für alle Einträge)</h3>
+      <div class="row">${c.labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" required value="${esc(l)}"></label>`).join("")}</div>
+      ${isNew ? "" : `<label>Titelbild der Kachel (Hauptbild von …)
+        <select name="cover"><option value="">– erster Eintrag –</option>
+        ${c.entries.map(e => `<option value="${e.id}" ${e.id === c.cover_entry_id ? "selected" : ""}>${esc(e.name)}</option>`).join("")}
+        </select></label>`}
+      <div class="actions">
+        <button>${isNew ? "Anlegen" : "Speichern"}</button>
+        ${isNew ? "" : `<button type="button" class="danger" id="delCat">Kategorie löschen</button>`}
+      </div>
+    </form>
+    ${isNew ? "" : `
+    <h3>Einträge (${n})</h3>
+    ${n !== 9 ? `<p class="hint warn">Für das 3×3-Raster sind 9 Einträge vorgesehen.</p>` : ""}
+    <ul class="list" id="entryList">
+      ${c.entries.map((e, i) => `
+      <li>
+        <a href="#/e/${e.id}">${esc(e.name)} <small>${esc(e.subtitle)} · ${e.images.length}/4 Bilder</small></a>
+        <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
+        <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < n - 1 ? "" : "disabled"}>↓</button>
+      </li>`).join("")}
+    </ul>
+    <button class="ghost" id="newEntry">+ Neuer Eintrag</button>`}`;
+
+  const form = $("catForm");
+  const F = form.elements;
+  // ID beim Anlegen aus dem Namen vorschlagen
+  if(isNew) F.name.addEventListener("input", () => { F.id.value = slug(F.name.value); });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const row = {
+      id:F.id.value.trim(), name:F.name.value.trim(), description:F.description.value.trim(),
+      latin:F.latin.checked, labels:[0,1,2,3].map(i => F["label" + i].value.trim())
+    };
+    if(isNew){
+      row.sort = cats.length;
+      await act(() => must(sb.from("categories").insert(row)), "Kategorie angelegt.");
+    }else{
+      row.cover_entry_id = F.cover.value || null;
+      await act(() => must(sb.from("categories").update(row).eq("id", c.id)), "Gespeichert.");
+    }
+    if(location.hash !== "#/k/" + row.id) location.hash = "#/k/" + row.id; else render();
+  });
+
+  if(isNew) return;
+  $("delCat").addEventListener("click", async () => {
+    if(!confirm(`Kategorie «${c.name}» mit allen ${n} Einträgen und Bildern endgültig löschen?`)) return;
+    const paths = c.entries.flatMap(e => e.images.map(i => i.storage_path));
+    await act(async () => {
+      await must(sb.from("categories").delete().eq("id", c.id));
+      if(paths.length) await must(sb.storage.from(CFG.bucket).remove(paths));
+    }, "Kategorie gelöscht.");
+    location.hash = "#/";
+  });
+  $("entryList").addEventListener("click", e => {
+    const b = e.target.closest("[data-move]");
+    if(b) move("entries", c.entries, +b.dataset.move, +b.dataset.dir);
+  });
+  $("newEntry").addEventListener("click", () => { location.hash = "#/e/neu/" + c.id; });
+}
+
+/* ------------------------------------------------------------------
+   EINTRAG BEARBEITEN
+------------------------------------------------------------------- */
+function factRow(k = "", v = ""){
+  return `<div class="fact">
+    <input type="text" placeholder="z. B. Höhe" value="${esc(k)}" data-k>
+    <input type="text" placeholder="z. B. bis 50 m" value="${esc(v)}" data-v>
+    <button type="button" class="icon" data-delfact title="Zeile entfernen">✕</button></div>`;
+}
+
+function renderEntry(cat, entry){
+  const isNew = !entry;
+  const e = entry || { name:"", subtitle:"", description:"", facts:[], search_terms:["","",""], wp:"", labels:null, images:[] };
+  const labels = e.labels || cat.labels;
+  const terms = [0,1,2].map(i => e.search_terms[i] || "");
+  const main = $("main");
+  main.innerHTML = `
+    <p class="hint"><a href="#/k/${esc(cat.id)}">← ${esc(cat.name)}</a></p>
+    <h2>${isNew ? "Neuer Eintrag" : esc(e.name)}</h2>
+    <form id="entryForm">
+      <div class="row">
+        <label>Name <input type="text" name="name" required value="${esc(e.name)}"></label>
+        <label>${cat.latin ? "Lateinischer Name" : "Untertitel (Ort, Gesteinsart …)"} <input type="text" name="subtitle" value="${esc(e.subtitle)}"></label>
+      </div>
+      <label>Beschreibung <textarea name="description">${esc(e.description)}</textarea></label>
+      <p class="hint">3–4 Sätze, sachlich und für Sek I verständlich. Schweizer Rechtschreibung: immer «ss», nie Eszett.</p>
+
+      <h3>Steckbrief</h3>
+      <div class="facts" id="facts">${e.facts.map(f => factRow(f.k, f.v)).join("")}</div>
+      <button type="button" class="ghost" id="addFact">+ Zeile</button>
+
+      <h3>Bilder</h3>
+      <label class="inline"><input type="checkbox" name="ownLabels" ${e.labels ? "checked" : ""}> Eigene Bildbeschriftungen statt «${esc(cat.labels.join(", "))}»</label>
+      <div class="row" id="labelRow" ${e.labels ? "" : "hidden"}>
+        ${labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" value="${esc(l)}"></label>`).join("")}
+      </div>
+      ${isNew ? `<p class="hint">Bilder können nach dem Anlegen hochgeladen werden.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>`}
+
+      <h3>Online-Ersatz (falls kein eigenes Bild hinterlegt ist)</h3>
+      <label>Englischer Wikipedia-Artikel für das Hauptbild (leer = ${cat.latin ? "lateinischer Name" : "Name"})
+        <input type="text" name="wp" value="${esc(e.wp)}"></label>
+      <div class="row">${terms.map((t, i) => `<label>Suchbegriff Bild ${i + 2} <input type="text" name="q${i}" value="${esc(t)}"></label>`).join("")}</div>
+
+      <div class="actions">
+        <button>${isNew ? "Anlegen" : "Speichern"}</button>
+        ${isNew ? "" : `<button type="button" class="danger" id="delEntry">Eintrag löschen</button>`}
+      </div>
+    </form>`;
+
+  const form = $("entryForm");
+  const F = form.elements;
+  const facts = $("facts");
+  $("addFact").addEventListener("click", () => facts.insertAdjacentHTML("beforeend", factRow()));
+  facts.addEventListener("click", ev => { if(ev.target.closest("[data-delfact]")) ev.target.closest(".fact").remove(); });
+  F.ownLabels.addEventListener("change", () => { $("labelRow").hidden = !F.ownLabels.checked; });
+
+  form.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const row = {
+      category_id:cat.id,
+      name:F.name.value.trim(), subtitle:F.subtitle.value.trim(), description:F.description.value.trim(),
+      facts:[...facts.querySelectorAll(".fact")]
+        .map(f => ({ k:f.querySelector("[data-k]").value.trim(), v:f.querySelector("[data-v]").value.trim() }))
+        .filter(f => f.k || f.v),
+      search_terms:[0,1,2].map(i => F["q" + i].value.trim()).filter(Boolean),
+      wp:F.wp.value.trim() || null,
+      labels:F.ownLabels.checked ? [0,1,2,3].map(i => F["label" + i].value.trim()) : null
+    };
+    if(isNew){
+      row.sort = cat.entries.length;
+      const saved = await act(() => must(sb.from("entries").insert(row).select("id").single()), "Eintrag angelegt.");
+      location.hash = "#/e/" + saved.id;
+      return;
+    }
+    // Quellenangaben der vorhandenen Bilder mitspeichern
+    const imgRows = e.images.map(img => ({
+      entry_id:e.id, position:img.position, storage_path:img.storage_path,
+      source_page:F["page" + img.position].value.trim() || null,
+      source_file:F["file" + img.position].value.trim() || null
+    }));
+    await act(async () => {
+      await must(sb.from("entries").update(row).eq("id", e.id));
+      if(imgRows.length) await must(sb.from("images").upsert(imgRows));
+    }, "Gespeichert.");
+    render();
+  });
+
+  if(isNew) return;
+  $("delEntry").addEventListener("click", async () => {
+    if(!confirm(`Eintrag «${e.name}» mit allen Bildern endgültig löschen?`)) return;
+    const paths = e.images.map(i => i.storage_path);
+    await act(async () => {
+      await must(sb.from("entries").delete().eq("id", e.id));
+      if(paths.length) await must(sb.storage.from(CFG.bucket).remove(paths));
+    }, "Eintrag gelöscht.");
+    location.hash = "#/k/" + cat.id;
+  });
+
+  main.querySelectorAll(".slot").forEach(slot => {
+    const p = +slot.dataset.pos;
+    const img = e.images.find(i => i.position === p);
+    const page = F["page" + p], file = F["file" + p];
+    page.addEventListener("change", () => { if(!file.value) file.value = commonsFile(page.value); });
+    slot.querySelector("input[type=file]").addEventListener("change", ev => {
+      const f = ev.target.files[0];
+      if(f) uploadImage(cat, e, p, f, img, page.value.trim(), file.value.trim());
+    });
+    slot.querySelector("[data-delimg]")?.addEventListener("click", async () => {
+      if(!confirm(`Bild ${p} entfernen?`)) return;
+      await act(async () => {
+        await must(sb.from("images").delete().eq("entry_id", e.id).eq("position", p));
+        await must(sb.storage.from(CFG.bucket).remove([img.storage_path]));
+      }, "Bild entfernt.");
+      render();
+    });
+  });
+}
+
+function slotHtml(e, p, label){
+  const img = e.images.find(i => i.position === p);
+  return `<div class="slot" data-pos="${p}">
+    <strong>${p} · ${esc(label)}${p === 1 ? " (Hauptbild)" : ""}</strong>
+    <div class="thumb">${img ? `<img src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy">` : "kein eigenes Bild<br>(wird online gesucht)"}</div>
+    <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
+    <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
+    <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
+    ${img ? `<button type="button" class="danger" data-delimg>Bild entfernen</button>` : ""}
+  </div>`;
+}
+
+async function uploadImage(cat, entry, pos, file, old, page, fileName){
+  msg("Bild wird hochgeladen …");
+  // Immer ein neuer Dateiname: so zeigt kein Zwischenspeicher (CDN, Browser) das alte Bild
+  const path = `${cat.id}/${entry.id}-${pos}-${Date.now()}.jpg`;
+  await act(async () => {
+    const blob = await resizeImage(file);
+    await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"image/jpeg" }));
+    await must(sb.from("images").upsert({
+      entry_id:entry.id, position:pos, storage_path:path, source_page:page || null, source_file:fileName || null
+    }));
+    if(old && old.storage_path !== path) await sb.storage.from(CFG.bucket).remove([old.storage_path]);
+  }, "Bild gespeichert.");
+  render();
+}
+
+/* ------------------------------------------------------------------
+   ANSICHT WÄHLEN
+------------------------------------------------------------------- */
+function render(){
+  renderSidebar();
+  const r = route();
+  const main = $("main");
+  if(r.type === "k" && r.id === "neu") return renderCategory(null);
+  if(r.type === "k" && findCat(r.id)) return renderCategory(findCat(r.id));
+  if(r.type === "e" && r.id === "neu" && findCat(r.extra)) return renderEntry(findCat(r.extra), null);
+  if(r.type === "e" && findEntry(r.id)){ const { cat, entry } = findEntry(r.id); return renderEntry(cat, entry); }
+  const total = cats.reduce((s, c) => s + c.entries.length, 0);
+  main.innerHTML = `<h2>Übersicht</h2>
+    <p>${cats.length} Kategorien, ${total} Einträge.</p>
+    <p class="hint">Links eine Kategorie wählen oder eine neue anlegen.</p>`;
+}
+
+/* ------------------------------------------------------------------
+   ANMELDUNG
+------------------------------------------------------------------- */
+async function start(session){
+  $("loginView").hidden = !!session;
+  $("appView").hidden = true;
+  $("logout").hidden = !session;
+  $("who").textContent = session ? session.user.email : "";
+  if(!session) return;
+  const isAdmin = await sb.rpc("is_admin");
+  if(isAdmin.data !== true){
+    $("loginView").hidden = false;
+    $("loginMsg").textContent = "Dieses Konto hat keine Admin-Rechte (Tabelle «admins»).";
+    return;
+  }
+  try{
+    await reload();
+    $("appView").hidden = false;
+    render();
+  }catch(e){ msg("Daten konnten nicht geladen werden: " + e.message, true); }
+}
+
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  $("loginMsg").textContent = "";
+  const { data, error } = await sb.auth.signInWithPassword({ email:$("email").value, password:$("pw").value });
+  if(error){ $("loginMsg").textContent = error.message; return; }
+  start(data.session);
+});
+$("logout").addEventListener("click", async () => { await sb.auth.signOut(); start(null); });
+window.addEventListener("hashchange", () => { if(!$("appView").hidden) render(); });
+sb.auth.getSession().then(({ data }) => start(data.session));
+</script>
+</body>
+</html>

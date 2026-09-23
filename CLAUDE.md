@@ -1,65 +1,70 @@
 # Natur und Schweiz (sff)
 
-Lern- und Nachschlageseite in einer einzigen HTML-Datei (ohne Build, ohne Abhängigkeiten).
-Sie zeigt 9 Kategorien mit je 9 Einträgen. Jeder Eintrag hat 4 Bilder und einen Steckbrief.
-Zielgruppe: Schule (Sek I).
+Lern- und Nachschlageseite für die Schule (Sek I). Sie zeigt Kategorien (z. B. Bäume, Amphibien) mit Einträgen.
+Jeder Eintrag hat 4 Bilder und einen Steckbrief.
+Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen Build, jede Seite ist eine eigene HTML-Datei.
 
 ## Ordnerstruktur
 
 ```
 sff/
-├── index.html                   # die ganze App (HTML, CSS, JS in einer Datei)
-├── CLAUDE.md
-└── bilder/
-    ├── bilder.js                # Liste der Bilder mit Quellen: window.OFFLINE_BILDER = { … }
-    ├── baeume/fichte-rottanne-1.jpg … -4.jpg
-    ├── straeucher/…
-    └── …                        # ein Unterordner pro Kategorie-ID
+├── index.html            # Anzeige (öffentlich). Lädt die Daten per REST, ohne Bibliothek
+├── admin.html            # Verwaltung (Login). Nutzt supabase-js (UMD über jsdelivr)
+├── config.js             # window.SFF_CONFIG = { url, key (anon/publishable), bucket }
+├── supabase/schema.sql   # Tabellen, RLS, Storage-Bucket (im SQL Editor ausführen)
+├── tools/
+│   ├── migration.html    # einmalige Übernahme der alten Daten und Bilder nach Supabase
+│   └── cats-alt.js       # alte Daten (früher `CATS` in index.html), nur für die Migration
+└── bilder/               # alte lokale Bilder und bilder.js, nur für die Migration
 ```
 
-- Bildpfad: `bilder/<kategorie-id>/<slug(name)>-<1..4>.jpg`. Bild 1 ist das Hauptbild.
-- `slug()`: klein schreiben, ä→ae, ö→oe, ü→ue, alles andere ausser a–z/0–9 wird zu `-`.
-- `bilder.js` ist absichtlich eine JS-Datei, keine JSON-Datei: Seiten, die über `file://` geöffnet werden, dürfen kein JSON per `fetch` laden.
-  Jeder Eintrag enthält `{ page: <Commons-Dateiseite>, file: <Originaldateiname> }`. Das braucht es für die Lizenzangabe (Knopf «Quelle»).
+`bilder/` und `tools/` braucht es nach der erfolgreichen Migration nicht mehr.
+
+## Datenmodell (supabase/schema.sql)
+
+- `categories`: `id` (Slug, gleichzeitig die Adresse `#/<id>`), `name`, `description`, `latin` (true → Untertitel kursiv als lateinischer Name), `labels` (4 Bildbeschriftungen), `cover_entry_id` (Eintrag für die Übersichtskachel), `sort`.
+- `entries`: `category_id`, `name`, `subtitle`, `description`, `facts` (jsonb-Array `[{k, v}]`, damit die Reihenfolge erhalten bleibt), `search_terms` (Suchbegriffe für Bilder 2–4), `wp` (englischer Wikipedia-Titel für das Hauptbild), `labels` (optional eigene 4 Beschriftungen), `sort`.
+- `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»). Position 1 ist das Hauptbild.
+- `admins`: `user_id`. Nur wer hier eingetragen ist, darf schreiben (`is_admin()`). Alle dürfen lesen.
+- Neue Uploads aus dem Admin bekommen immer einen neuen Pfad (`<kat>/<entry-id>-<pos>-<zeit>.jpg`), damit kein Cache das alte Bild zeigt. Die alte Datei wird gelöscht.
 
 ## Aufbau von index.html
 
-- `CATS`: das Daten-Array (Kategorien → Einträge), ganz oben im `<script>`.
-  - Kategorie: `id`, `name`, `desc`, `latin` (true → Untertitel kursiv als lateinischer Name), `cover` (Index des Eintrags, dessen Hauptbild die Übersichtskachel zeigt), `labels` (4 Bildbeschriftungen), `items`.
-  - Eintrag: `n` Name, `s` Untertitel (lateinischer Name, Ort oder Gesteinsart), `t` Beschreibung, `f` Steckbrief (Objekt Schlüssel → Wert), `q` 3 Suchbegriffe für die Bilder 2–4, optional `wp` (Titel des englischen Wikipedia-Artikels für das Hauptbild), optional `lb` (eigene 4 Bildbeschriftungen).
-- Navigation per Hash: `#/` zeigt die Übersicht, `#/<kategorie-id>` eine Kategorie. Der Browser-Zurück-Knopf funktioniert.
-- Karten: 5 Folien (4 Bilder + Text). Pfeile und Punkte erscheinen beim Darüberfahren (auf Touch-Geräten immer sichtbar). Die Pfeiltasten funktionieren, wenn die Karte den Fokus hat.
+- `loadCats()` holt alles in einer Anfrage (`categories?select=…entries(…images(…))`) und bringt die Daten in die gewohnte Kurzform: Kategorie `id, name, desc, latin, labels, cover, items`, Eintrag `id, n, s, t, f, q, wp, lb, img[0..3]`.
+- Navigation per Hash: `#/` zeigt die Übersicht, `#/<kategorie-id>` eine Kategorie.
+- Karten: 5 Folien (4 Bilder + Text). Pfeile und Punkte erscheinen beim Darüberfahren. Die Pfeiltasten funktionieren, wenn die Karte den Fokus hat.
 
 ## Bilder laden
 
-1. Steht ein Bild in `OFFLINE_BILDER`, wird zuerst die lokale Datei geladen.
-2. Fehlt sie oder lässt sie sich nicht laden, wird das Bild online gesucht (Fallback):
-   - Hauptbild: Titelbild (`pageimages`) des englischen Wikipedia-Artikels `wp` bzw. des lateinischen Namens.
-   - Bilder 2–4: Suche auf Wikimedia Commons mit `q[i] filetype:bitmap`. Findet sie nichts, werden die Suchbegriffe schrittweise gekürzt, zuletzt bleibt nur der Grundname. Innerhalb eines Eintrags erscheint kein Bild doppelt.
-3. Wikimedia bremst zu viele Anfragen (HTTP 429). Darum laufen höchstens 3 API-Anfragen und 4 Bild-Downloads gleichzeitig (`limiter`), und `retry` versucht es mit wachsender Wartezeit erneut. Bilder 2–4 werden erst beim ersten Darüberfahren geladen.
+1. Hat ein Eintrag ein Bild in `images`, wird es aus Supabase Storage geladen.
+2. Sonst oder bei einem Fehler wird es online gesucht (Fallback):
+   - Hauptbild: Titelbild des englischen Wikipedia-Artikels `wp` bzw. des lateinischen Namens.
+   - Bilder 2–4: Suche auf Wikimedia Commons mit `q[i] filetype:bitmap`, bei Bedarf mit gekürzten Suchbegriffen. Innerhalb eines Eintrags erscheint kein Bild doppelt.
+3. Wikimedia bremst zu viele Anfragen (HTTP 429). Darum gibt es `limiter` (3 API-Anfragen, 4 Downloads gleichzeitig) und `retry`. Bilder 2–4 werden erst beim ersten Darüberfahren geladen.
 
-## Offline-Betrieb
+## Verwaltung (admin.html)
 
-`index.html` ist die Offline-Version ohne Download-Knopf. Die Bilder liegen fertig in `bilder/`.
-Die frühere Variante mit dem Knopf «Offline-Paket herunterladen (ZIP)» gehört nicht zum Projekt.
-Sollen die Bilder neu zusammengestellt werden, lieber einzelne Dateien in `bilder/` ersetzen, als wieder einen Download-Mechanismus einzubauen.
+- Anmeldung mit E-Mail und Passwort. Das Konto muss in `admins` stehen.
+- Adressen: `#/k/<id>` Kategorie, `#/k/neu`, `#/e/<entry-id>` Eintrag, `#/e/neu/<kat-id>`.
+- Nach jeder Änderung lädt `reload()` alle Daten neu. Die Datenmenge ist klein, das ist gewollt einfach.
+- Hochgeladene Bilder werden im Browser auf höchstens 1600 px verkleinert (JPEG, Qualität 0.85).
+
+## Offline-App (geplant)
+
+Später als PWA: Ein Service Worker speichert die REST-Antwort von `loadCats()` und die Storage-Bilder zwischen.
+`updated_at` in allen Tabellen ist dafür schon vorhanden. Die Datenquelle deshalb nur über `loadCats()` ansprechen.
 
 ## Konventionen
 
 - Sprache Deutsch, **Schweizer Rechtschreibung: nie «ß», immer «ss»** (auch im Code und in Kommentaren).
-- Texte sachlich und für Sek-I-Schülerinnen und -Schüler verständlich: 3–4 Sätze Beschreibung, 3–4 Steckbrief-Zeilen.
-- Pro Kategorie genau 9 Einträge (3×3-Raster), pro Eintrag genau 3 Suchbegriffe in `q`.
+- Texte sachlich und für Sek I verständlich: 3–4 Sätze Beschreibung, 3–4 Steckbrief-Zeilen.
+- Richtwert 9 Einträge pro Kategorie (3×3-Raster) und 3 Suchbegriffe. Der Admin warnt, erzwingt es aber nicht.
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
-- Keine externen Bibliotheken, alles bleibt in einer Datei.
-
-## Einen Eintrag ändern oder hinzufügen
-
-1. Den Eintrag in `CATS` bearbeiten.
-2. Ändert sich der Name `n`, ändert sich auch der Bildpfad (`slug`). Dann die Bilddateien umbenennen und die Schlüssel in `bilder.js` anpassen, sonst lädt die Seite die Bilder wieder online.
-3. Ein Bild gezielt ersetzen: die JPG-Datei im Ordner austauschen und `page`/`file` in `bilder.js` nachführen.
+- Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin und in den Tools.
+- In `config.js` nur den öffentlichen Schlüssel eintragen, nie den Service-Key.
 
 ## Prüfen
 
-- Syntax: das `<script>` herauslösen und `node --check` ausführen.
-- Kein «ß» in der Datei: `grep -c "ß" index.html` muss 0 ergeben.
-- `index.html` direkt im Browser öffnen (`file://`) und eine Kategorie durchklicken.
+- Syntax: Es gibt kein Node. Die Inline-Skripte als `<script type="text/plain">` in eine Prüfseite kopieren, mit `new Function(...)` parsen und die Seite mit headless Chrome (`--dump-dom`) öffnen.
+- Kein «ß»: `grep -c "ß" *.html` muss überall 0 ergeben.
+- `index.html` im Browser öffnen, eine Kategorie durchklicken. Im Admin einen Eintrag bearbeiten und ein Bild ersetzen.
