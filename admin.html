@@ -146,7 +146,7 @@ async function act(fn, okText){
 
 async function reload(){
   cats = await must(sb.from("categories")
-    .select("*, entries(*, images(*))")
+    .select("*, entries!entries_category_id_fkey(*, images(*))")
     .order("sort").order("name")
     .order("sort", { referencedTable:"entries" }).order("name", { referencedTable:"entries" }));
   renderSidebar();

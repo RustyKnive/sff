@@ -120,7 +120,7 @@ let CATS = [];
    wp Wikipedia-Titel, lb eigene Bildbeschriftungen, img[0..3] eigene Bilder (oder null) */
 async function loadCats(){
   const select = "id,name,description,latin,labels,cover_entry_id,"
-    + "entries(id,name,subtitle,description,facts,search_terms,wp,labels,"
+    + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,"
     + "images(position,storage_path,source_page,source_file))";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
     + "&order=sort.asc,name.asc&entries.order=sort.asc,name.asc";
