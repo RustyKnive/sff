@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <!-- Erlaubte Quellen: nur eigene Dateien (kein eingebetteter Code) und das eigene Supabase-Projekt.
-     data: für den QR-Code der Zwei-Faktor-Einrichtung, blob: für die Bildvorschau beim Verkleinern. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://pkiaxvsgplohhvewbgmw.supabase.co; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co wss://pkiaxvsgplohhvewbgmw.supabase.co; base-uri 'none'; form-action 'none'">
+     data: für den QR-Code der Zwei-Faktor-Einrichtung, blob: für die Bildvorschau beim Verkleinern,
+     Wikipedia/Wikimedia für die Übernahme von Bildern. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://pkiaxvsgplohhvewbgmw.supabase.co; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co wss://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org https://upload.wikimedia.org; base-uri 'none'; form-action 'none'">
 <title>Verwaltung – Natur und Schweiz</title>
 <link rel="icon" href="icons/steinbock.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/basis.css">
@@ -14,6 +15,7 @@
 <script src="config.js"></script>
 <!-- supabase-js liegt im Repo (js/lib). Aktualisieren: neue Datei von jsDelivr herunterladen und den Dateinamen hier anpassen. -->
 <script src="js/lib/supabase-2.117.1.min.js" defer></script>
+<script src="js/wikimedia.js" defer></script>
 <script src="js/admin.js" defer></script>
 </head>
 <body>

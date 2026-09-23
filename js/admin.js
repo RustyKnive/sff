@@ -254,6 +254,9 @@ function renderEntry(cat, entry){
         ${labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" value="${esc(l)}"></label>`).join("")}
       </div>
       ${isNew ? `<p class="hint">Bilder können nach dem Anlegen hochgeladen werden.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>`}
+      ${!isNew && e.images.length < 4 ? `<p><button type="button" class="ghost" id="importWm">Fehlende Bilder von Wikimedia übernehmen</button></p>
+        <p class="hint">Sucht wie die Seite (Wikipedia-Titelbild, sonst Suchbegriffe unten) und speichert die Bilder mit Quellenangabe.
+          Geänderte Suchbegriffe vorher speichern.</p>` : ""}
 
       <h3>Online-Ersatz (falls kein eigenes Bild hinterlegt ist)</h3>
       <label>Englischer Wikipedia-Artikel für das Hauptbild (leer = ${cat.latin ? "lateinischer Name" : "Name"})
@@ -333,6 +336,20 @@ function renderEntry(cat, entry){
       }, "Bild entfernt.");
       render();
     });
+    slot.querySelector("[data-otherimg]")?.addEventListener("click", async ev => {
+      ev.target.disabled = true;
+      msg("Anderes Bild wird gesucht …");
+      await act(() => replaceFromWikimedia(cat, e, p, img), "Anderes Bild gespeichert.").catch(() => {});
+      render();
+    });
+  });
+
+  $("importWm")?.addEventListener("click", async ev => {
+    ev.target.disabled = true;
+    msg("Bilder werden von Wikimedia übernommen …");
+    const failed = await act(() => importMissing(cat, e), null).catch(() => null);
+    if(failed) msg(failed.length ? `Nicht gefunden: Bild ${failed.join(", ")}. Suchbegriff anpassen und nochmals versuchen.` : "Bilder übernommen.", failed.length > 0);
+    render();
   });
 }
 
@@ -344,24 +361,109 @@ function slotHtml(e, p, label){
     <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
     <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
-    ${img ? `<button type="button" class="danger" data-delimg>Bild entfernen</button>` : ""}
+    ${img ? `<div class="slot-actions">
+      <button type="button" class="ghost" data-otherimg title="Nächstes passendes Bild von Wikimedia Commons">Anderes Bild suchen</button>
+      <button type="button" class="danger" data-delimg>Bild entfernen</button></div>` : ""}
   </div>`;
 }
 
 async function uploadImage(cat, entry, pos, file, old, page, fileName){
   msg("Bild wird hochgeladen …");
-  // Immer ein neuer Dateiname: so zeigt kein Zwischenspeicher (CDN, Browser) das alte Bild
-  const path = `${cat.id}/${entry.id}-${pos}-${Date.now()}.jpg`;
   await act(async () => {
     page = sourceUrl(page);
-    const blob = await resizeImage(file);
-    await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"image/jpeg" }));
-    await must(sb.from("images").upsert({
-      entry_id:entry.id, position:pos, storage_path:path, source_page:page || null, source_file:fileName || null
-    }));
-    if(old && old.storage_path !== path) await sb.storage.from(CFG.bucket).remove([old.storage_path]);
+    await storeImage(cat, entry, pos, await resizeImage(file), old, page, fileName);
   }, "Bild gespeichert.");
   render();
+}
+
+// Bild speichern: Datei in den Bucket, Zeile in «images», altes Bild löschen
+async function storeImage(cat, entry, pos, blob, old, page, fileName){
+  // Immer ein neuer Dateiname: so zeigt kein Zwischenspeicher (CDN, Browser) das alte Bild
+  const path = `${cat.id}/${entry.id}-${pos}-${Date.now()}.jpg`;
+  await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"image/jpeg" }));
+  await must(sb.from("images").upsert({
+    entry_id:entry.id, position:pos, storage_path:path, source_page:page || null, source_file:fileName || null
+  }));
+  if(old && old.storage_path !== path) await sb.storage.from(CFG.bucket).remove([old.storage_path]);
+}
+
+/* ------------------------------------------------------------------
+   BILDER VON WIKIMEDIA ÜBERNEHMEN
+   Sucht wie die Anzeige (js/wikimedia.js): Bild 1 = Titelbild des Wikipedia-Artikels,
+   Bilder 2–4 = Commons-Suche mit den Suchbegriffen. Danach liegen die Bilder im eigenen
+   Speicher: schnell, auch für ganze Klassen, und offline verfügbar.
+------------------------------------------------------------------- */
+const baseTitle = (cat, e) => e.wp || (cat.latin ? e.subtitle : e.name);
+const rejected = new Map();   // pro Eintrag: mit «Anderes Bild suchen» verworfene Dateien
+
+function usedFiles(e){
+  const used = new Set(e.images.map(i => i.source_file).filter(Boolean));
+  for(const f of rejected.get(e.id) || []) used.add(f);
+  return used;
+}
+
+async function findWikimedia(cat, e, pos, used){
+  const base = baseTitle(cat, e);
+  if(pos === 1){
+    const img = await wikiImage(base).catch(() => null);
+    if(img && !used.has(img.file)){ used.add(img.file); return img; }
+    return commonsImage(base, used);
+  }
+  return commonsImage(e.search_terms[pos - 2] || base, used, base);
+}
+
+async function importImage(cat, e, pos, used, old){
+  const img = await findWikimedia(cat, e, pos, used);
+  const r = await retry(async () => {
+    const r = await fetch(img.src);
+    if(!r.ok) throw httpError(r);
+    return r;
+  });
+  await storeImage(cat, e, pos, await resizeImage(await r.blob()), old, sourceUrl(img.page), img.file);
+}
+
+// Leere Plätze eines Eintrags füllen. Gibt die Plätze zurück, für die nichts gefunden wurde.
+async function importMissing(cat, e, onImage){
+  const used = usedFiles(e);
+  const failed = [];
+  for(const p of [1, 2, 3, 4]){
+    if(e.images.some(i => i.position === p)) continue;
+    try{ await importImage(cat, e, p, used); onImage?.(true); }
+    catch(err){ failed.push(p); onImage?.(false); }
+    await sleep(300);   // Wikimedia schonen
+  }
+  return failed;
+}
+
+// Vorhandenes Bild durch das nächste passende ersetzen
+async function replaceFromWikimedia(cat, e, pos, old){
+  if(old.source_file){
+    if(!rejected.has(e.id)) rejected.set(e.id, new Set());
+    rejected.get(e.id).add(old.source_file);
+  }
+  await importImage(cat, e, pos, usedFiles(e), old);
+}
+
+// Alle Einträge mit fehlenden Bildern nacheinander bearbeiten (Stand für die Übersicht)
+let bulk = null, bulkResult = "";
+function showBulk(){
+  const el = $("importMsg");
+  if(el && bulk) el.textContent = `Eintrag ${bulk.i} von ${bulk.n}: ${bulk.name} … bisher ${bulk.added} Bilder übernommen.`;
+}
+async function importAll(todo){
+  bulk = { i:0, n:todo.length, added:0, fails:[] };
+  for(const { cat, e } of todo){
+    bulk.i++; bulk.name = e.name; showBulk();
+    const failed = await importMissing(cat, e, ok => { if(ok){ bulk.added++; showBulk(); } });
+    if(failed.length) bulk.fails.push(`${e.name} (Bild ${failed.join(", ")})`);
+    await sleep(500);
+  }
+  bulkResult = `${bulk.added} Bilder übernommen.`
+    + (bulk.fails.length ? ` Nicht gefunden: ${bulk.fails.join("; ")}. Dort Suchbegriffe anpassen und im Eintrag nochmals versuchen.` : "");
+  bulk = null;
+  try{ await reload(); }catch(err){}
+  render();
+  msg(bulkResult);
 }
 
 /* ------------------------------------------------------------------
@@ -376,9 +478,21 @@ function render(){
   if(r.type === "e" && r.id === "neu" && findCat(r.extra)) return renderEntry(findCat(r.extra), null);
   if(r.type === "e" && findEntry(r.id)){ const { cat, entry } = findEntry(r.id); return renderEntry(cat, entry); }
   const total = cats.reduce((s, c) => s + c.entries.length, 0);
+  const todo = cats.flatMap(c => c.entries.filter(e => e.images.length < 4).map(e => ({ cat:c, e })));
+  const missing = todo.reduce((s, t) => s + 4 - t.e.images.length, 0);
   main.innerHTML = `<h2>Übersicht</h2>
     <p>${cats.length} Kategorien, ${total} Einträge.</p>
-    <p class="hint">Links eine Kategorie wählen oder eine neue anlegen.</p>`;
+    <p class="hint">Links eine Kategorie wählen oder eine neue anlegen.</p>
+    <h3>Eigene Bilder</h3>
+    ${todo.length || bulk ? `
+      <p>${todo.length} Einträge haben nicht alle 4 eigenen Bilder (${missing} fehlen). Diese Bilder sucht die Seite bei jedem Besuch online:
+        das ist langsam, Wikimedia sperrt bei vielen Anfragen, und offline fehlen sie.</p>
+      <button id="importAll" ${bulk ? "disabled" : ""}>Fehlende Bilder von Wikimedia übernehmen</button>
+      <p class="hint" id="importMsg">Die Bilder werden nacheinander gesucht, verkleinert und gespeichert. Das dauert einige Minuten; die Seite dabei offen lassen.</p>`
+    : `<p class="hint">Alle Einträge haben 4 eigene Bilder.</p>`}
+    ${bulkResult && !bulk ? `<p class="hint">${esc(bulkResult)}</p>` : ""}`;
+  showBulk();
+  $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
 }
 
 /* ------------------------------------------------------------------

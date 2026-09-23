@@ -6,12 +6,12 @@
      So landen keine Admin-Daten (z. B. ausgeblendete Einträge) im Zwischenspeicher.
    - Wikipedia/Wikimedia (Bild-Fallback) wird nicht gespeichert. */
 
-const APP = "sff-app-v2";      // Version erhöhen, wenn sich die Liste FILES ändert
+const APP = "sff-app-v3";      // Version erhöhen, wenn sich die Liste FILES ändert
 const DATA = "sff-daten";
 const IMAGES = "sff-bilder";   // wird auch von js/index.js gefüllt (Knopf «Für offline speichern»)
 const FILES = [
   "./", "index.html", "config.js", "manifest.webmanifest",
-  "css/basis.css", "css/index.css", "js/index.js",
+  "css/basis.css", "css/index.css", "js/wikimedia.js", "js/index.js",
   "icons/steinbock.svg", "icons/steinbock-192.png", "icons/steinbock-512.png"
 ];
 const WAIT = 4000;             // so lange auf das Netz warten, bevor der gespeicherte Stand kommt

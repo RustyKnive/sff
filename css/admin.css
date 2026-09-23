@@ -59,3 +59,4 @@ button:disabled{opacity:.4;cursor:default}
 [hidden]{display:none!important}
 .qr{display:block;width:200px;height:200px;margin:0 auto 10px;padding:8px;border-radius:8px;background:#fff}
 code{word-break:break-all}
+.slot-actions{display:flex;flex-wrap:wrap;gap:6px}

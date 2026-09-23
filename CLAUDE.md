@@ -7,7 +7,7 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 ## Ordnerstruktur
 
 - `index.html` Anzeige, `admin.html` Verwaltung, `config.js` Verbindung zu Supabase
-- `js/index.js`, `js/admin.js` Skripte der Seiten; `js/lib/` supabase-js (fest eingebundene Version)
+- `js/index.js`, `js/admin.js` Skripte der Seiten; `js/wikimedia.js` Bildsuche (von beiden genutzt); `js/lib/` supabase-js (fest eingebundene Version)
 - `css/basis.css` gemeinsame Farben und Grundlagen, `css/index.css`, `css/admin.css` pro Seite
 - `sw.js`, `manifest.webmanifest`, `icons/` Offline-App (siehe unten)
 - `supabase/` Datenbankschema und nummerierte Änderungen
@@ -30,7 +30,8 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 2. Sonst oder bei einem Fehler wird es online gesucht (Fallback):
    - Hauptbild: Titelbild des englischen Wikipedia-Artikels `wp` bzw. des lateinischen Namens.
    - Bilder 2–4: Suche auf Wikimedia Commons mit `q[i] filetype:bitmap`, bei Bedarf mit gekürzten Suchbegriffen. Innerhalb eines Eintrags erscheint kein Bild doppelt.
-3. Wikimedia bremst zu viele Anfragen (HTTP 429). Darum gibt es `limiter` (3 API-Anfragen, 4 Downloads gleichzeitig) und `retry`. Bilder 2–4 werden erst beim ersten Darüberfahren geladen.
+3. Wikimedia bremst zu viele Anfragen (HTTP 429), eine ganze Schulklasse hinter einer Adresse erst recht. Darum gibt es `limiter` (3 API-Anfragen, 4 Downloads gleichzeitig) und `retry` (in `js/wikimedia.js`). Bilder 2–4 werden erst beim ersten Darüberfahren geladen.
+4. Der Online-Fallback ist nur eine Notlösung: Jeder Eintrag soll 4 eigene Bilder haben (schnell, offline verfügbar). Dafür gibt es in der Verwaltung «Fehlende Bilder von Wikimedia übernehmen».
 
 ## Verwaltung (admin.html)
 
@@ -39,6 +40,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 - Adressen: `#/k/<id>` Kategorie, `#/k/neu`, `#/e/<entry-id>` Eintrag, `#/e/neu/<kat-id>`.
 - Nach jeder Änderung lädt `reload()` alle Daten neu. Die Datenmenge ist klein, das ist gewollt einfach.
 - Hochgeladene Bilder werden im Browser auf höchstens 1600 px verkleinert (JPEG, Qualität 0.85).
+- «Fehlende Bilder von Wikimedia übernehmen» (Übersicht: alle Einträge; im Eintrag: nur dieser) sucht wie die Anzeige, lädt herunter, verkleinert und speichert mit `source_page`/`source_file`. «Anderes Bild suchen» ersetzt ein Bild durch den nächsten Treffer; verworfene Dateien merkt sich die Seite bis zum Neuladen.
 
 ## Offline-App (PWA)
 
