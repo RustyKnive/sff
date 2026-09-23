@@ -35,7 +35,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 
 ## Lightbox (index.html)
 
-Klick auf ein Bild oder den Text einer Karte (oder Enter) öffnet ein bildschirmfüllendes `<dialog>` mit denselben 5 Seiten, auf der gerade gezeigten Seite. Karte und Lightbox teilen `slidesHtml()`, `controlsHtml()` und `carousel()`; die Bilder lädt auch hier `fillSlide()`. Schliessen mit ×, Esc oder Browser-Zurück, blättern mit Pfeilen, Punkten, Pfeiltasten oder Wischen. Auf schmalen Bildschirmen stehen die Pfeile unten.
+Klick auf ein Bild oder den Text einer Karte (oder Enter) öffnet ein bildschirmfüllendes `<dialog>` mit denselben 5 Seiten, auf der gerade gezeigten Seite. Karte und Lightbox teilen `slidesHtml()`, `controlsHtml()` und `carousel()`; die Bilder lädt auch hier `fillSlide()`. Schliessen mit ×, Esc oder Browser-Zurück (ein eigener Verlaufseintrag per `history.pushState`, darum bleibt man in der Kategorie), blättern mit Pfeilen, Punkten, Pfeiltasten oder Wischen. Auf schmalen Bildschirmen stehen die Pfeile unten.
 
 ## Verwaltung (admin.html)
 
@@ -78,5 +78,5 @@ Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) 
 
 - Syntax: Es gibt kein Node. Die Dateien in `js/` mit `new Function(...)` in einer Prüfseite parsen oder die Seite über einen lokalen Webserver mit headless Chrome (`--dump-dom`) öffnen; CSP-Verstösse erscheinen im Log.
 - Kein «ß»: `grep -rc "ß" *.html js/*.js css` muss überall 0 ergeben.
-- Headless Chrome mit `--virtual-time-budget` lässt CSS-Übergänge (z. B. das Blättern) nicht weiterlaufen: Für Screenshots im Testskript `track.style.transition = "none"` setzen. Fenster schmaler als etwa 500 px schneidet headless Chrome ab.
+- Headless Chrome mit `--virtual-time-budget` lässt CSS-Übergänge (z. B. das Blättern) nicht weiterlaufen: Für Screenshots im Testskript `track.style.transition = "none"` setzen. Fenster schmaler als etwa 500 px schneidet headless Chrome ab. Auch das `close`-Event von `<dialog>` feuert unter virtueller Zeit nicht; Abläufe mit Verlauf/Dialog darum in echter Zeit testen (headless mit `--remote-debugging-port`, Ergebnis per DevTools `Runtime.evaluate` auslesen, danach nur diesen Prozess beenden).
 - `index.html` im Browser öffnen, eine Kategorie durchklicken. Im Admin einen Eintrag bearbeiten und ein Bild ersetzen.

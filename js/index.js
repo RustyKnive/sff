@@ -197,7 +197,7 @@ function buildCard(cat, item){
   return card;
 }
 
-// Lightbox: ein <dialog> für die ganze Seite. Schliessen mit ×, Esc oder «Zurück» im Browser.
+// Lightbox: ein <dialog> für die ganze Seite. Schliessen mit ×, Esc oder «Zurück» (bleibt in der Kategorie).
 const lightbox = document.createElement("dialog");
 lightbox.className = "lightbox";
 document.body.append(lightbox);
@@ -220,12 +220,17 @@ function openLightbox(cat, item, start){
   root.querySelector(".lb-close").addEventListener("click", () => lightbox.close());
   document.body.classList.add("lb-open");
   lightbox.showModal();
+  // Eigener Verlaufseintrag (gleiche Adresse): «Zurück» schliesst nur die Lightbox
+  history.pushState({ lb:true }, "");
 }
 lightbox.addEventListener("close", () => {
   document.body.classList.remove("lb-open");
   lightbox.replaceChildren();
   lbCarousel = null;
+  // Mit × oder Esc geschlossen: den Verlaufseintrag der Lightbox wieder entfernen
+  if(history.state && history.state.lb) history.back();
 });
+window.addEventListener("popstate", () => { if(lightbox.open) lightbox.close(); });
 lightbox.addEventListener("keydown", e => {
   if(!lbCarousel) return;
   if(e.key === "ArrowRight"){ lbCarousel.go(lbCarousel.cur + 1); e.preventDefault(); }
