@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<!-- Erlaubte Quellen: nur eigene Dateien, supabase-js vom CDN und das eigene Supabase-Projekt -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src 'self' blob: https://pkiaxvsgplohhvewbgmw.supabase.co; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co wss://pkiaxvsgplohhvewbgmw.supabase.co; base-uri 'none'; form-action 'none'">
 <title>Verwaltung – Natur und Schweiz</title>
 <style>
   :root{
@@ -73,12 +75,14 @@
   [hidden]{display:none!important}
 </style>
 <script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Feste Version mit Prüfsumme (SRI): Eine veränderte Datei auf dem CDN wird nicht ausgeführt.
+     Beim Aktualisieren Version und integrity zusammen ändern (sha384 der neuen Datei). -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/dist/umd/supabase.min.js" integrity="sha384-q36VSR1ktH2hgqgm+0LDeyqPW8CyZHSxfDSttSPm5ReOJzB+sYThmh7D4fE+jWTs" crossorigin="anonymous"></script>
 </head>
 <body>
 <header>
   <h1>Verwaltung · Natur und Schweiz</h1>
-  <a href="index.html" target="_blank">Seite ansehen ↗</a>
+  <a href="index.html" target="_blank" rel="noopener">Seite ansehen ↗</a>
   <span id="who" class="hint"></span>
   <button id="logout" class="ghost" hidden>Abmelden</button>
 </header>
@@ -105,6 +109,8 @@
 <div id="msg" hidden></div>
 
 <script>
+// Schutz vor Clickjacking: Die Verwaltung nie in einem fremden Rahmen (iframe) anzeigen
+if(window.top !== window.self){ document.body.replaceChildren(); throw new Error("In einem Rahmen gesperrt"); }
 const CFG = window.SFF_CONFIG;
 const sb = supabase.createClient(CFG.url, CFG.key);
 const $ = id => document.getElementById(id);
@@ -186,6 +192,12 @@ function resizeImage(file, max = 1600){
     img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Datei ist kein lesbares Bild")); };
     img.src = url;
   });
+}
+
+// Quelle prüfen: leer oder eine http(s)-Adresse (die Seite macht daraus einen Link)
+function sourceUrl(s){
+  if(s && !/^https?:\/\//i.test(s)) throw new Error("Die Quelle muss mit https:// beginnen.");
+  return s || null;
 }
 
 // Aus einer Commons-Dateiseite den Dateinamen ableiten
@@ -392,12 +404,12 @@ function renderEntry(cat, entry){
       return;
     }
     // Quellenangaben der vorhandenen Bilder mitspeichern
-    const imgRows = e.images.map(img => ({
-      entry_id:e.id, position:img.position, storage_path:img.storage_path,
-      source_page:F["page" + img.position].value.trim() || null,
-      source_file:F["file" + img.position].value.trim() || null
-    }));
     await act(async () => {
+      const imgRows = e.images.map(img => ({
+        entry_id:e.id, position:img.position, storage_path:img.storage_path,
+        source_page:sourceUrl(F["page" + img.position].value.trim()),
+        source_file:F["file" + img.position].value.trim() || null
+      }));
       await must(sb.from("entries").update(row).eq("id", e.id));
       if(imgRows.length) await must(sb.from("images").upsert(imgRows));
     }, "Gespeichert.");
@@ -452,6 +464,7 @@ async function uploadImage(cat, entry, pos, file, old, page, fileName){
   // Immer ein neuer Dateiname: so zeigt kein Zwischenspeicher (CDN, Browser) das alte Bild
   const path = `${cat.id}/${entry.id}-${pos}-${Date.now()}.jpg`;
   await act(async () => {
+    page = sourceUrl(page);
     const blob = await resizeImage(file);
     await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"image/jpeg" }));
     await must(sb.from("images").upsert({

@@ -75,7 +75,8 @@ create table if not exists public.images (
   entry_id     uuid not null references public.entries (id) on delete cascade,
   position     smallint not null check (position between 1 and 4),  -- 1 = Hauptbild
   storage_path text not null,                                        -- Pfad im Bucket «bilder»
-  source_page  text,                                                 -- Commons-Dateiseite (Knopf «Quelle»)
+  source_page  text constraint images_source_page_http
+               check (source_page is null or source_page ~* '^https?://'),  -- Commons-Dateiseite (Knopf «Quelle»)
   source_file  text,                                                 -- Originaldateiname
   updated_at   timestamptz not null default now(),
   primary key (entry_id, position)
@@ -121,9 +122,11 @@ create policy "lesen" on public.entries for select to anon, authenticated using 
 -- ------------------------------------------------------------------
 -- Storage: öffentlicher Bucket «bilder», nur Admins laden hoch
 -- ------------------------------------------------------------------
-insert into storage.buckets (id, name, public)
-values ('bilder', 'bilder', true)
-on conflict (id) do update set public = true;
+-- Nur JPEG, höchstens 5 MB pro Datei (der Admin verkleinert auf 1600 px)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('bilder', 'bilder', true, 5242880, array['image/jpeg'])
+on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "bilder_admin_insert" on storage.objects;
 create policy "bilder_admin_insert" on storage.objects

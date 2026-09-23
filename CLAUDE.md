@@ -6,7 +6,10 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 
 ## Ordnerstruktur
 
-`bilder/` und `tools/` braucht es nach der erfolgreichen Migration nicht mehr.
+- `index.html` Anzeige, `admin.html` Verwaltung, `config.js` Verbindung zu Supabase
+- `supabase/` Datenbankschema und nummerierte Änderungen
+
+Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurden nach der Migration entfernt (in der Git-Geschichte noch vorhanden).
 
 ## Datenmodell (supabase/schema.sql)
 
@@ -51,8 +54,11 @@ Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) 
 - Texte sachlich und für Sek I verständlich: 3–4 Sätze Beschreibung, 3–4 Steckbrief-Zeilen.
 - Richtwert 9 Einträge pro Kategorie (3×3-Raster) und 3 Suchbegriffe. Der Admin warnt, erzwingt es aber nicht.
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
-- Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin und in den Tools.
+- Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin.
 - In `config.js` nur den öffentlichen Schlüssel eintragen, nie den Service-Key.
+- `index.html` und `admin.html` haben eine Content-Security-Policy (`<meta>`). Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen.
+- supabase-js ist mit fester Version und `integrity` (SRI) eingebunden. Beim Aktualisieren beides zusammen ändern.
+- Links aus Daten (z. B. «Quelle») nur mit `http(s)://` verwenden; die Datenbank prüft das zusätzlich.
 
 ## Prüfen
 

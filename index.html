@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Erlaubte Quellen: eigene Dateien, das Supabase-Projekt und Wikipedia/Wikimedia (Bild-Fallback) -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' https://pkiaxvsgplohhvewbgmw.supabase.co https://upload.wikimedia.org; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org; base-uri 'none'; form-action 'none'">
 <title>Natur und Schweiz by toj</title>
 <style>
   :root{
@@ -151,6 +153,8 @@ const API_C  = "https://commons.wikimedia.org/w/api.php";
 const ARROW_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
 const ARROW_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// Nur http(s)-Adressen als Link verwenden (kein «javascript:» o. Ä.)
+const safeUrl = s => /^https?:\/\//i.test(s || "") ? s : null;
 
 /* Wikimedia bremst zu viele gleichzeitige Anfragen (Fehler 429).
    Darum: wenige Anfragen gleichzeitig, bei Fehlern warten und erneut versuchen. */
@@ -292,7 +296,7 @@ function fillSlide(slide, cat, item, k){
   el.alt = slide.dataset.alt;
   const show = data => showImg(el, data).then(() => {
     status.remove();
-    if(data.page){ a.href = data.page; a.hidden = false; }
+    if(safeUrl(data.page)){ a.href = data.page; a.hidden = false; }
   });
   const online = () => (resolveItem(cat, item)[k] || Promise.reject(new Error("kein Suchbegriff"))).then(show);
   const loc = localImage(cat, item, k);
