@@ -249,7 +249,9 @@ async function setupOffline(){
   const cache = await caches.open(IMAGE_CACHE);
   const stored = new Set((await cache.keys()).map(r => r.url));
   const missing = () => urls.filter(u => !stored.has(u));
-  if(!missing().length) info.textContent = `Alle ${urls.length} Bilder sind offline gespeichert.`;
+  info.textContent = missing().length
+    ? `Lädt alle ${urls.length} Bilder herunter (rund ${Math.round(urls.length * 0.21)} MB), damit die Seite auch ohne Internet vollständig ist.`
+    : `Alle ${urls.length} Bilder sind offline gespeichert.`;
   box.hidden = false;
 
   btn.addEventListener("click", async () => {
