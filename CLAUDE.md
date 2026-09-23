@@ -1,14 +1,15 @@
-# Natur und Schweiz – schweiz-flora-fauna.html
+# Natur und Schweiz (sff)
 
 Lern- und Nachschlageseite in einer einzigen HTML-Datei (ohne Build, ohne Abhängigkeiten).
 Sie zeigt 9 Kategorien mit je 9 Einträgen. Jeder Eintrag hat 4 Bilder und einen Steckbrief.
 Zielgruppe: Schule (Sek I).
 
-## Ordnerstruktur (Offline-Version)
+## Ordnerstruktur
 
 ```
 sff/
-├── index.html     # die ganze App (HTML, CSS, JS in einer Datei)
+├── index.html                   # die ganze App (HTML, CSS, JS in einer Datei)
+├── CLAUDE.md
 └── bilder/
     ├── bilder.js                # Liste der Bilder mit Quellen: window.OFFLINE_BILDER = { … }
     ├── baeume/fichte-rottanne-1.jpg … -4.jpg
@@ -21,7 +22,7 @@ sff/
 - `bilder.js` ist absichtlich eine JS-Datei, keine JSON-Datei: Seiten, die über `file://` geöffnet werden, dürfen kein JSON per `fetch` laden.
   Jeder Eintrag enthält `{ page: <Commons-Dateiseite>, file: <Originaldateiname> }`. Das braucht es für die Lizenzangabe (Knopf «Quelle»).
 
-## Aufbau von schweiz-flora-fauna.html
+## Aufbau von index.html
 
 - `CATS`: das Daten-Array (Kategorien → Einträge), ganz oben im `<script>`.
   - Kategorie: `id`, `name`, `desc`, `latin` (true → Untertitel kursiv als lateinischer Name), `cover` (Index des Eintrags, dessen Hauptbild die Übersichtskachel zeigt), `labels` (4 Bildbeschriftungen), `items`.
@@ -37,12 +38,11 @@ sff/
    - Bilder 2–4: Suche auf Wikimedia Commons mit `q[i] filetype:bitmap`. Findet sie nichts, werden die Suchbegriffe schrittweise gekürzt, zuletzt bleibt nur der Grundname. Innerhalb eines Eintrags erscheint kein Bild doppelt.
 3. Wikimedia bremst zu viele Anfragen (HTTP 429). Darum laufen höchstens 3 API-Anfragen und 4 Bild-Downloads gleichzeitig (`limiter`), und `retry` versucht es mit wachsender Wartezeit erneut. Bilder 2–4 werden erst beim ersten Darüberfahren geladen.
 
-## Zwei Varianten
+## Offline-Betrieb
 
-- `schweiz-flora-fauna.html` (mit Download): Im Fuss steht zusätzlich der Knopf «Offline-Paket herunterladen (ZIP)». Er lädt alle 324 Bilder und baut im Browser eine ZIP-Datei (eigener ZIP-Schreiber ohne Kompression, `makeZip`/`crc32`) mit der HTML-Datei, `bilder/` und `bilder.js`.
-- `ohne-download/schweiz-flora-fauna.html`: gleich, aber ohne diesen Knopf und ohne Download-Code. Diese Version gehört in den fertigen Offline-Ordner.
-
-Änderungen an Daten oder Darstellung immer in **beiden** Varianten nachführen.
+`index.html` ist die Offline-Version ohne Download-Knopf. Die Bilder liegen fertig in `bilder/`.
+Die frühere Variante mit dem Knopf «Offline-Paket herunterladen (ZIP)» gehört nicht zum Projekt.
+Sollen die Bilder neu zusammengestellt werden, lieber einzelne Dateien in `bilder/` ersetzen, als wieder einen Download-Mechanismus einzubauen.
 
 ## Konventionen
 
@@ -61,5 +61,5 @@ sff/
 ## Prüfen
 
 - Syntax: das `<script>` herauslösen und `node --check` ausführen.
-- Kein «ß» in der Datei: `grep -c "ß" schweiz-flora-fauna.html` muss 0 ergeben.
-- Die Datei direkt im Browser öffnen (`file://`) und eine Kategorie durchklicken.
+- Kein «ß» in der Datei: `grep -c "ß" index.html` muss 0 ergeben.
+- `index.html` direkt im Browser öffnen (`file://`) und eine Kategorie durchklicken.
