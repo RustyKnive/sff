@@ -65,7 +65,8 @@ async function retry(fn, tries = 5){
   for(let i = 0; ; i++){
     try{ return await fn(i); }
     catch(e){
-      if(e.fatal || i >= tries - 1) throw e;
+      // Ohne Internet nicht mehrmals versuchen (Offline-App: nur gespeicherte Bilder)
+      if(e.fatal || i >= tries - 1 || !navigator.onLine) throw e;
       await sleep(e.retryAfter || wait);
       wait *= 2;
     }
@@ -310,12 +311,62 @@ function render(){
   grid.append(...catCards.get(cat.id));
 }
 
+/* ------------------------------------------------------------------
+   OFFLINE (Service Worker in sw.js)
+   Die Inhalte speichert der Service Worker bei jedem Laden. Eigene Bilder speichert er,
+   sobald sie einmal angezeigt wurden. Der Knopf lädt alle auf einmal herunter.
+------------------------------------------------------------------- */
+const IMAGE_CACHE = "sff-bilder";   // gleicher Name wie in sw.js
+const OFFLINE_OK = "serviceWorker" in navigator && "caches" in window;
+if(OFFLINE_OK) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+const allImageUrls = () => CATS.flatMap(c => c.items.flatMap(it => it.img.filter(Boolean).map(i => i.src)));
+
+async function setupOffline(){
+  if(!OFFLINE_OK) return;
+  const box = document.getElementById("offline");
+  const btn = document.getElementById("offlineBtn");
+  const info = document.getElementById("offlineMsg");
+  const urls = allImageUrls();
+  const cache = await caches.open(IMAGE_CACHE);
+  const stored = new Set((await cache.keys()).map(r => r.url));
+  const missing = () => urls.filter(u => !stored.has(u));
+  if(!missing().length) info.textContent = `Alle ${urls.length} Bilder sind offline gespeichert.`;
+  box.hidden = false;
+
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    const todo = missing();
+    const queue = limiter(4);
+    let done = 0, failed = 0;
+    const show = () => { info.textContent = `Bilder werden gespeichert … ${done} / ${todo.length}`; };
+    show();
+    await Promise.all(todo.map(u => queue(async () => {
+      try{
+        const r = await fetch(u, { mode:"cors", credentials:"omit" });
+        if(!r.ok) throw new Error("HTTP " + r.status);
+        await cache.put(u, r);
+        stored.add(u);
+      }catch(e){ failed++; }
+      done++; show();
+    })));
+    // Bilder entfernen, die es auf der Seite nicht mehr gibt (ersetzt oder gelöscht)
+    const keep = new Set(urls);
+    for(const r of await cache.keys()) if(!keep.has(r.url)) await cache.delete(r);
+    info.textContent = failed
+      ? `${urls.length - failed} von ${urls.length} Bildern gespeichert. ${failed} fehlen, bitte später nochmals versuchen.`
+      : `Alle ${urls.length} Bilder sind offline gespeichert.`;
+    btn.disabled = false;
+  });
+}
+
 document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
 introEl.textContent = "Inhalte werden geladen …";
 loadCats().then(cats => {
   CATS = cats;
   window.addEventListener("hashchange", render);
   render();
+  setupOffline().catch(() => {});
 }).catch(e => {
   introEl.textContent = "Die Inhalte konnten nicht geladen werden (" + e.message + "). Bitte Internetverbindung prüfen und die Seite neu laden.";
 });

@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Erlaubte Quellen: nur eigene Dateien (kein eingebetteter Code), das Supabase-Projekt und Wikipedia/Wikimedia (Bild-Fallback) -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://pkiaxvsgplohhvewbgmw.supabase.co https://upload.wikimedia.org; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://pkiaxvsgplohhvewbgmw.supabase.co https://upload.wikimedia.org; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <title>Natur und Schweiz by toj</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f6b3a">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="stylesheet" href="css/basis.css">
 <link rel="stylesheet" href="css/index.css">
 <!-- Verbindung zu Supabase (URL und öffentlicher Schlüssel) -->
@@ -21,6 +25,10 @@
 <main id="grid"></main>
 <footer>
   Die Bilder stammen von <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>. Lizenz und Urheber: Klick auf «Quelle» im jeweiligen Bild.
+  <div class="offline" id="offline" hidden>
+    <button id="offlineBtn">Für offline speichern</button>
+    <span id="offlineMsg">Lädt alle Bilder herunter (rund 60 MB), damit die Seite auch ohne Internet vollständig ist.</span>
+  </div>
 </footer>
 
 </body>

@@ -9,6 +9,7 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 - `index.html` Anzeige, `admin.html` Verwaltung, `config.js` Verbindung zu Supabase
 - `js/index.js`, `js/admin.js` Skripte der Seiten; `js/lib/` supabase-js (fest eingebundene Version)
 - `css/basis.css` gemeinsame Farben und Grundlagen, `css/index.css`, `css/admin.css` pro Seite
+- `sw.js`, `manifest.webmanifest`, `icons/` Offline-App (siehe unten)
 - `supabase/` Datenbankschema und nummerierte Änderungen
 
 Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurden nach der Migration entfernt (in der Git-Geschichte noch vorhanden).
@@ -39,10 +40,14 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 - Nach jeder Änderung lädt `reload()` alle Daten neu. Die Datenmenge ist klein, das ist gewollt einfach.
 - Hochgeladene Bilder werden im Browser auf höchstens 1600 px verkleinert (JPEG, Qualität 0.85).
 
-## Offline-App (geplant)
+## Offline-App (PWA)
 
-Später als PWA: Ein Service Worker speichert die REST-Antwort von `loadCats()` und die Storage-Bilder zwischen.
-`updated_at` in allen Tabellen ist dafür schon vorhanden. Die Datenquelle deshalb nur über `loadCats()` ansprechen.
+Die Anzeige lässt sich installieren (Startbildschirm) und funktioniert ohne Internet. Die Datenquelle deshalb nur über `loadCats()` ansprechen.
+- `sw.js` (Service Worker): Seite und `loadCats()`-Antwort «Netz zuerst» (nach 4 s oder ohne Netz der gespeicherte Stand), Storage-Bilder «Speicher zuerst» im Cache `sff-bilder`. Wikimedia-Fallback wird nicht gespeichert.
+- Anfragen mit `Authorization` (Verwaltung, supabase-js) und `admin.html` laufen nie über den Speicher, damit keine Admin-Daten im Cache landen.
+- Neue Datei für die Anzeige (JS, CSS, Symbol): in `FILES` in `sw.js` eintragen und `APP` (z. B. `sff-app-v2`) erhöhen.
+- Knopf «Für offline speichern» in der Fusszeile: lädt alle eigenen Bilder in `sff-bilder` und entfernt dort ersetzte oder gelöschte.
+- `manifest.webmanifest` und `icons/` (Vorlage `icon.svg`; PNG 512 per headless Chrome, 192/180 daraus verkleinert).
 
 ## Neuer Eintrag per Handyfoto (geplant)
 

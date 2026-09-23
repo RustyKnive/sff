@@ -79,3 +79,7 @@ main{max-width:1200px;margin:0 auto;padding:16px 16px 40px;
 
 footer{max-width:1200px;margin:0 auto;padding:0 16px 32px;color:var(--muted);font-size:.8rem}
 footer a{color:inherit}
+footer .offline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:12px}
+footer button{padding:6px 14px;border:none;border-radius:99px;background:var(--accent-soft);color:var(--accent);
+  font:inherit;font-weight:600;cursor:pointer}
+footer button:disabled{opacity:.6;cursor:default}
