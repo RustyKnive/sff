@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="de-CH">
-<head>
+<html lang="de-CH"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Natur und Schweiz</title>
@@ -92,22 +91,34 @@
 
   footer{max-width:1200px;margin:0 auto;padding:0 16px 32px;color:var(--muted);font-size:.8rem}
   footer a{color:inherit}
+  .offline{margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+  .offline button{padding:8px 16px;border:none;border-radius:99px;background:var(--accent);color:var(--card);
+    font:inherit;font-weight:600;cursor:pointer}
+  .offline button:disabled{opacity:.6;cursor:wait}
+  .offline progress{width:200px;accent-color:var(--accent)}
 </style>
 <!-- Offline-Bilder (wird vom Offline-Paket mitgeliefert; fehlt die Datei, werden die Bilder online geladen) -->
 <script src="bilder/bilder.js"></script>
 </head>
 <body>
 <header>
-  <button class="back" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Übersicht</button>
+  <button class="back" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>Übersicht</button>
   <h1 id="title">Natur und Schweiz</h1>
   <p id="intro"></p>
 </header>
 <main id="grid"></main>
 <footer>
   <span id="srcnote">Bilder werden beim Öffnen live von <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a> geladen (Internetverbindung nötig).</span> Lizenz und Urheber: Klick auf «Quelle» im jeweiligen Bild.
+  <div class="offline">
+    <button id="dl">Offline-Paket herunterladen (ZIP)</button>
+    <progress id="dlbar" max="1" value="0" hidden=""></progress>
+    <span id="dlstatus"></span>
+  </div>
 </footer>
 
 <script>
+// Quelltext dieser Seite (für das Offline-Paket), bevor das Skript etwas verändert
+const PAGE_SOURCE = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
 const OFFLINE = window.OFFLINE_BILDER || null;
 
 /* ------------------------------------------------------------------
@@ -772,14 +783,120 @@ function render(){
   grid.append(...catCards.get(cat.id));
 }
 
+/* ------------------------------------------------------------------
+   OFFLINE-PAKET: lädt alle Bilder und erstellt eine ZIP-Datei mit
+   schweiz-flora-fauna/schweiz-flora-fauna.html + schweiz-flora-fauna/bilder/...
+------------------------------------------------------------------- */
+const CRC_T = (() => { const t = new Uint32Array(256);
+  for(let n = 0; n < 256; n++){ let c = n; for(let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t; })();
+function crc32(buf){
+  let crc = 0xFFFFFFFF;
+  for(let i = 0; i < buf.length; i++) crc = CRC_T[(crc ^ buf[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function makeZip(files){
+  const enc = new TextEncoder(), parts = [], central = [];
+  const now = new Date();
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  let offset = 0;
+  for(const f of files){
+    const name = enc.encode(f.name), data = f.data, crc = crc32(data);
+    const h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);
+    h.setUint16(10, dosTime, true); h.setUint16(12, dosDate, true); h.setUint32(14, crc, true);
+    h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true);
+    parts.push(h.buffer, name, data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+    c.setUint16(12, dosTime, true); c.setUint16(14, dosDate, true); c.setUint32(16, crc, true);
+    c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, name.length, true);
+    c.setUint32(42, offset, true);
+    central.push(c.buffer, name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((s, p) => s + p.byteLength, 0);
+  const e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+  e.setUint32(12, cdSize, true); e.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, e.buffer], { type:"application/zip" });
+}
+
+const dlQueue = limiter(2);           // beim Paket nur 2 Downloads gleichzeitig
+const dlCache = new Map();            // bereits geladene Bilder bleiben erhalten (für einen 2. Versuch)
+function fetchBytes(url){
+  return dlQueue(() => retry(async () => {
+    const r = await fetch(url);
+    if(!r.ok) throw httpError(r);
+    return new Uint8Array(await r.arrayBuffer());
+  }, 6));
+}
+
+async function buildOfflinePackage(){
+  const btn = document.getElementById("dl"), bar = document.getElementById("dlbar"), st = document.getElementById("dlstatus");
+  btn.disabled = true; bar.hidden = false;
+  const jobs = [];
+  CATS.forEach(cat => cat.items.forEach(item => {
+    resolveItem(cat, item).forEach((p, k) => jobs.push({ key:imgKey(cat, item, k), cat, item, k }));
+  }));
+  bar.max = jobs.length;
+  const update = (extra = "") => {
+    bar.value = dlCache.size;
+    st.textContent = `Bilder geladen: ${dlCache.size} / ${jobs.length}` + extra;
+  };
+  // bis zu 3 Durchgänge; nach einem Durchgang mit Fehlern kurz warten
+  for(let round = 0; round < 3; round++){
+    const todo = jobs.filter(j => !dlCache.has(j.key));
+    if(!todo.length) break;
+    if(round > 0){
+      for(let s = 20; s > 0; s--){ update(` – ${todo.length} fehlen noch, neuer Versuch in ${s} s`); await sleep(1000); }
+      // Bilder, die gar nicht gefunden wurden, neu suchen
+      todo.forEach(j => {
+        const res = resolveItem(j.cat, j.item);
+        res[j.k] = res[j.k].catch(() => (j.k === 0 ? wikiImage(baseName(j.cat, j.item))
+          : commonsImage(j.item.q[j.k - 1], new Set(), baseName(j.cat, j.item))));
+      });
+    }
+    await Promise.all(todo.map(async j => {
+      try{
+        const d = await resolveItem(j.cat, j.item)[j.k];
+        const data = await fetchBytes(d.src);
+        dlCache.set(j.key, { data, page:d.page, file:d.file });
+      }catch(e){}
+      update();
+    }));
+  }
+  st.textContent = "ZIP-Datei wird erstellt …";
+  const ROOT = "schweiz-flora-fauna/";
+  const files = [], manifest = {};
+  for(const [key, v] of dlCache){
+    files.push({ name:ROOT + "bilder/" + key + ".jpg", data:v.data });
+    manifest[key] = { page:v.page, file:v.file };
+  }
+  const enc = new TextEncoder();
+  files.push({ name:ROOT + "bilder/bilder.js",
+    data:enc.encode("// Offline-Bilder für schweiz-flora-fauna.html (Quelle: Wikimedia Commons)\nwindow.OFFLINE_BILDER = " + JSON.stringify(manifest, null, 1) + ";\n") });
+  files.push({ name:ROOT + "schweiz-flora-fauna.html", data:enc.encode(PAGE_SOURCE) });
+  const url = URL.createObjectURL(makeZip(files));
+  const a = document.createElement("a");
+  a.href = url; a.download = "schweiz-flora-fauna.zip";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  bar.hidden = true; btn.disabled = false;
+  const missing = jobs.length - dlCache.size;
+  st.textContent = `Fertig: ${dlCache.size} von ${jobs.length} Bildern gespeichert.` +
+    (missing ? ` ${missing} fehlen – später nochmals auf den Knopf klicken, dann werden nur die fehlenden geladen.` : "") +
+    " ZIP entpacken und im Ordner «schweiz-flora-fauna» die HTML-Datei öffnen.";
+}
+document.getElementById("dl").addEventListener("click", buildOfflinePackage);
 
 if(OFFLINE){
   document.getElementById("srcnote").textContent = "Offline-Version: Die Bilder stammen von Wikimedia Commons und liegen im Ordner «bilder».";
+  document.getElementById("dl").textContent = "Offline-Paket neu erstellen (ZIP)";
 }
 
 document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
 window.addEventListener("hashchange", render);
 render();
-</script>
-</body>
-</html>
+</script></body></html>
