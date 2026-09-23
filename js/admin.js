@@ -162,7 +162,6 @@ function renderCategory(cat){
     </form>
     ${isNew ? "" : `
     <h3>Einträge (${n})</h3>
-    ${n !== 15 ? `<p class="hint warn">Vorgesehen sind 15 Einträge (5 Reihen à 3).</p>` : ""}
     <ul class="list" id="entryList">
       ${c.entries.map((e, i) => `
       <li class="${e.visible ? "" : "off"}">

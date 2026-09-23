@@ -62,7 +62,7 @@ Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) 
 
 - Sprache Deutsch, **Schweizer Rechtschreibung: nie «ß», immer «ss»** (auch im Code und in Kommentaren).
 - Texte sachlich und für Sek I verständlich: 3–4 Sätze Beschreibung, 3–4 Steckbrief-Zeilen.
-- Richtwert 15 Einträge pro Kategorie (5 Reihen à 3) und 3 Suchbegriffe. Der Admin warnt, erzwingt es aber nicht.
+- Die Anzahl Einträge pro Kategorie ist frei (auf dem Handy steht ohnehin eine Karte pro Zeile). Richtwert 3 Suchbegriffe pro Eintrag.
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
 - Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin.
 - In `config.js` nur den öffentlichen Schlüssel eintragen, nie den Service-Key.
