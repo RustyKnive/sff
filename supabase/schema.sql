@@ -40,6 +40,7 @@ create table if not exists public.categories (
   labels         text[] not null default array['Bild 1','Bild 2','Bild 3','Bild 4']
                  check (cardinality(labels) = 4),       -- Beschriftungen der 4 Bilder
   cover_entry_id uuid,                                  -- Eintrag, dessen Hauptbild die Kachel zeigt
+  visible        boolean not null default true,         -- false = auf der Seite ausgeblendet
   sort           integer not null default 0,
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now()
@@ -55,6 +56,7 @@ create table if not exists public.entries (
   search_terms text[] not null default '{}',           -- Suchbegriffe für den Online-Fallback der Bilder 2–4
   wp           text,                                   -- Titel des englischen Wikipedia-Artikels (Fallback Hauptbild)
   labels       text[] check (labels is null or cardinality(labels) = 4),  -- eigene Bildbeschriftungen
+  visible      boolean not null default true,          -- false = auf der Seite ausgeblendet
   sort         integer not null default 0,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -107,6 +109,14 @@ begin
     execute format('create policy "admin_schreiben" on public.%I for all to authenticated using (public.is_admin()) with check (public.is_admin())', t);
   end loop;
 end $$;
+
+-- Ausgeblendete Kategorien und Einträge sieht nur ein Admin
+alter table public.categories add column if not exists visible boolean not null default true;
+alter table public.entries    add column if not exists visible boolean not null default true;
+drop policy if exists "lesen" on public.categories;
+create policy "lesen" on public.categories for select to anon, authenticated using (visible or public.is_admin());
+drop policy if exists "lesen" on public.entries;
+create policy "lesen" on public.entries for select to anon, authenticated using (visible or public.is_admin());
 
 -- ------------------------------------------------------------------
 -- Storage: öffentlicher Bucket «bilder», nur Admins laden hoch

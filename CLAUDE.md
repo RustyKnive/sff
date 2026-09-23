@@ -26,6 +26,8 @@ sff/
 - `entries`: `category_id`, `name`, `subtitle`, `description`, `facts` (jsonb-Array `[{k, v}]`, damit die Reihenfolge erhalten bleibt), `search_terms` (Suchbegriffe für Bilder 2–4), `wp` (englischer Wikipedia-Titel für das Hauptbild), `labels` (optional eigene 4 Beschriftungen), `sort`.
 - `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»). Position 1 ist das Hauptbild.
 - `admins`: `user_id`. Nur wer hier eingetragen ist, darf schreiben (`is_admin()`). Alle dürfen lesen.
+- `visible` (bei `categories` und `entries`): Ausgeblendete Zeilen filtert die RLS-Regel «lesen» (`visible or is_admin()`) heraus. `index.html` filtert deshalb nicht selbst. Die Kontrollkästchen stehen im Admin in beiden Listen und in den Formularen.
+- Änderungen am Schema kommen als nummerierte Datei in `supabase/` (z. B. `002_sichtbar.sql`) und werden zusätzlich in `schema.sql` nachgeführt.
 - Neue Uploads aus dem Admin bekommen immer einen neuen Pfad (`<kat>/<entry-id>-<pos>-<zeit>.jpg`), damit kein Cache das alte Bild zeigt. Die alte Datei wird gelöscht.
 
 ## Aufbau von index.html

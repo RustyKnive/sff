@@ -33,6 +33,8 @@
   .list a{flex:1;padding:6px 8px;color:inherit;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .list a small{color:var(--muted)}
   .list li:hover{background:var(--accent-soft)}
+  .list input[type=checkbox]{margin:0 2px 0 6px;accent-color:var(--accent);cursor:pointer}
+  .list li.off a{color:var(--muted);text-decoration:line-through}
 
   label{display:block;margin:0 0 10px;font-size:.85rem;font-weight:600;color:var(--muted)}
   label.inline{display:flex;align-items:center;gap:8px;font-weight:400;color:var(--ink)}
@@ -204,7 +206,8 @@ function renderSidebar(){
   const r = route();
   const activeCat = r.type === "k" ? r.id : r.type === "e" ? (r.id === "neu" ? r.extra : findEntry(r.id)?.cat.id) : null;
   $("catList").innerHTML = cats.map((c, i) => `
-    <li class="${c.id === activeCat ? "active" : ""}">
+    <li class="${c.id === activeCat ? "active" : ""} ${c.visible ? "" : "off"}">
+      <input type="checkbox" data-vis="${esc(c.id)}" ${c.visible ? "checked" : ""} title="Auf der Seite sichtbar">
       <a href="#/k/${esc(c.id)}">${esc(c.name)} <small>(${c.entries.length})</small></a>
       <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
       <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < cats.length - 1 ? "" : "disabled"}>↓</button>
@@ -214,6 +217,17 @@ $("catList").addEventListener("click", e => {
   const b = e.target.closest("[data-move]");
   if(b) move("categories", cats, +b.dataset.move, +b.dataset.dir);
 });
+$("catList").addEventListener("change", e => {
+  const box = e.target.closest("[data-vis]");
+  if(box) setVisible("categories", box.dataset.vis, box.checked);
+});
+
+// Kategorie oder Eintrag auf der Seite ein- oder ausblenden
+async function setVisible(table, id, visible){
+  await act(() => must(sb.from(table).update({ visible }).eq("id", id)),
+    visible ? "Eingeblendet." : "Ausgeblendet.");
+  render();
+}
 $("newCat").addEventListener("click", () => { location.hash = "#/k/neu"; });
 
 /* ------------------------------------------------------------------
@@ -221,7 +235,7 @@ $("newCat").addEventListener("click", () => { location.hash = "#/k/neu"; });
 ------------------------------------------------------------------- */
 function renderCategory(cat){
   const isNew = !cat;
-  const c = cat || { id:"", name:"", description:"", latin:false, labels:DEFAULT_LABELS, cover_entry_id:null, entries:[] };
+  const c = cat || { id:"", name:"", description:"", latin:false, visible:true, labels:DEFAULT_LABELS, cover_entry_id:null, entries:[] };
   const main = $("main");
   const n = c.entries.length;
   main.innerHTML = `
@@ -232,6 +246,7 @@ function renderCategory(cat){
         <label>ID (für die Adresse #/…) <input type="text" name="id" required pattern="[a-z0-9]+(-[a-z0-9]+)*" value="${esc(c.id)}"></label>
       </div>
       <label>Beschreibung (Untertitel der Kachel) <input type="text" name="description" value="${esc(c.description)}"></label>
+      <label class="inline"><input type="checkbox" name="visible" ${c.visible ? "checked" : ""}> Kategorie auf der Seite sichtbar</label>
       <label class="inline"><input type="checkbox" name="latin" ${c.latin ? "checked" : ""}> Untertitel der Einträge ist ein lateinischer Name (kursiv)</label>
       <h3>Bildbeschriftungen (Standard für alle Einträge)</h3>
       <div class="row">${c.labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" required value="${esc(l)}"></label>`).join("")}</div>
@@ -249,7 +264,8 @@ function renderCategory(cat){
     ${n !== 9 ? `<p class="hint warn">Für das 3×3-Raster sind 9 Einträge vorgesehen.</p>` : ""}
     <ul class="list" id="entryList">
       ${c.entries.map((e, i) => `
-      <li>
+      <li class="${e.visible ? "" : "off"}">
+        <input type="checkbox" data-vis="${e.id}" ${e.visible ? "checked" : ""} title="Auf der Seite sichtbar">
         <a href="#/e/${e.id}">${esc(e.name)} <small>${esc(e.subtitle)} · ${e.images.length}/4 Bilder</small></a>
         <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
         <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < n - 1 ? "" : "disabled"}>↓</button>
@@ -266,7 +282,7 @@ function renderCategory(cat){
     e.preventDefault();
     const row = {
       id:F.id.value.trim(), name:F.name.value.trim(), description:F.description.value.trim(),
-      latin:F.latin.checked, labels:[0,1,2,3].map(i => F["label" + i].value.trim())
+      latin:F.latin.checked, visible:F.visible.checked, labels:[0,1,2,3].map(i => F["label" + i].value.trim())
     };
     if(isNew){
       row.sort = cats.length;
@@ -292,6 +308,10 @@ function renderCategory(cat){
     const b = e.target.closest("[data-move]");
     if(b) move("entries", c.entries, +b.dataset.move, +b.dataset.dir);
   });
+  $("entryList").addEventListener("change", e => {
+    const box = e.target.closest("[data-vis]");
+    if(box) setVisible("entries", box.dataset.vis, box.checked);
+  });
   $("newEntry").addEventListener("click", () => { location.hash = "#/e/neu/" + c.id; });
 }
 
@@ -307,7 +327,7 @@ function factRow(k = "", v = ""){
 
 function renderEntry(cat, entry){
   const isNew = !entry;
-  const e = entry || { name:"", subtitle:"", description:"", facts:[], search_terms:["","",""], wp:"", labels:null, images:[] };
+  const e = entry || { name:"", subtitle:"", description:"", visible:true, facts:[], search_terms:["","",""], wp:"", labels:null, images:[] };
   const labels = e.labels || cat.labels;
   const terms = [0,1,2].map(i => e.search_terms[i] || "");
   const main = $("main");
@@ -319,6 +339,7 @@ function renderEntry(cat, entry){
         <label>Name <input type="text" name="name" required value="${esc(e.name)}"></label>
         <label>${cat.latin ? "Lateinischer Name" : "Untertitel (Ort, Gesteinsart …)"} <input type="text" name="subtitle" value="${esc(e.subtitle)}"></label>
       </div>
+      <label class="inline"><input type="checkbox" name="visible" ${e.visible ? "checked" : ""}> Eintrag auf der Seite sichtbar</label>
       <label>Beschreibung <textarea name="description">${esc(e.description)}</textarea></label>
       <p class="hint">3–4 Sätze, sachlich und für Sek I verständlich. Schweizer Rechtschreibung: immer «ss», nie Eszett.</p>
 
@@ -356,6 +377,7 @@ function renderEntry(cat, entry){
     const row = {
       category_id:cat.id,
       name:F.name.value.trim(), subtitle:F.subtitle.value.trim(), description:F.description.value.trim(),
+      visible:F.visible.checked,
       facts:[...facts.querySelectorAll(".fact")]
         .map(f => ({ k:f.querySelector("[data-k]").value.trim(), v:f.querySelector("[data-v]").value.trim() }))
         .filter(f => f.k || f.v),
