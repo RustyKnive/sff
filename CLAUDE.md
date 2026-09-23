@@ -7,8 +7,8 @@ Zielgruppe: Schule (Sek I).
 ## Ordnerstruktur (Offline-Version)
 
 ```
-schweiz-flora-fauna/
-├── schweiz-flora-fauna.html     # die ganze App (HTML, CSS, JS in einer Datei)
+sff/
+├── index.html     # die ganze App (HTML, CSS, JS in einer Datei)
 └── bilder/
     ├── bilder.js                # Liste der Bilder mit Quellen: window.OFFLINE_BILDER = { … }
     ├── baeume/fichte-rottanne-1.jpg … -4.jpg
