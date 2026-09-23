@@ -13,7 +13,9 @@ alter table public.admins enable row level security;
 create or replace function public.is_admin()
 returns boolean language sql stable security definer set search_path = ''
 as $$
-  select exists (select 1 from public.admins where user_id = auth.uid());
+  -- nur mit bestätigtem zweitem Faktor (aal2), siehe 004_mfa.sql
+  select coalesce(auth.jwt() ->> 'aal', '') = 'aal2'
+     and exists (select 1 from public.admins where user_id = auth.uid());
 $$;
 
 drop policy if exists "admins_selbst_lesen" on public.admins;

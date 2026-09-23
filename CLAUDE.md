@@ -2,11 +2,13 @@
 
 Lern- und Nachschlageseite für die Schule (Sek I). Sie zeigt Kategorien (z. B. Bäume, Amphibien) mit Einträgen.
 Jeder Eintrag hat 4 Bilder und einen Steckbrief.
-Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen Build, jede Seite ist eine eigene HTML-Datei.
+Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen Build: Jede Seite besteht aus einer HTML-Datei mit eigenem Skript in `js/` und Stil in `css/`.
 
 ## Ordnerstruktur
 
 - `index.html` Anzeige, `admin.html` Verwaltung, `config.js` Verbindung zu Supabase
+- `js/index.js`, `js/admin.js` Skripte der Seiten; `js/lib/` supabase-js (fest eingebundene Version)
+- `css/basis.css` gemeinsame Farben und Grundlagen, `css/index.css`, `css/admin.css` pro Seite
 - `supabase/` Datenbankschema und nummerierte Änderungen
 
 Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurden nach der Migration entfernt (in der Git-Geschichte noch vorhanden).
@@ -31,7 +33,8 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 
 ## Verwaltung (admin.html)
 
-- Anmeldung mit E-Mail und Passwort. Das Konto muss in `admins` stehen.
+- Anmeldung mit E-Mail, Passwort und Code aus einer Authenticator-App (TOTP). Beim ersten Anmelden zeigt die Verwaltung einen QR-Code zum Einrichten. Das Konto muss in `admins` stehen.
+- `is_admin()` gilt nur mit zweitem Faktor (`aal2`, siehe `004_mfa.sql`). Handy verloren: im Dashboard unter Authentication → Users → Konto den MFA-Faktor löschen, dann beim nächsten Anmelden neu einrichten.
 - Adressen: `#/k/<id>` Kategorie, `#/k/neu`, `#/e/<entry-id>` Eintrag, `#/e/neu/<kat-id>`.
 - Nach jeder Änderung lädt `reload()` alle Daten neu. Die Datenmenge ist klein, das ist gewollt einfach.
 - Hochgeladene Bilder werden im Browser auf höchstens 1600 px verkleinert (JPEG, Qualität 0.85).
@@ -56,12 +59,12 @@ Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) 
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
 - Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin.
 - In `config.js` nur den öffentlichen Schlüssel eintragen, nie den Service-Key.
-- `index.html` und `admin.html` haben eine Content-Security-Policy (`<meta>`). Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen.
-- supabase-js ist mit fester Version und `integrity` (SRI) eingebunden. Beim Aktualisieren beides zusammen ändern.
+- Kein eingebetteter Code: kein `<script>` mit Inhalt, kein `<style>`, keine `style="…"`- oder `on…="…"`-Attribute. Die Content-Security-Policy (`<meta>` in beiden HTML-Dateien) erlaubt nur eigene Dateien und blockiert alles andere. Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen.
+- supabase-js liegt als Datei in `js/lib/` (Version im Dateinamen). Zum Aktualisieren die neue `dist/umd/supabase.min.js` von jsDelivr herunterladen und den Pfad in `admin.html` anpassen.
 - Links aus Daten (z. B. «Quelle») nur mit `http(s)://` verwenden; die Datenbank prüft das zusätzlich.
 
 ## Prüfen
 
-- Syntax: Es gibt kein Node. Die Inline-Skripte als `<script type="text/plain">` in eine Prüfseite kopieren, mit `new Function(...)` parsen und die Seite mit headless Chrome (`--dump-dom`) öffnen.
-- Kein «ß»: `grep -c "ß" *.html` muss überall 0 ergeben.
+- Syntax: Es gibt kein Node. Die Dateien in `js/` mit `new Function(...)` in einer Prüfseite parsen oder die Seite über einen lokalen Webserver mit headless Chrome (`--dump-dom`) öffnen; CSP-Verstösse erscheinen im Log.
+- Kein «ß»: `grep -rc "ß" *.html js/*.js css` muss überall 0 ergeben.
 - `index.html` im Browser öffnen, eine Kategorie durchklicken. Im Admin einen Eintrag bearbeiten und ein Bild ersetzen.
