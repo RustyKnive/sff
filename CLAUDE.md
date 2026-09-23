@@ -33,6 +33,10 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 3. Wikimedia bremst zu viele Anfragen (HTTP 429), eine ganze Schulklasse hinter einer Adresse erst recht. Darum gibt es `limiter` (3 API-Anfragen, 4 Downloads gleichzeitig) und `retry` (in `js/wikimedia.js`). Bilder 2–4 werden erst beim ersten Darüberfahren geladen.
 4. Der Online-Fallback ist nur eine Notlösung: Jeder Eintrag soll 4 eigene Bilder haben (schnell, offline verfügbar). Dafür gibt es in der Verwaltung «Fehlende Bilder von Wikimedia übernehmen».
 
+## Lightbox (index.html)
+
+Klick auf ein Bild oder den Text einer Karte (oder Enter) öffnet ein bildschirmfüllendes `<dialog>` mit denselben 5 Seiten, auf der gerade gezeigten Seite. Karte und Lightbox teilen `slidesHtml()`, `controlsHtml()` und `carousel()`; die Bilder lädt auch hier `fillSlide()`. Schliessen mit ×, Esc oder Browser-Zurück, blättern mit Pfeilen, Punkten, Pfeiltasten oder Wischen. Auf schmalen Bildschirmen stehen die Pfeile unten.
+
 ## Verwaltung (admin.html)
 
 - Anmeldung mit E-Mail, Passwort und Code aus einer Authenticator-App (TOTP). Beim ersten Anmelden zeigt die Verwaltung einen QR-Code zum Einrichten. Das Konto muss in `admins` stehen.
@@ -74,4 +78,5 @@ Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) 
 
 - Syntax: Es gibt kein Node. Die Dateien in `js/` mit `new Function(...)` in einer Prüfseite parsen oder die Seite über einen lokalen Webserver mit headless Chrome (`--dump-dom`) öffnen; CSP-Verstösse erscheinen im Log.
 - Kein «ß»: `grep -rc "ß" *.html js/*.js css` muss überall 0 ergeben.
+- Headless Chrome mit `--virtual-time-budget` lässt CSS-Übergänge (z. B. das Blättern) nicht weiterlaufen: Für Screenshots im Testskript `track.style.transition = "none"` setzen. Fenster schmaler als etwa 500 px schneidet headless Chrome ab.
 - `index.html` im Browser öffnen, eine Kategorie durchklicken. Im Admin einen Eintrag bearbeiten und ein Bild ersetzen.

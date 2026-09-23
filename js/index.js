@@ -112,60 +112,66 @@ function fillSlide(slide, cat, item, k){
 }
 
 /* ------------------------------------------------------------------
-   KARTE EINES EINTRAGS (4 Bilder + Text)
+   KARTE EINES EINTRAGS (4 Bilder + Text) und LIGHTBOX (dieselben Seiten gross)
 ------------------------------------------------------------------- */
-function buildCard(cat, item){
-  const labels = item.lb || cat.labels;
-  const card = document.createElement("article");
-  card.className = "card";
-  card.tabIndex = 0;
-  card.setAttribute("aria-label", item.n);
-
-  const imgSlides = labels.map(l => `
+// Die 5 Seiten eines Eintrags; in der Lightbox steht der Name zusätzlich in der Beschriftung
+function slidesHtml(cat, item, labels, big){
+  const facts = item.f.map(({k, v}) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+  return labels.map(l => `
     <div class="slide" data-alt="${esc(item.n + " – " + l)}">
       <img alt="">
       <div class="status"><div class="spinner"></div></div>
-      <span class="tag">${esc(l)}</span>
+      <span class="tag">${esc(big ? item.n + " · " + l : l)}</span>
       <a class="credit" target="_blank" rel="noopener" hidden>Quelle</a>
-    </div>`).join("");
-  const facts = item.f.map(({k, v}) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
-
-  card.innerHTML = `
-    <div class="track">
-      ${imgSlides}
-      <div class="slide text">
-        <h2>${esc(item.n)}</h2>
-        <p class="sub${cat.latin ? " latin" : ""}">${esc(item.s)}</p>
-        <p>${esc(item.t)}</p>
-        <dl>${facts}</dl>
-      </div>
-    </div>
-    <div class="name">${esc(item.n)}</div>
+    </div>`).join("") + `
+    <div class="slide text"><div class="text-inner">
+      <h2>${esc(item.n)}</h2>
+      <p class="sub${cat.latin ? " latin" : ""}">${esc(item.s)}</p>
+      <p>${esc(item.t)}</p>
+      <dl>${facts}</dl>
+    </div></div>`;
+}
+function controlsHtml(labels){
+  return `
     <button class="nav prev" aria-label="Zurück">${ARROW_L}</button>
     <button class="nav next" aria-label="Weiter">${ARROW_R}</button>
     <div class="dots">
-      ${labels.map((l,k)=>`<button class="dot" aria-label="${esc(l)}" data-i="${k}"></button>`).join("")}
+      ${labels.map((l, k) => `<button class="dot" aria-label="${esc(l)}" data-i="${k}"></button>`).join("")}
       <button class="dot txt" aria-label="Beschreibung" data-i="4"></button>
     </div>`;
+}
 
-  const track = card.querySelector(".track");
-  const dots = [...card.querySelectorAll(".dot")];
-  const N = 5;
+// Blättern mit Pfeilen und Punkten; onChange bekommt die aktuelle Seite (4 = Text)
+function carousel(root, onChange){
+  const track = root.querySelector(".track");
+  const dots = [...root.querySelectorAll(".dot")];
+  const N = dots.length;
   let cur = 0;
   const go = n => {
     cur = (n + N) % N;
     track.style.transform = `translateX(-${cur * 100}%)`;
     dots.forEach((d, k) => d.classList.toggle("active", k === cur));
-    card.classList.toggle("on-text", cur === 4);
+    if(onChange) onChange(cur);
   };
-  card.querySelector(".prev").addEventListener("click", e => { e.stopPropagation(); go(cur - 1); });
-  card.querySelector(".next").addEventListener("click", e => { e.stopPropagation(); go(cur + 1); });
-  dots.forEach(d => d.addEventListener("click", () => go(+d.dataset.i)));
-  card.addEventListener("keydown", e => {
-    if(e.key === "ArrowRight"){ go(cur + 1); e.preventDefault(); }
-    if(e.key === "ArrowLeft"){ go(cur - 1); e.preventDefault(); }
-  });
-  go(0);
+  root.querySelector(".prev").addEventListener("click", e => { e.stopPropagation(); go(cur - 1); });
+  root.querySelector(".next").addEventListener("click", e => { e.stopPropagation(); go(cur + 1); });
+  dots.forEach(d => d.addEventListener("click", e => { e.stopPropagation(); go(+d.dataset.i); }));
+  return { go, get cur(){ return cur; } };
+}
+
+function buildCard(cat, item){
+  const labels = item.lb || cat.labels;
+  const card = document.createElement("article");
+  card.className = "card";
+  card.tabIndex = 0;
+  card.setAttribute("aria-label", item.n + " (Enter oder Klick vergrössert)");
+  card.innerHTML = `
+    <div class="track">${slidesHtml(cat, item, labels, false)}</div>
+    <div class="name">${esc(item.n)}</div>
+    ${controlsHtml(labels)}`;
+
+  const c = carousel(card, cur => card.classList.toggle("on-text", cur === 4));
+  c.go(0);
 
   // Hauptbild sofort laden, die weiteren Bilder erst beim ersten Darüberfahren
   const slides = card.querySelectorAll(".slide:not(.text)");
@@ -175,8 +181,65 @@ function buildCard(cat, item){
   card.addEventListener("mouseenter", loadRest);
   card.addEventListener("focusin", loadRest);
   card.addEventListener("touchstart", loadRest, { passive:true });
+
+  // Klick auf ein Bild oder den Text öffnet die Lightbox auf derselben Seite
+  card.addEventListener("click", e => {
+    if(e.target.closest("button, a")) return;
+    loadRest();
+    openLightbox(cat, item, c.cur);
+  });
+  card.addEventListener("keydown", e => {
+    if(e.target !== card) return;
+    if(e.key === "ArrowRight"){ c.go(c.cur + 1); e.preventDefault(); }
+    if(e.key === "ArrowLeft"){ c.go(c.cur - 1); e.preventDefault(); }
+    if(e.key === "Enter"){ loadRest(); openLightbox(cat, item, c.cur); e.preventDefault(); }
+  });
   return card;
 }
+
+// Lightbox: ein <dialog> für die ganze Seite. Schliessen mit ×, Esc oder «Zurück» im Browser.
+const lightbox = document.createElement("dialog");
+lightbox.className = "lightbox";
+document.body.append(lightbox);
+let lbCarousel = null;
+
+function openLightbox(cat, item, start){
+  const labels = item.lb || cat.labels;
+  lightbox.setAttribute("aria-label", item.n);
+  lightbox.innerHTML = `
+    <div class="lb">
+      <div class="track">${slidesHtml(cat, item, labels, true)}</div>
+      ${controlsHtml(labels)}
+      <button class="lb-close" aria-label="Schliessen">×</button>
+    </div>`;
+  const root = lightbox.querySelector(".lb");
+  lbCarousel = carousel(root);
+  // Die Bilder sind meist schon geladen (Browser- und Offline-Speicher), sonst werden sie jetzt geholt
+  root.querySelectorAll(".slide:not(.text)").forEach((s, k) => fillSlide(s, cat, item, k));
+  lbCarousel.go(start);
+  root.querySelector(".lb-close").addEventListener("click", () => lightbox.close());
+  document.body.classList.add("lb-open");
+  lightbox.showModal();
+}
+lightbox.addEventListener("close", () => {
+  document.body.classList.remove("lb-open");
+  lightbox.replaceChildren();
+  lbCarousel = null;
+});
+lightbox.addEventListener("keydown", e => {
+  if(!lbCarousel) return;
+  if(e.key === "ArrowRight"){ lbCarousel.go(lbCarousel.cur + 1); e.preventDefault(); }
+  if(e.key === "ArrowLeft"){ lbCarousel.go(lbCarousel.cur - 1); e.preventDefault(); }
+});
+// Wischen auf dem Handy
+let swipeX = null;
+lightbox.addEventListener("pointerdown", e => { swipeX = e.clientX; });
+lightbox.addEventListener("pointerup", e => {
+  if(swipeX === null || !lbCarousel) return;
+  const dx = e.clientX - swipeX;
+  swipeX = null;
+  if(Math.abs(dx) > 50) lbCarousel.go(lbCarousel.cur + (dx < 0 ? 1 : -1));
+});
 
 /* ------------------------------------------------------------------
    ANSICHTEN: Übersicht und Kategorie
@@ -210,6 +273,7 @@ function buildOverview(){
 function render(){
   const id = location.hash.replace(/^#\/?/, "");
   const cat = CATS.find(c => c.id === id);
+  if(lightbox.open) lightbox.close();
   grid.replaceChildren();
   window.scrollTo(0, 0);
   if(!cat){
