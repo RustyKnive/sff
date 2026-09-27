@@ -19,17 +19,44 @@
 </head>
 <body>
 <header>
+  <div class="menu-wrap">
+    <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <nav class="menu" id="menu" hidden>
+      <span class="menu-item off" aria-disabled="true">LernApp <small>bald</small></span>
+      <a class="menu-item" href="#/einstellungen">Einstellungen</a>
+      <a class="menu-item" href="admin.html">Admin</a>
+      <a class="menu-item" href="#/copyright">Copyright</a>
+    </nav>
+  </div>
   <button class="back" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Übersicht</button>
   <h1 id="title">Natur und Schweiz by toj</h1>
   <p id="intro"></p>
 </header>
 <main id="grid"></main>
-<footer>
-  Die Bilder stammen von <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>. Lizenz und Urheber: Klick auf «Quelle» im jeweiligen Bild.
-  <div class="offline" id="offline" hidden>
-    <button id="offlineBtn">Für offline speichern</button>
-    <span id="offlineMsg"></span>
+
+<!-- Seiten aus dem Menü (Adresse #/einstellungen bzw. #/copyright) -->
+<section class="page" id="page-einstellungen" hidden>
+  <h2>Bilder herunterladen</h2>
+  <p>Die Seite funktioniert auch ohne Internet. Bilder, die du schon angeschaut hast, sind bereits gespeichert.
+    Mit dem Knopf lädst du alle Bilder auf einmal herunter, damit die Seite offline vollständig ist.</p>
+  <div class="offline">
+    <button id="offlineBtn" hidden>Alle Bilder herunterladen</button>
+    <span id="offlineMsg">Wird geprüft …</span>
   </div>
+</section>
+<section class="page" id="page-copyright" hidden>
+  <h2>Texte und Gestaltung</h2>
+  <p>© 2026 toj. Die Texte und die Gestaltung dieser Seite dürfen für den Unterricht frei verwendet werden.</p>
+  <h2>Bilder</h2>
+  <p>Die Bilder stammen von <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>
+    und stehen unter der Lizenz, die auf der jeweiligen Quellseite angegeben ist (meist Creative Commons oder gemeinfrei).
+    Urheber und Lizenz findest du über «Quelle» im Bild oder in der Liste unten.</p>
+  <h2>Bildnachweis</h2>
+  <div id="credits"></div>
+</section>
+
+<footer>
+  Bilder: <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, Urheber und Lizenz unter <a href="#/copyright">Copyright</a>.
 </footer>
 
 </body>

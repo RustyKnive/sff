@@ -275,14 +275,45 @@ function buildOverview(){
   });
 }
 
+// Seiten aus dem Menü (stehen in index.html); gehen vor gleichnamigen Kategorien
+const PAGES = {
+  einstellungen:{ title:"Einstellungen", intro:"Einstellungen für dieses Gerät." },
+  copyright:{ title:"Copyright", intro:"Urheberrecht und Bildnachweis." }
+};
+
+// Bildnachweis: alle eigenen Bilder mit Link zur Quellseite (Urheber und Lizenz)
+let creditsBuilt = false;
+function buildCredits(){
+  if(creditsBuilt) return;
+  creditsBuilt = true;
+  document.getElementById("credits").innerHTML = CATS.map(cat => `
+    <h3>${esc(cat.name)}</h3>
+    <ul class="credits">${cat.items.map(it => {
+      const links = it.img.map((i, k) => i && safeUrl(i.page)
+        ? `<a href="${esc(i.page)}" target="_blank" rel="noopener" title="${esc(i.file || "")}">Bild ${k + 1}</a>` : "").join("");
+      return `<li>${esc(it.n)}${links || " <small>(Bilder werden live von Wikimedia geladen)</small>"}</li>`;
+    }).join("")}</ul>`).join("");
+}
+
 function render(){
   const id = location.hash.replace(/^#\/?/, "");
-  const cat = CATS.find(c => c.id === id);
+  const page = PAGES[id];
+  const cat = page ? null : CATS.find(c => c.id === id);
   if(lightbox.open) lightbox.close();
   grid.replaceChildren();
   window.scrollTo(0, 0);
+  for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== id;
+  grid.hidden = !!page;
+  if(page){
+    document.body.classList.add("in-sub");
+    titleEl.textContent = page.title;
+    introEl.textContent = page.intro;
+    document.title = page.title + " – Natur und Schweiz by toj";
+    if(id === "copyright") buildCredits();
+    return;
+  }
   if(!cat){
-    document.body.classList.remove("in-cat");
+    document.body.classList.remove("in-sub");
     titleEl.textContent = "Natur und Schweiz by toj";
     introEl.textContent = "Wähle eine Kategorie.";
     document.title = "Natur und Schweiz by toj";
@@ -290,7 +321,7 @@ function render(){
     grid.append(...overviewCards);
     return;
   }
-  document.body.classList.add("in-cat");
+  document.body.classList.add("in-sub");
   titleEl.textContent = cat.name;
   introEl.textContent = "Mit der Maus auf ein Bild fahren und mit den Pfeilen durch die Bilder und den Steckbrief blättern.";
   document.title = cat.name + " – Natur und Schweiz by toj";
@@ -301,7 +332,7 @@ function render(){
 /* ------------------------------------------------------------------
    OFFLINE (Service Worker in sw.js)
    Die Inhalte speichert der Service Worker bei jedem Laden. Eigene Bilder speichert er,
-   sobald sie einmal angezeigt wurden. Der Knopf lädt alle auf einmal herunter.
+   sobald sie einmal angezeigt wurden. Der Knopf in den Einstellungen lädt alle auf einmal herunter.
 ------------------------------------------------------------------- */
 const IMAGE_CACHE = "sff-bilder";   // gleicher Name wie in sw.js
 const OFFLINE_OK = "serviceWorker" in navigator && "caches" in window;
@@ -310,10 +341,9 @@ if(OFFLINE_OK) navigator.serviceWorker.register("sw.js").catch(() => {});
 const allImageUrls = () => CATS.flatMap(c => c.items.flatMap(it => it.img.filter(Boolean).map(i => i.src)));
 
 async function setupOffline(){
-  if(!OFFLINE_OK) return;
-  const box = document.getElementById("offline");
   const btn = document.getElementById("offlineBtn");
   const info = document.getElementById("offlineMsg");
+  if(!OFFLINE_OK){ info.textContent = "Dieser Browser kann die Bilder nicht offline speichern."; return; }
   const urls = allImageUrls();
   const cache = await caches.open(IMAGE_CACHE);
   const stored = new Set((await cache.keys()).map(r => r.url));
@@ -321,7 +351,7 @@ async function setupOffline(){
   info.textContent = missing().length
     ? `Lädt alle ${urls.length} Bilder herunter (rund ${Math.round(urls.length * 0.21)} MB), damit die Seite auch ohne Internet vollständig ist.`
     : `Alle ${urls.length} Bilder sind offline gespeichert.`;
-  box.hidden = false;
+  btn.hidden = false;
 
   btn.addEventListener("click", async () => {
     btn.disabled = true;
@@ -349,13 +379,30 @@ async function setupOffline(){
   });
 }
 
+/* ------------------------------------------------------------------
+   MENÜ (oben rechts)
+------------------------------------------------------------------- */
+const menuBtn = document.getElementById("menuBtn");
+const menu = document.getElementById("menu");
+function setMenu(open){
+  menu.hidden = !open;
+  menuBtn.setAttribute("aria-expanded", open);
+}
+menuBtn.addEventListener("click", () => setMenu(menu.hidden));
+menu.addEventListener("click", e => { if(e.target.closest("a")) setMenu(false); });
+// Schliessen mit Klick daneben oder Esc
+document.addEventListener("click", e => { if(!menu.hidden && !e.target.closest(".menu-wrap")) setMenu(false); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && !menu.hidden){ setMenu(false); menuBtn.focus(); } });
+
 document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
 introEl.textContent = "Inhalte werden geladen …";
 loadCats().then(cats => {
   CATS = cats;
   window.addEventListener("hashchange", render);
   render();
-  setupOffline().catch(() => {});
+  setupOffline().catch(() => {
+    document.getElementById("offlineMsg").textContent = "Der Offline-Speicher ist in diesem Browser nicht verfügbar (z. B. im privaten Fenster).";
+  });
 }).catch(e => {
   introEl.textContent = "Die Inhalte konnten nicht geladen werden (" + e.message + "). Bitte Internetverbindung prüfen und die Seite neu laden.";
 });

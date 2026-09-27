@@ -4,14 +4,43 @@
   :root{ --shadow:0 6px 24px rgba(0,0,0,.45); }
 }
 body{line-height:1.5}
-header{max-width:1200px;margin:0 auto;padding:28px 16px 8px}
+[hidden]{display:none!important}
+header{position:relative;max-width:1200px;margin:0 auto;padding:28px 70px 8px 16px}
 header h1{margin:0;font-size:clamp(1.6rem,3vw,2.3rem);letter-spacing:-.01em}
+
+/* Menü oben rechts */
+.menu-wrap{position:absolute;top:24px;right:16px;z-index:10}
+.menu-btn{width:44px;height:44px;border:none;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;display:grid;place-items:center}
+.menu-btn svg{width:22px;height:22px}
+.menu-btn:hover{filter:brightness(.95)}
+.menu{position:absolute;top:calc(100% + 8px);right:0;min-width:210px;padding:6px;border-radius:12px;
+  background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column}
+.menu-item{padding:10px 14px;border-radius:8px;color:var(--ink);text-decoration:none;font-weight:600}
+a.menu-item:hover,a.menu-item:focus-visible{background:var(--accent-soft);color:var(--accent);outline:none}
+.menu-item.off{color:var(--muted);font-weight:400;cursor:default}
+.menu-item small{margin-left:6px;padding:1px 8px;border-radius:99px;background:var(--accent-soft);font-size:.72rem}
+
+/* Seiten aus dem Menü */
+.page{max-width:1200px;margin:0 auto;padding:8px 16px 40px}
+.page > *{max-width:760px}
+.page h2{margin:1.6rem 0 .4rem;font-size:1.2rem;color:var(--accent)}
+.page p{margin:0 0 .8rem}
+.page a{color:var(--accent)}
+.page .offline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px}
+.page button{padding:8px 16px;border:none;border-radius:99px;background:var(--accent);color:var(--card);
+  font:inherit;font-weight:600;cursor:pointer}
+.page button:disabled{opacity:.6;cursor:default}
+.page h3{margin:1.2rem 0 .3rem;font-size:1rem}
+.credits{margin:0;padding:0;list-style:none;font-size:.88rem}
+.credits li{padding:2px 0}
+.credits a{margin-left:6px}
 header p{margin:.4rem 0 0;color:var(--muted)}
 .back{display:none;align-items:center;gap:6px;margin-bottom:12px;padding:7px 14px 7px 10px;border:none;border-radius:99px;
   background:var(--accent-soft);color:var(--accent);font:inherit;font-weight:600;cursor:pointer}
 .back svg{width:18px;height:18px}
 .back:hover{filter:brightness(.95)}
-body.in-cat .back{display:inline-flex}
+body.in-sub .back{display:inline-flex}
 main{max-width:1200px;margin:0 auto;padding:16px 16px 40px;
   display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media (max-width:900px){ main{grid-template-columns:repeat(2,1fr)} }
@@ -79,10 +108,6 @@ main{max-width:1200px;margin:0 auto;padding:16px 16px 40px;
 
 footer{max-width:1200px;margin:0 auto;padding:0 16px 32px;color:var(--muted);font-size:.8rem}
 footer a{color:inherit}
-footer .offline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-top:12px}
-footer button{padding:6px 14px;border:none;border-radius:99px;background:var(--accent-soft);color:var(--accent);
-  font:inherit;font-weight:600;cursor:pointer}
-footer button:disabled{opacity:.6;cursor:default}
 
 /* Lightbox: dieselben 5 Seiten wie auf der Karte, bildschirmfüllend */
 .card .slide{cursor:zoom-in}

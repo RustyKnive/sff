@@ -37,6 +37,15 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 
 Klick auf ein Bild oder den Text einer Karte (oder Enter) öffnet ein bildschirmfüllendes `<dialog>` mit denselben 5 Seiten, auf der gerade gezeigten Seite. Karte und Lightbox teilen `slidesHtml()`, `controlsHtml()` und `carousel()`; die Bilder lädt auch hier `fillSlide()`. Schliessen mit ×, Esc oder Browser-Zurück (ein eigener Verlaufseintrag per `history.pushState`, darum bleibt man in der Kategorie), blättern mit Pfeilen, Punkten, Pfeiltasten oder Wischen. Auf schmalen Bildschirmen stehen die Pfeile unten.
 
+## Menü (index.html)
+
+Knopf oben rechts, klappt eine Liste auf (schliesst mit Klick daneben oder Esc):
+- «LernApp»: noch ohne Funktion (grau, «bald»).
+- «Einstellungen» (`#/einstellungen`): Bilder für offline herunterladen.
+- «Admin»: Link auf `admin.html`.
+- «Copyright» (`#/copyright`): Urheberrecht und Bildnachweis (alle eigenen Bilder mit Link auf `source_page`).
+Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und in `PAGES` in `js/index.js`. Ihre Adressen gehen vor Kategorien mit gleicher `id`; solche Slugs darum nicht vergeben.
+
 ## Verwaltung (admin.html)
 
 - Anmeldung mit E-Mail, Passwort und Code aus einer Authenticator-App (TOTP). Beim ersten Anmelden zeigt die Verwaltung einen QR-Code zum Einrichten. Das Konto muss in `admins` stehen.
@@ -52,7 +61,7 @@ Die Anzeige lässt sich installieren (Startbildschirm) und funktioniert ohne Int
 - `sw.js` (Service Worker): Seite und `loadCats()`-Antwort «Netz zuerst» (nach 4 s oder ohne Netz der gespeicherte Stand), Storage-Bilder «Speicher zuerst» im Cache `sff-bilder`. Wikimedia-Fallback wird nicht gespeichert.
 - Anfragen mit `Authorization` (Verwaltung, supabase-js) und `admin.html` laufen nie über den Speicher, damit keine Admin-Daten im Cache landen.
 - Neue Datei für die Anzeige (JS, CSS, Symbol): in `FILES` in `sw.js` eintragen und `APP` (z. B. `sff-app-v2`) erhöhen.
-- Knopf «Für offline speichern» in der Fusszeile: lädt alle eigenen Bilder in `sff-bilder` und entfernt dort ersetzte oder gelöschte.
+- Knopf «Alle Bilder herunterladen» unter Menü → Einstellungen: lädt alle eigenen Bilder in `sff-bilder` und entfernt dort ersetzte oder gelöschte.
 - `manifest.webmanifest` und `icons/` (Steinbock, Vorlage `steinbock.svg`; PNG 512 per headless Chrome, 192/180 daraus verkleinert). Neues Symbol immer unter neuem Dateinamen, sonst zeigen Browser das alte weiter.
 
 ## Neuer Eintrag per Handyfoto (geplant)
