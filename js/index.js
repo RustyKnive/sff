@@ -7,11 +7,12 @@ let CATS = [];
 /* Kategorien mit Einträgen und Bildern in einer Anfrage laden (REST, ohne Bibliothek)
    und in die Form bringen, mit der der Rest der Seite arbeitet:
    Eintrag: n Name, s Untertitel, t Beschreibung, f Steckbrief [{k,v}], q Suchbegriffe,
-   wp Wikipedia-Titel, lb eigene Bildbeschriftungen, img[0..3] eigene Bilder (oder null) */
+   wp Wikipedia-Titel, lb eigene Bildbeschriftungen, img[0..3] eigene Bilder (oder null)
+   Bild: src, page, file, fx/fy/z Ausschnitt für die 4:3-Kacheln (null = Mitte, nicht vergrössert) */
 async function loadCats(){
   const select = "id,name,description,latin,labels,cover_entry_id,"
     + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,"
-    + "images(position,storage_path,source_page,source_file))";
+    + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom))";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
     + "&order=sort.asc,name.asc&entries.order=sort.asc,name.asc";
   const r = await fetch(url, { headers:{ apikey:CFG.key } });
@@ -27,7 +28,8 @@ async function loadCats(){
       q:e.search_terms || [], wp:e.wp, lb:e.labels,
       img:[1,2,3,4].map(p => {
         const i = e.images.find(x => x.position === p);
-        return i ? { src:publicUrl(i.storage_path), page:i.source_page, file:i.source_file } : null;
+        return i ? { src:publicUrl(i.storage_path), page:i.source_page, file:i.source_file,
+          fx:i.thumb_x, fy:i.thumb_y, z:i.thumb_zoom } : null;
       })
     }))
   }));
@@ -88,8 +90,15 @@ function preload(src){
     t.src = src;
   }), 4));
 }
+// Ausschnitt aus der Verwaltung als CSS-Variablen (css/index.css); die Lightbox zeigt trotzdem das ganze Bild
+function setFocus(img, data){
+  img.style.setProperty("--fx", (data.fx ?? 50) + "%");
+  img.style.setProperty("--fy", (data.fy ?? 50) + "%");
+  img.style.setProperty("--z", data.z ?? 1);
+}
 function showImg(img, data){
   return preload(data.src).then(() => {
+    setFocus(img, data);
     img.src = data.src;
     img.classList.add("loaded");
   });

@@ -18,7 +18,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 
 - `categories`: `id` (Slug, gleichzeitig die Adresse `#/<id>`), `name`, `description`, `latin` (true → Untertitel kursiv als lateinischer Name), `labels` (4 Bildbeschriftungen), `cover_entry_id` (Eintrag für die Übersichtskachel), `sort`.
 - `entries`: `category_id`, `name`, `subtitle`, `description`, `facts` (jsonb-Array `[{k, v}]`, damit die Reihenfolge erhalten bleibt), `search_terms` (Suchbegriffe für Bilder 2–4), `wp` (englischer Wikipedia-Titel für das Hauptbild), `labels` (optional eigene 4 Beschriftungen), `sort`.
-- `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»). Position 1 ist das Hauptbild.
+- `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»), `thumb_x`/`thumb_y`/`thumb_zoom` (Ausschnitt der Vorschau, siehe Verwaltung). Position 1 ist das Hauptbild.
 - `admins`: `user_id`. Nur wer hier eingetragen ist, darf schreiben (`is_admin()`). Alle dürfen lesen.
 - `visible` (bei `categories` und `entries`): Ausgeblendete Zeilen filtert die RLS-Regel «lesen» (`visible or is_admin()`) heraus. `index.html` filtert deshalb nicht selbst. Die Kontrollkästchen stehen im Admin in beiden Listen und in den Formularen.
 - Änderungen am Schema kommen als nummerierte Datei in `supabase/` (z. B. `002_sichtbar.sql`) und werden zusätzlich in `schema.sql` nachgeführt.
@@ -54,6 +54,10 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
 - Nach jeder Änderung lädt `reload()` alle Daten neu. Die Datenmenge ist klein, das ist gewollt einfach.
 - Hochgeladene Bilder werden im Browser auf höchstens 1600 px verkleinert (JPEG, Qualität 0.85).
 - «Fehlende Bilder von Wikimedia übernehmen» (Übersicht: alle Einträge; im Eintrag: nur dieser) sucht wie die Anzeige, lädt herunter, verkleinert und speichert mit `source_page`/`source_file`. «Anderes Bild suchen» ersetzt ein Bild durch den nächsten Treffer; verworfene Dateien merkt sich die Seite bis zum Neuladen.
+- Pro Bild öffnen zwei Knöpfe den Dialog `#editor`:
+  - «Zuschneiden»: Rahmen aufziehen (frei oder festes Seitenverhältnis), das Bild wird per canvas zugeschnitten und wie ein Ersatz gespeichert (neuer Pfad, JPEG 0.9, Quelle bleibt).
+  - «Ausschnitt Vorschau»: Bild im 4:3-Rahmen verschieben und vergrössern. Gespeichert in `thumb_x`/`thumb_y` (Punkt in %, wie `object-position`) und `thumb_zoom` (1–4), `null` = Mitte. Die Anzeige setzt daraus die CSS-Variablen `--fx`, `--fy`, `--z` (`setFocus` in `js/index.js`, `applyFocus` in `js/admin.js`); Karten, Übersichtskachel und die Vorschau im Admin werten sie gleich aus, die Lightbox nicht.
+  - Jedes neue Bild (`storeImage`) setzt den Ausschnitt zurück.
 
 ## Offline-App (PWA)
 

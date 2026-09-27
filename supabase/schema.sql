@@ -80,7 +80,11 @@ create table if not exists public.images (
   source_page  text constraint images_source_page_http
                check (source_page is null or source_page ~* '^https?://'),  -- Commons-Dateiseite (Knopf «Quelle»)
   source_file  text,                                                 -- Originaldateiname
-  updated_at   timestamptz not null default now(),
+  -- Ausschnitt in den 4:3-Kacheln (010_bildausschnitt.sql): Punkt in %, Vergrösserung; null = Mitte, 1
+  thumb_x      real constraint images_thumb_x check (thumb_x between 0 and 100),
+  thumb_y      real constraint images_thumb_y check (thumb_y between 0 and 100),
+  thumb_zoom   real constraint images_thumb_zoom check (thumb_zoom between 1 and 4),
+  updated_at  timestamptz not null default now(),
   primary key (entry_id, position)
 );
 

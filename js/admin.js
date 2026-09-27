@@ -326,6 +326,10 @@ function renderEntry(cat, entry){
     const img = e.images.find(i => i.position === p);
     const page = F["page" + p], file = F["file" + p];
     page.addEventListener("change", () => { if(!file.value) file.value = commonsFile(page.value); });
+    const thumb = slot.querySelector(".thumb img");
+    if(thumb) applyFocus(thumb, img);
+    slot.querySelector("[data-crop]")?.addEventListener("click", () => editCrop(cat, e, img));
+    slot.querySelector("[data-focus]")?.addEventListener("click", () => editFocus(e, img));
     slot.querySelector("input[type=file]").addEventListener("change", ev => {
       const f = ev.target.files[0];
       if(f) uploadImage(cat, e, p, f, img, page.value.trim(), file.value.trim());
@@ -364,6 +368,8 @@ function slotHtml(e, p, label){
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
     <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
     ${img ? `<div class="slot-actions">
+      <button type="button" class="ghost" data-crop title="Bild dauerhaft zuschneiden">Zuschneiden</button>
+      <button type="button" class="ghost" data-focus title="Welcher Teil in der kleinen Vorschau (Karte, Übersicht) zu sehen ist">Ausschnitt Vorschau</button>
       <button type="button" class="ghost" data-otherimg title="Nächstes passendes Bild von Wikimedia Commons">Anderes Bild suchen</button>
       <button type="button" class="danger" data-delimg>Bild entfernen</button></div>` : ""}
   </div>`;
@@ -378,15 +384,212 @@ async function uploadImage(cat, entry, pos, file, old, page, fileName){
   render();
 }
 
-// Bild speichern: Datei in den Bucket, Zeile in «images», altes Bild löschen
+// Bild speichern: Datei in den Bucket, Zeile in «images», altes Bild löschen.
+// Der Ausschnitt der Vorschau gehört zum alten Bild und wird zurückgesetzt.
 async function storeImage(cat, entry, pos, blob, old, page, fileName){
   // Immer ein neuer Dateiname: so zeigt kein Zwischenspeicher (CDN, Browser) das alte Bild
   const path = `${cat.id}/${entry.id}-${pos}-${Date.now()}.jpg`;
   await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"image/jpeg" }));
   await must(sb.from("images").upsert({
-    entry_id:entry.id, position:pos, storage_path:path, source_page:page || null, source_file:fileName || null
+    entry_id:entry.id, position:pos, storage_path:path, source_page:page || null, source_file:fileName || null,
+    thumb_x:null, thumb_y:null, thumb_zoom:null
   }));
   if(old && old.storage_path !== path) await sb.storage.from(CFG.bucket).remove([old.storage_path]);
+}
+
+/* ------------------------------------------------------------------
+   BILD ZUSCHNEIDEN UND AUSSCHNITT DER VORSCHAU (Dialog #editor)
+   Zuschneiden ändert die Datei (neuer Upload wie beim Ersetzen). Der Ausschnitt ändert nur,
+   welcher Teil in den 4:3-Kacheln (Karte, Übersicht) zu sehen ist: thumb_x/thumb_y = Punkt im
+   Bild in % (wie object-position), thumb_zoom = Vergrösserung 1–4. Die Lightbox zeigt immer alles.
+------------------------------------------------------------------- */
+const editor = $("editor");
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+let editorDone = null;   // Aufräumen beim Schliessen (Objekt-URL, Beobachter)
+editor.addEventListener("close", () => {
+  // Das Ereignis kommt verzögert: Ist schon der nächste Dialog offen, nichts tun
+  if(editor.open) return;
+  editorDone?.();
+  editorDone = null;
+});
+
+// Ausschnitt als CSS-Variablen setzen (css/admin.css wertet sie gleich aus wie css/index.css)
+function applyFocus(el, f){
+  el.style.setProperty("--fx", (f.thumb_x ?? 50) + "%");
+  el.style.setProperty("--fy", (f.thumb_y ?? 50) + "%");
+  el.style.setProperty("--z", f.thumb_zoom ?? 1);
+}
+
+// Gespeichertes Bild als Blob laden, damit es sich auf eine Leinwand (canvas) zeichnen lässt
+async function loadEditImage(img){
+  const r = await fetch(publicUrl(img.storage_path));
+  if(!r.ok) throw new Error("Bild konnte nicht geladen werden (HTTP " + r.status + ")");
+  const blob = await r.blob();
+  const pic = new Image();
+  pic.draggable = false;
+  await new Promise((res, rej) => {
+    pic.onload = res;
+    pic.onerror = () => { URL.revokeObjectURL(pic.src); rej(new Error("Datei ist kein lesbares Bild")); };
+    pic.src = URL.createObjectURL(blob);
+  });
+  return pic;
+}
+
+async function openEditor(img, html, setup){
+  let pic;
+  try{ pic = await loadEditImage(img); }catch(err){ return msg("Fehler: " + err.message, true); }
+  editorDone?.();
+  editorDone = null;
+  editor.innerHTML = html + `<div class="actions">
+    <button type="button" id="edSave">Speichern</button>
+    <button type="button" class="ghost" id="edReset"></button>
+    <button type="button" class="ghost" id="edCancel">Abbrechen</button></div>`;
+  $("edCancel").addEventListener("click", () => editor.close());
+  editor.showModal();
+  const done = setup(pic);
+  editorDone = () => { done?.(); URL.revokeObjectURL(pic.src); };
+}
+
+// Ausschnitt der Vorschau: Bild im 4:3-Rahmen verschieben und vergrössern
+function editFocus(entry, img){
+  openEditor(img, `<h2>Ausschnitt der Vorschau · Bild ${img.position}</h2>
+    <p class="hint">Bild mit der Maus oder dem Finger verschieben, mit dem Regler vergrössern.
+      So erscheint es auf der Karte${img.position === 1 ? " und als Titelbild der Kategorie" : ""}. Vergrössert (Lightbox) ist immer das ganze Bild zu sehen.</p>
+    <div class="focus-frame" id="fFrame"></div>
+    <label>Vergrösserung <input type="range" id="fZoom" min="1" max="4" step="0.05"></label>`, pic => {
+    const frame = $("fFrame"), zoom = $("fZoom");
+    frame.append(pic);
+    const f = { thumb_x:img.thumb_x ?? 50, thumb_y:img.thumb_y ?? 50, thumb_zoom:img.thumb_zoom ?? 1 };
+    const show = () => { applyFocus(pic, f); zoom.value = f.thumb_zoom; };
+    show();
+    zoom.addEventListener("input", () => { f.thumb_zoom = +zoom.value; applyFocus(pic, f); });
+
+    // Verschieben: Das Bild ragt um «slack» Pixel über den Rahmen; x = 0 % zeigt den linken Rand, 100 % den rechten
+    let last = null;
+    frame.addEventListener("pointerdown", ev => { last = ev; frame.setPointerCapture(ev.pointerId); ev.preventDefault(); });
+    frame.addEventListener("pointermove", ev => {
+      if(!last) return;
+      const fw = frame.clientWidth, fh = frame.clientHeight;
+      const s = Math.max(fw / pic.naturalWidth, fh / pic.naturalHeight) * f.thumb_zoom;
+      const slackX = pic.naturalWidth * s - fw, slackY = pic.naturalHeight * s - fh;
+      if(slackX > 0.5) f.thumb_x = clamp(f.thumb_x - 100 * (ev.clientX - last.clientX) / slackX, 0, 100);
+      if(slackY > 0.5) f.thumb_y = clamp(f.thumb_y - 100 * (ev.clientY - last.clientY) / slackY, 0, 100);
+      last = ev;
+      show();
+    });
+    const stop = () => { last = null; };
+    frame.addEventListener("pointerup", stop);
+    frame.addEventListener("pointercancel", stop);
+
+    $("edReset").textContent = "Mitte, nicht vergrössert";
+    $("edReset").addEventListener("click", () => { Object.assign(f, { thumb_x:50, thumb_y:50, thumb_zoom:1 }); show(); });
+    $("edSave").addEventListener("click", async () => {
+      const r = v => Math.round(v * 10) / 10;
+      const isDefault = r(f.thumb_x) === 50 && r(f.thumb_y) === 50 && r(f.thumb_zoom) === 1;
+      const row = isDefault ? { thumb_x:null, thumb_y:null, thumb_zoom:null }
+        : { thumb_x:r(f.thumb_x), thumb_y:r(f.thumb_y), thumb_zoom:r(f.thumb_zoom) };
+      await act(() => must(sb.from("images").update(row).eq("entry_id", entry.id).eq("position", img.position)),
+        "Ausschnitt gespeichert.").catch(() => {});
+      editor.close();
+      render();
+    });
+  });
+}
+
+// Zuschneiden: Rahmen aufziehen, verschieben oder an den Ecken ändern (Koordinaten in Bildpixeln)
+function editCrop(cat, entry, img){
+  const RATIOS = [["frei", 0], ["4:3 wie die Karten", 4 / 3], ["3:4 hoch", 3 / 4], ["1:1", 1], ["16:9", 16 / 9]];
+  openEditor(img, `<h2>Bild ${img.position} zuschneiden</h2>
+    <p class="hint">Rahmen neu aufziehen, verschieben oder an den Ecken ziehen. Das Bild wird dauerhaft zugeschnitten
+      (die Quelle bleibt), der Ausschnitt der Vorschau wird zurückgesetzt.</p>
+    <div class="crop-wrap" id="cWrap"><div class="crop-box" id="cBox">
+      ${["nw", "ne", "sw", "se"].map(h => `<span data-h="${h}"></span>`).join("")}</div></div>
+    <div class="crop-bar">
+      <label>Seitenverhältnis <select id="cRatio">${RATIOS.map(([t, v]) => `<option value="${v}">${t}</option>`).join("")}</select></label>
+      <span class="hint" id="cSize"></span>
+    </div>`, pic => {
+    const wrap = $("cWrap"), boxEl = $("cBox");
+    wrap.prepend(pic);
+    const W = pic.naturalWidth, H = pic.naturalHeight, MIN = 16;
+    let ratio = 0;
+    let box = { x:0, y:0, w:W, h:H };
+
+    // Grösstes Rechteck mit dem gewählten Seitenverhältnis in b, zentriert
+    const fit = b => {
+      if(!ratio) return b;
+      const w = Math.min(b.w, b.h * ratio), h = w / ratio;
+      return { x:b.x + (b.w - w) / 2, y:b.y + (b.h - h) / 2, w, h };
+    };
+    const draw = () => {
+      const s = pic.clientWidth / W;
+      boxEl.style.left = box.x * s + "px";
+      boxEl.style.top = box.y * s + "px";
+      boxEl.style.width = box.w * s + "px";
+      boxEl.style.height = box.h * s + "px";
+      $("cSize").textContent = `${Math.round(box.w)} × ${Math.round(box.h)} px (ganzes Bild ${W} × ${H})`;
+    };
+    const resize = new ResizeObserver(draw);
+    resize.observe(pic);
+
+    // Rechteck von einem festen Punkt (a) zum Zeiger (p), innerhalb des Bildes
+    const rectFrom = (a, p) => {
+      const right = p.x >= a.x, down = p.y >= a.y;
+      const maxW = right ? W - a.x : a.x, maxH = down ? H - a.y : a.y;
+      let w = Math.min(Math.abs(p.x - a.x), maxW), h = Math.min(Math.abs(p.y - a.y), maxH);
+      if(ratio){ w = Math.min(Math.max(w, h * ratio), maxW, maxH * ratio); h = w / ratio; }
+      return { x:right ? a.x : a.x - w, y:down ? a.y : a.y - h, w, h };
+    };
+    const point = ev => {
+      const r = pic.getBoundingClientRect(), s = pic.clientWidth / W;
+      return { x:clamp((ev.clientX - r.left) / s, 0, W), y:clamp((ev.clientY - r.top) / s, 0, H) };
+    };
+
+    let drag = null;
+    wrap.addEventListener("pointerdown", ev => {
+      ev.preventDefault();
+      wrap.setPointerCapture(ev.pointerId);
+      const p = point(ev), h = ev.target.dataset.h;
+      if(h) drag = { anchor:{ x:h[1] === "w" ? box.x + box.w : box.x, y:h[0] === "n" ? box.y + box.h : box.y } };
+      else if(ev.target === boxEl) drag = { dx:p.x - box.x, dy:p.y - box.y };
+      else drag = { anchor:p };
+      drag.prev = box;
+    });
+    wrap.addEventListener("pointermove", ev => {
+      if(!drag) return;
+      const p = point(ev);
+      box = drag.anchor ? rectFrom(drag.anchor, p)
+        : { ...box, x:clamp(p.x - drag.dx, 0, W - box.w), y:clamp(p.y - drag.dy, 0, H - box.h) };
+      draw();
+    });
+    const stop = () => {
+      // Nur geklickt statt gezogen: alten Rahmen behalten
+      if(drag && (box.w < MIN || box.h < MIN)){ box = drag.prev; draw(); }
+      drag = null;
+    };
+    wrap.addEventListener("pointerup", stop);
+    wrap.addEventListener("pointercancel", stop);
+
+    $("cRatio").addEventListener("change", ev => { ratio = +ev.target.value; box = fit(box); draw(); });
+    $("edReset").textContent = "Ganzes Bild";
+    $("edReset").addEventListener("click", () => { box = fit({ x:0, y:0, w:W, h:H }); draw(); });
+    $("edSave").addEventListener("click", async ev => {
+      const x = Math.round(box.x), y = Math.round(box.y);
+      const w = Math.min(Math.round(box.w), W - x), h = Math.min(Math.round(box.h), H - y);
+      if(w === W && h === H){ editor.close(); return; }
+      ev.target.disabled = true;
+      msg("Bild wird zugeschnitten …");
+      const c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      c.getContext("2d").drawImage(pic, x, y, w, h, 0, 0, w, h);
+      await act(async () => {
+        const blob = await new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error("Bild konnte nicht umgewandelt werden")), "image/jpeg", .9));
+        await storeImage(cat, entry, img.position, blob, img, img.source_page, img.source_file);
+      }, "Bild zugeschnitten.").catch(() => {});
+      editor.close();
+      render();
+    });
+    return () => resize.disconnect();
+  });
 }
 
 /* ------------------------------------------------------------------

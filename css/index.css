@@ -51,7 +51,7 @@ main{max-width:1200px;margin:0 auto;padding:16px 16px 40px;
   background:var(--accent-soft);box-shadow:var(--shadow);border:none;padding:0;text-align:left;color:#fff;font:inherit}
 .cat img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .4s,transform .5s}
 .cat img.loaded{opacity:1}
-.cat:hover img{transform:scale(1.05)}
+.cat:hover img{transform:scale(calc(var(--z,1) * 1.05))}
 .cat:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 .cat .cap{position:absolute;left:0;right:0;bottom:0;padding:40px 18px 14px;background:linear-gradient(transparent,rgba(0,0,0,.78))}
 .cat .cap strong{display:block;font-size:1.45rem;text-shadow:0 1px 3px rgba(0,0,0,.5)}
@@ -66,6 +66,9 @@ main{max-width:1200px;margin:0 auto;padding:16px 16px 40px;
 .slide{flex:0 0 100%;height:100%;position:relative;overflow:hidden;background:var(--accent-soft)}
 .slide img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .4s}
 .slide img.loaded{opacity:1}
+/* Ausschnitt aus der Verwaltung: --fx/--fy Punkt im Bild, --z Vergrösserung (setFocus in js/index.js) */
+.cat img,.slide img{object-position:var(--fx,50%) var(--fy,50%);transform-origin:var(--fx,50%) var(--fy,50%);
+  transform:scale(var(--z,1))}
 .status{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:.9rem;text-align:center;padding:1rem}
 .spinner{width:28px;height:28px;border:3px solid var(--muted);border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -118,7 +121,7 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lb{position:relative;width:100%;height:100%;overflow:hidden;touch-action:pan-y}
 .lb .track{height:100%}
 .lb .slide{background:transparent}
-.lb .slide img{object-fit:contain}
+.lb .slide img{object-fit:contain;object-position:50% 50%;transform:none}
 .lb .slide.text{display:grid;place-items:center;padding:64px 84px;background:transparent;overflow-y:auto}
 .lb .text-inner{max-width:720px;background:var(--card);border-radius:var(--radius);padding:28px 32px}
 .lb .text h2{font-size:1.8rem}

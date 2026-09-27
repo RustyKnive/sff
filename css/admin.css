@@ -46,6 +46,9 @@ button:disabled{opacity:.4;cursor:default}
 .thumb{aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:var(--accent-soft);display:grid;place-items:center;
   color:var(--muted);font-size:.8rem;margin-bottom:8px;text-align:center;padding:0}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+/* Ausschnitt der Vorschau (--fx/--fy Punkt im Bild, --z Vergrösserung), gleich wie in css/index.css */
+.thumb img,.focus-frame img{object-position:var(--fx,50%) var(--fy,50%);transform-origin:var(--fx,50%) var(--fy,50%);
+  transform:scale(var(--z,1))}
 .slot strong{display:block;margin-bottom:6px;font-size:.9rem}
 .slot label{font-size:.78rem;margin-bottom:6px}
 .slot input[type=file]{font-size:.78rem;margin-bottom:6px;max-width:100%}
@@ -62,3 +65,25 @@ code{word-break:break-all}
 .slot-actions{display:flex;flex-wrap:wrap;gap:6px}
 #toOverview{margin-bottom:14px}
 aside h2 small{color:var(--muted);font-weight:400;font-size:.85rem}
+
+/* Dialog: Bild zuschneiden / Ausschnitt der Vorschau */
+dialog.editor{width:min(900px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:20px;
+  border:none;border-radius:var(--radius);background:var(--card);color:var(--ink)}
+dialog.editor::backdrop{background:rgba(0,0,0,.6)}
+.editor h2{margin:0 0 6px;font-size:1.05rem;color:var(--accent)}
+.editor input[type=range]{display:block;width:100%;margin-top:6px;accent-color:var(--accent)}
+.focus-frame{position:relative;width:min(100%,560px);aspect-ratio:4/3;margin:0 auto 14px;overflow:hidden;
+  border-radius:8px;background:var(--accent-soft);cursor:grab;touch-action:none}
+.focus-frame:active{cursor:grabbing}
+.focus-frame img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none}
+.crop-wrap{position:relative;width:fit-content;max-width:100%;margin:0 auto 12px;overflow:hidden;
+  touch-action:none;user-select:none;cursor:crosshair;line-height:0}
+.crop-wrap img{display:block;max-width:100%;max-height:60vh;pointer-events:none}
+.crop-box{position:absolute;outline:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.55);cursor:move}
+.crop-box span{position:absolute;width:18px;height:18px;background:#fff;border:2px solid var(--accent);border-radius:4px}
+.crop-box [data-h=nw]{left:-9px;top:-9px;cursor:nwse-resize}
+.crop-box [data-h=ne]{right:-9px;top:-9px;cursor:nesw-resize}
+.crop-box [data-h=sw]{left:-9px;bottom:-9px;cursor:nesw-resize}
+.crop-box [data-h=se]{right:-9px;bottom:-9px;cursor:nwse-resize}
+.crop-bar{display:flex;flex-wrap:wrap;align-items:end;gap:6px 16px}
+.crop-bar label{margin:0}
