@@ -42,10 +42,11 @@ Zoomen (`zoomTo()`, `panBy()`): Mausrad, Doppelklick bzw. doppelt tippen (2,5-fa
 
 Knopf oben rechts, klappt eine Liste auf (schliesst mit Klick daneben oder Esc):
 - «LernApp»: noch ohne Funktion (grau, «bald»).
+- «PDF drucken» (`#/pdf`): Kategorie wählen, «PDF erstellen» öffnet den Druckdialog (Ziel «Als PDF speichern»). Kein PDF-Werkzeug, nur Druck-CSS (`@media print` in `css/index.css`): A4, Rand 5 mm, 8 Einträge pro Seite (2 × 4, 2 mm weisser Abstand), Hauptbild (mit Ausschnitt der Vorschau) und Name, Untertitel, Beschreibung, Steckbrief klein darüber; am Schluss der Bildnachweis. `printCategory()` füllt `#print` (am Bildschirm unsichtbar), wartet auf alle Bilder, setzt `document.title` (= Dateiname) und leert alles nach `afterprint`.
 - «Einstellungen» (`#/einstellungen`): Bilder für offline herunterladen.
 - «Admin»: Link auf `admin.html`.
 - «Copyright» (`#/copyright`): Urheberrecht und Bildnachweis (alle eigenen Bilder mit Link auf `source_page`).
-Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und in `PAGES` in `js/index.js`. Ihre Adressen gehen vor Kategorien mit gleicher `id`; solche Slugs darum nicht vergeben.
+Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und in `PAGES` in `js/index.js`. Ihre Adressen gehen vor Kategorien mit gleicher `id`; solche Slugs (`pdf`, `einstellungen`, `copyright`) darum nicht vergeben.
 
 ## Verwaltung (admin.html)
 

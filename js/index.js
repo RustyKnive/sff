@@ -384,6 +384,7 @@ function buildOverview(){
 
 // Seiten aus dem Menü (stehen in index.html); gehen vor gleichnamigen Kategorien
 const PAGES = {
+  pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
   einstellungen:{ title:"Einstellungen", intro:"Einstellungen für dieses Gerät." },
   copyright:{ title:"Copyright", intro:"Urheberrecht und Bildnachweis." }
 };
@@ -404,6 +405,81 @@ function buildCredits(){
     }).join("")}</ul>`).join("");
 }
 
+/* ------------------------------------------------------------------
+   PDF DRUCKEN: eine Kategorie, 8 Einträge pro A4-Seite (2 × 4), Hauptbild mit dem Text darüber,
+   am Schluss der Bildnachweis (CC-Lizenzen verlangen ihn auch gedruckt). Das PDF erstellt der
+   Browser über den Druckdialog («Als PDF speichern»); das Layout steht in css/index.css (@media print).
+------------------------------------------------------------------- */
+const PER_PAGE = 8;
+const printBox = document.getElementById("print");
+const pdfMsg = document.getElementById("pdfMsg");
+
+function fillPdfSelect(){
+  const sel = document.getElementById("pdfCat");
+  const keep = sel.value;
+  sel.innerHTML = CATS.map(c => `<option value="${esc(c.id)}">${esc(c.name)} (${c.items.length})</option>`).join("");
+  if(CATS.some(c => c.id === keep)) sel.value = keep;
+}
+
+// Hauptbild eines Eintrags ins <img> laden (eigenes Bild, sonst online); gibt die Bilddaten zurück
+function loadPrintImage(el, cat, item){
+  const load = d => new Promise((res, rej) => {
+    setFocus(el, d);
+    el.onload = () => res(d);
+    el.onerror = () => rej(new Error("Bildfehler"));
+    el.src = d.src;
+  });
+  const online = () => resolveItem(cat, item)[0].then(load);
+  const loc = localImage(cat, item, shownSlots(item)[0]);
+  return loc ? load(loc).catch(online) : online();
+}
+
+async function printCategory(cat){
+  const btn = document.getElementById("pdfBtn");
+  btn.disabled = true;
+  pdfMsg.textContent = "Bilder werden geladen …";
+  const pages = [];
+  for(let i = 0; i < cat.items.length; i += PER_PAGE) pages.push(cat.items.slice(i, i + PER_PAGE));
+  printBox.innerHTML = pages.map(p => `<div class="print-page">${p.map(it => `
+    <figure class="print-cell">
+      <img alt="">
+      <figcaption>
+        <strong>${esc(it.n)}</strong>${it.s ? ` <span class="${cat.latin ? "latin" : ""}">${esc(it.s)}</span>` : ""}
+        <p>${esc(it.t)}</p>
+        ${it.f.length ? `<p>${it.f.map(f => `<b>${esc(f.k)}:</b> ${esc(f.v)}`).join(" · ")}</p>` : ""}
+      </figcaption>
+    </figure>`).join("")}</div>`).join("");
+
+  // Alle Hauptbilder laden; fehlt eines, bleibt die Fläche leer
+  const imgs = printBox.querySelectorAll(".print-cell img");
+  const shown = await Promise.all(cat.items.map((it, i) => loadPrintImage(imgs[i], cat, it).catch(() => null)));
+  const credits = cat.items.map((it, i) => {
+    const d = shown[i];
+    const src = !d ? "kein Bild" : safeUrl(d.page) ? `${esc(d.file || "Wikimedia Commons")}, ${esc(d.page)}${d.edited ? " (zugeschnitten)" : ""}` : "eigenes Foto";
+    return `<li><b>${esc(it.n)}:</b> ${src}</li>`;
+  }).join("");
+  printBox.insertAdjacentHTML("beforeend", `<div class="print-credits">
+    <h2>Natur und Schweiz · ${esc(cat.name)} · Bildnachweis</h2>
+    <p>Bilder von Wikimedia Commons unter der Lizenz, die auf der jeweiligen Quellseite angegeben ist (meist Creative Commons oder gemeinfrei).</p>
+    <ul>${credits}</ul></div>`);
+
+  pdfMsg.textContent = "";
+  btn.disabled = false;
+  // Der Titel wird im Druckdialog zum Dateinamen des PDFs
+  const title = document.title;
+  document.title = "Natur und Schweiz – " + cat.name;
+  window.addEventListener("afterprint", () => { document.title = title; printBox.replaceChildren(); }, { once:true });
+  window.print();
+}
+
+document.getElementById("pdfBtn").addEventListener("click", () => {
+  const cat = CATS.find(c => c.id === document.getElementById("pdfCat").value);
+  if(cat) printCategory(cat).catch(e => {
+    pdfMsg.textContent = "PDF konnte nicht erstellt werden (" + e.message + ").";
+    document.getElementById("pdfBtn").disabled = false;
+  });
+});
+
 function render(){
   const id = location.hash.replace(/^#\/?/, "");
   const page = PAGES[id];
@@ -419,6 +495,7 @@ function render(){
     introEl.textContent = page.intro;
     document.title = page.title + " – Natur und Schweiz by toj";
     if(id === "copyright"){ buildCredits(); refresh(); }
+    if(id === "pdf") fillPdfSelect();
     return;
   }
   if(!cat){
@@ -518,7 +595,9 @@ async function refresh(){
   CATS = cats;
   catCards.clear();
   overviewCards = null;
-  if(location.hash.replace(/^#\/?/, "") === "copyright") buildCredits();
+  const id = location.hash.replace(/^#\/?/, "");
+  if(id === "copyright") buildCredits();
+  if(id === "pdf") fillPdfSelect();
 }
 document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && lastData) refresh(); });
 

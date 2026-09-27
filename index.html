@@ -23,6 +23,7 @@
     <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="menu" id="menu" hidden>
       <span class="menu-item off" aria-disabled="true">LernApp <small>bald</small></span>
+      <a class="menu-item" href="#/pdf">PDF drucken</a>
       <a class="menu-item" href="#/einstellungen">Einstellungen</a>
       <a class="menu-item" href="admin.html">Admin</a>
       <a class="menu-item" href="#/copyright">Copyright</a>
@@ -34,7 +35,17 @@
 </header>
 <main id="grid"></main>
 
-<!-- Seiten aus dem Menü (Adresse #/einstellungen bzw. #/copyright) -->
+<!-- Seiten aus dem Menü (Adresse #/pdf, #/einstellungen, #/copyright) -->
+<section class="page" id="page-pdf" hidden>
+  <h2>Kategorie als PDF</h2>
+  <p>Pro Eintrag das Hauptbild mit Name, Beschreibung und Steckbrief, 8 Einträge pro A4-Seite, am Schluss der Bildnachweis.
+    Im Druckfenster als Ziel «Als PDF speichern» wählen, um die Datei zu speichern, oder direkt drucken.</p>
+  <div class="offline">
+    <select id="pdfCat" aria-label="Kategorie"></select>
+    <button id="pdfBtn">PDF erstellen</button>
+    <span id="pdfMsg"></span>
+  </div>
+</section>
 <section class="page" id="page-einstellungen" hidden>
   <h2>Bilder herunterladen</h2>
   <p>Die Seite funktioniert auch ohne Internet. Bilder, die du schon angeschaut hast, sind bereits gespeichert.
@@ -58,6 +69,9 @@
 <footer>
   Bilder: <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, Urheber und Lizenz unter <a href="#/copyright">Copyright</a>.
 </footer>
+
+<!-- Druckbereich für «PDF drucken»: nur beim Drucken sichtbar (css/index.css, @media print) -->
+<div id="print" aria-hidden="true"></div>
 
 </body>
 </html>
