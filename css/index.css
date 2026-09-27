@@ -185,6 +185,13 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lern-card.revealed .credit{display:block;opacity:1}
 .lern-form{display:flex;flex-wrap:wrap;gap:8px}
 .lern-form input{flex:1 1 220px;padding:10px 14px;border:1.5px solid var(--accent);border-radius:99px;background:var(--card);color:var(--ink);font:inherit;font-size:1.05rem}
+.lern-catprog{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 10px;max-width:520px;margin:-4px 0 16px;font-size:.85rem}
+.lern-mini{height:8px;border-radius:99px;background:var(--accent-soft);overflow:hidden}
+.lern-mini i{display:block;height:100%;width:0;background:var(--accent)}
+.lern-catprog small{color:var(--muted)}
+.lern-banner{display:block;margin:12px 0 0;padding:12px 16px;border-radius:12px;background:var(--accent-soft);color:var(--ink);text-decoration:none;max-width:760px}
+.lern-banner:hover{filter:brightness(.97)}
+.lern-banner-go{color:var(--accent);font-weight:700;white-space:nowrap}
 .lern-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:4px}
 .page .lern-choices button.ghost:not(.nav):not(.dot){padding:12px 16px;border-radius:12px;background:var(--card);text-align:left;font-size:1rem}
 .page .lern-choices button.right:not(.nav):not(.dot){background:var(--accent);color:var(--card);opacity:1}

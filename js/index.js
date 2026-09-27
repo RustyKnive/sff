@@ -540,6 +540,59 @@ function lernIntroduce(items, extra = 0){
   }
 }
 
+// Lernserie: Tage in Folge mit mindestens einer gewerteten Antwort ({ last:Tag, count })
+function lernStreak(){
+  const s = lern && lern.streak;
+  if(!s) return 0;
+  return Math.round((startOfToday() - s.last) / DAY) <= 1 ? s.count : 0;   // gestern oder heute gelernt: Serie läuft
+}
+function lernMarkDay(){
+  const today = startOfToday(), s = lern.streak;
+  if(s && s.last === today) return;
+  lern.streak = { last:today, count:s && Math.round((today - s.last) / DAY) === 1 ? s.count + 1 : 1 };
+}
+
+// Hinweis auf der Übersicht: was heute ansteht, ohne etwas zu verändern (keine Zuteilung neuer Begriffe)
+function showLernBanner(){
+  const el = document.getElementById("lernBanner");
+  if(!el) return;
+  el.hidden = true;
+  if(!lern) return;
+  const now = Date.now(), today = startOfToday();
+  let due = 0, neu = 0;
+  for(const id of lern.cats){
+    for(const it of CATS.find(c => c.id === id)?.items || []){
+      const c = lern.cards[it.id];
+      if(!c || c.box === 0) neu++; else if(c.due <= now) due++;
+    }
+  }
+  neu = Math.min(neu, lern.newDay === today ? Math.max(0, NEU_PRO_TAG - (lern.newCount || 0)) : NEU_PRO_TAG);
+  const streak = lernStreak(), total = due + neu;
+  const serie = streak >= 2 ? `Deine Serie: ${streak} Tage in Folge.` : "";
+  if(total){
+    const parts = [due && `${due} fällig`, neu && `${neu} ${neu === 1 ? "neuer" : "neue"}`].filter(Boolean).join(", ");
+    el.innerHTML = `<b>Heute ${total === 1 ? "wartet 1 Begriff" : `warten ${total} Begriffe`} auf dich</b> (${parts}).
+      ${serie} <span class="lern-banner-go">Jetzt lernen →</span>`;
+  }else if(streak){
+    el.innerHTML = `<b>Für heute ist alles wiederholt.</b> ${serie || "Gut gemacht!"} <span class="lern-banner-go">Zur LernApp →</span>`;
+  }else return;
+  el.hidden = false;
+}
+
+// Fortschritt pro Kategorie (richtig = Fach 2–5)
+function lernCatStats(items){
+  const map = new Map();
+  for(const { cat, item } of items){
+    const c = lern.cards[item.id];
+    const m = map.get(cat.id) || { cat, total:0, richtig:0, fach5:0 };
+    m.total++;
+    if(c.box >= 2) m.richtig++;
+    if(c.box === 5) m.fach5++;
+    map.set(cat.id, m);
+  }
+  return [...map.values()];
+}
+
 function lernStats(items){
   const s = { total:items.length, neu:0, richtig:0, fach5:0, due:0, next:Infinity, boxes:[0, 0, 0, 0, 0] };
   const now = Date.now();
@@ -628,13 +681,15 @@ function renderLern(){
 
 function renderLernSetup(){
   const sel = new Set(lern ? lern.cats : []);
+  // Bisheriger Fortschritt der gewählten Kategorien (geht verloren, wenn die Auswahl geändert wird)
+  const prog = new Map(lern ? lernCatStats(lernSync()).map(r => [r.cat.id, r]) : []);
   lernEl.innerHTML = `
     <h2>Kategorien wählen</h2>
     <p>Wähle eine oder mehrere Kategorien. Die LernApp zeigt ein Bild, und du tippst den Namen ein.
       Nach dem Leitner-System kommen Begriffe, die du gut kannst, immer seltener dran, schwierige öfter.
       So bleiben sie dauerhaft im Gedächtnis. Dein Fortschritt wird auf diesem Gerät gespeichert.</p>
     <div class="lern-cats">${CATS.map(c => `<label><input type="checkbox" value="${esc(c.id)}" ${sel.has(c.id) ? "checked" : ""}>
-      ${esc(c.name)} <small>(${c.items.length})</small></label>`).join("")}</div>
+      ${esc(c.name)} <small>(${c.items.length})${prog.has(c.id) ? ` · ${prog.get(c.id).richtig}/${prog.get(c.id).total} richtig` : ""}</small></label>`).join("")}</div>
     <p id="lernSum" class="lern-sum"></p>
     <div class="offline">
       <button id="lernStart">Lernen starten</button>
@@ -674,6 +729,7 @@ function renderLernQuiz(){
   lernIntroduce(items);
   lernSave();
   const s = lernStats(items);
+  const catStats = lernCatStats(items);
   const now = Date.now();
   const active = items.filter(({ item }) => lern.cards[item.id].box > 0);
   // Runden zu höchstens RUNDE Fragen; nach der letzten Frage kommt die Auswertung
@@ -695,9 +751,12 @@ function renderLernQuiz(){
       <div><b>${s.total}</b> Einträge zu lernen</div>
       <div><b>${s.richtig}</b> richtig beantwortet</div>
       <div><b>${s.fach5}</b> im Langzeitgedächtnis</div>
+      <div><b>${lernStreak()}</b> ${lernStreak() === 1 ? "Tag" : "Tage"} in Folge</div>
     </div>
     <div class="lern-bar" title="${s.richtig} von ${s.total} richtig beantwortet"><i></i></div>
     <div class="lern-boxes">${s.boxes.map((n, i) => `<div class="lern-box"><span><i></i></span><small>Fach ${i + 1}<br>${n}</small></div>`).join("")}</div>
+    ${catStats.length > 1 ? `<div class="lern-catprog">${catStats.map(r => `
+      <span>${esc(r.cat.name)}</span><span class="lern-mini"><i></i></span><small>${r.richtig}/${r.total}</small>`).join("")}</div>` : ""}
     ${s.neu ? `<p class="lern-hint">${s.neu} neue Begriffe warten noch, pro Tag kommen bis zu ${NEU_PRO_TAG} dazu.</p>` : ""}
     ${lernCur ? `
       ${lernCardHtml(lernCur)}
@@ -744,6 +803,7 @@ function renderLernQuiz(){
   lernEl.querySelector(".lern-bar i").style.width = (s.total ? 100 * s.richtig / s.total : 0) + "%";
   const max = Math.max(1, ...s.boxes);
   lernEl.querySelectorAll(".lern-box i").forEach((el, i) => { el.style.height = (100 * s.boxes[i] / max) + "%"; });
+  lernEl.querySelectorAll(".lern-mini i").forEach((el, i) => { el.style.width = (100 * catStats[i].richtig / catStats[i].total) + "%"; });
   document.getElementById("lernCats").addEventListener("click", renderLernSetup);
   document.getElementById("lernPracticeBtn")?.addEventListener("click", () => { lernPractice = true; renderLernQuiz(); });
   document.getElementById("lernNextRound")?.addEventListener("click", () => { lernRound = null; renderLernQuiz(); });
@@ -783,6 +843,7 @@ function renderLernQuiz(){
         progress.box = result ? Math.min(5, progress.box + 1) : 1;
         progress.due = result ? startOfToday() + LEITNER_TAGE[progress.box - 1] * DAY : 0;
       }
+      lernMarkDay();
       lernSave();
       if(lernRound){ lernRound.n++; if(result && helped) lernRound.helped++; else if(result) lernRound.right++; }
     }
@@ -832,6 +893,8 @@ function render(){
   const page = PAGES[id];
   const cat = page ? null : CATS.find(c => c.id === id);
   if(lightbox.open) lightbox.close();
+  const lernBanner = document.getElementById("lernBanner");
+  if(lernBanner) lernBanner.hidden = true;   // nur auf der Übersicht
   grid.replaceChildren();
   window.scrollTo(0, 0);
   for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== id;
@@ -855,6 +918,7 @@ function render(){
     document.title = "Natur und Schweiz by toj";
     if(!overviewCards) overviewCards = buildOverview();
     grid.append(...overviewCards);
+    showLernBanner();
     return;
   }
   document.body.classList.add("in-sub");

@@ -114,6 +114,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bilder aus Liste übernehmen:** Mehrere Bilder auf einmal von Commons übernehmen oder entfernen, indem man eine Liste
   einfügt (Eintrag, Bildnummer, Adresse). Anlass war die Durchsicht der 140 neuen Bilder, bei der gut 20 falsche
   Motive auffielen, etwa ein Schädel statt eines Steinmarders oder eine Gedenktafel von den Philippinen.
+- **LernApp: dranbleiben:** Auf der Startseite erinnert ein Hinweis, wenn Begriffe fällig sind («Heute warten 12 Begriffe
+  auf dich … Jetzt lernen»). Die LernApp zählt die Lernserie (Tage in Folge) und zeigt den Fortschritt pro Kategorie.
 - **LernApp: leichter einsteigen, besser behalten:** Neue Begriffe wählt man zuerst aus 4 Namen aus, erst ab Fach 2
   tippt man selbst. Ein Tipp-Knopf zeigt den ersten Buchstaben und die Länge; mit Tipp richtig zählt nur halb. Nach jeder
   Antwort erscheint ein Merksatz aus der Beschreibung, damit sich der Name mit einer Eigenschaft verknüpft.
