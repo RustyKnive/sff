@@ -24,7 +24,7 @@ aside h2,.panel h2{margin:0 0 12px;font-size:1.05rem;color:var(--accent)}
 
 label{display:block;margin:0 0 10px;font-size:.85rem;font-weight:600;color:var(--muted)}
 label.inline{display:flex;align-items:center;gap:8px;font-weight:400;color:var(--ink)}
-input[type=text],input[type=email],input[type=password],input[type=url],textarea,select{
+input[type=text],input[type=email],input[type=password],input[type=url],input[type=number],textarea,select{
   display:block;width:100%;margin-top:3px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;
   background:var(--bg);color:var(--ink);font:inherit;font-weight:400}
 textarea{min-height:110px;resize:vertical}
@@ -65,6 +65,21 @@ code{word-break:break-all}
 .slot-actions{display:flex;flex-wrap:wrap;gap:6px}
 #toOverview{margin-bottom:14px}
 aside h2 small{color:var(--muted);font-weight:400;font-size:.85rem}
+
+/* Neue Kategorie mit Claude */
+.ai{margin:4px 0 14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--accent-soft)}
+.ai-row{display:flex;flex-wrap:wrap;align-items:end;gap:8px 12px}
+.ai-row label{margin:0;width:140px}
+.ai-verdict{margin:10px 0;padding:10px 12px;border-radius:8px;background:var(--card);border-left:4px solid var(--accent)}
+.ai-verdict.warn{border-left-color:var(--warn)}
+.ai-list{display:grid;gap:6px}
+.ai-entry{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:center}
+.ai-entry input[type=text]{margin:0;font-size:.9rem}
+.ai-entry input[type=checkbox]{accent-color:var(--accent)}
+.ai-entry .hint{grid-column:2 / -1;margin:0 0 8px}
+.ai h3{margin-top:0}
+.ai-row a{color:var(--accent);font-weight:600;padding:7px 0}
+.ai textarea{min-height:90px;margin-bottom:8px}
 
 /* Dialog: Bild zuschneiden / Ausschnitt der Vorschau */
 dialog.editor{width:min(900px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:20px;

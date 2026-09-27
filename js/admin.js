@@ -142,13 +142,28 @@ function renderCategory(cat){
   const c = cat || { id:"", name:"", description:"", latin:false, visible:true, labels:DEFAULT_LABELS, cover_entry_id:null, entries:[] };
   const main = $("main");
   const n = c.entries.length;
+  if(aiReport && aiReport.id !== c.id) aiReport = null;
   main.innerHTML = `
     <h2>${isNew ? "Neue Kategorie" : "Kategorie: " + esc(c.name)}</h2>
+    ${aiReport ? `<p class="ai-verdict ${aiReport.isErr ? "warn" : ""}">${esc(aiReport.text)}</p>` : ""}
     <form id="catForm">
       <div class="row">
         <label>Name <input type="text" name="name" required value="${esc(c.name)}"></label>
         <label>ID (für die Adresse #/…) <input type="text" name="id" required pattern="[a-z0-9]+(-[a-z0-9]+)*" value="${esc(c.id)}"></label>
       </div>
+      ${isNew ? `<div class="ai">
+        <h3>Einträge mit Claude erstellen</h3>
+        <div class="ai-row">
+          <label>Anzahl Einträge <input type="number" name="aiCount" min="1" max="20" value="8"></label>
+          <button type="button" class="ghost" id="aiCopy">1. Auftrag für Claude kopieren</button>
+          <a href="https://claude.ai/new" target="_blank" rel="noopener">2. claude.ai öffnen ↗</a>
+        </div>
+        <p class="hint">Den kopierten Auftrag in einem neuen Chat auf claude.ai einfügen und senden.
+          Claude prüft die Kategorie und schreibt alle Einträge. Die Antwort komplett kopieren und hier einfügen:</p>
+        <textarea name="aiAnswer" placeholder="3. Antwort von Claude hier einfügen"></textarea>
+        <button type="button" class="ghost" id="aiRead">4. Antwort übernehmen</button>
+        <div id="aiResult"></div>
+      </div>` : ""}
       <label>Beschreibung (Untertitel der Kachel) <input type="text" name="description" value="${esc(c.description)}"></label>
       <label class="inline"><input type="checkbox" name="visible" ${c.visible ? "checked" : ""}> Kategorie auf der Seite sichtbar</label>
       <label class="inline"><input type="checkbox" name="latin" ${c.latin ? "checked" : ""}> Untertitel der Einträge ist ein lateinischer Name (kursiv)</label>
@@ -180,6 +195,7 @@ function renderCategory(cat){
   const F = form.elements;
   // ID beim Anlegen aus dem Namen vorschlagen
   if(isNew) F.name.addEventListener("input", () => { F.id.value = slug(F.name.value); });
+  if(isNew) setupAi(form);
 
   form.addEventListener("submit", async e => {
     e.preventDefault();
@@ -187,6 +203,11 @@ function renderCategory(cat){
       id:F.id.value.trim(), name:F.name.value.trim(), description:F.description.value.trim(),
       latin:F.latin.checked, visible:F.visible.checked, labels:[0,1,2,3].map(i => F["label" + i].value.trim())
     };
+    const chosen = isNew ? aiChosen() : [];
+    if(chosen.length){
+      await createWithAi(form, row, chosen);
+      return;
+    }
     if(isNew){
       row.sort = cats.length;
       await act(() => must(sb.from("categories").insert(row)), "Kategorie angelegt.");
@@ -216,6 +237,184 @@ function renderCategory(cat){
     if(box) setVisible("entries", box.dataset.vis, box.checked);
   });
   $("newEntry").addEventListener("click", () => { location.hash = "#/e/neu/" + c.id; });
+}
+
+/* ------------------------------------------------------------------
+   NEUE KATEGORIE MIT CLAUDE (kopieren und einfügen über claude.ai, ohne API-Kosten)
+   1. aiPrompt() erstellt den Auftrag mit Name, Anzahl und allen bestehenden Namen (gegen Doppelte).
+   2. Claude antwortet auf claude.ai mit JSON: Prüfung, Kategorie-Angaben und alle Einträge.
+   3. aiParse() liest die eingefügte Antwort, das Formular zeigt den Vorschlag zum Durchsehen.
+   4. createWithAi(): Kategorie ausgeblendet speichern, Einträge speichern, Bilder von Wikimedia.
+------------------------------------------------------------------- */
+let aiEntries = [];   // Einträge aus der eingefügten Antwort
+let aiReport = null;  // Ergebnis für die Kategorieseite: { id, text, isErr }
+
+function aiPrompt(name, count){
+  return `Du arbeitest an «Natur und Schweiz», einer Lern- und Nachschlageseite für die Sekundarstufe I (12–15 Jahre).
+Sie zeigt Kategorien (z. B. Bäume, Amphibien, Berge) mit Einträgen. Jeder Eintrag hat 4 Bilder, eine Beschreibung und einen Steckbrief.
+Es geht um Natur, Landschaft und Sehenswürdigkeiten der Schweiz: Einträge müssen in der Schweiz vorkommen bzw. liegen,
+und es sollen die bekanntesten und für Schülerinnen und Schüler wichtigsten sein.
+
+Neue Kategorie: «${name}», mit ${count} Einträgen (die bekanntesten zuerst).
+
+1. Prüfe, ob die Kategorie zur Seite passt und ob sie sich mit bestehenden Kategorien oder Einträgen überschneidet.
+   Keine Einträge, die es schon gibt.
+2. Schlage Name der Kategorie (Mehrzahl wie die bestehenden), einen kurzen Untertitel der Kachel und genau 4 kurze
+   Bildbeschriftungen vor (Bild 1 zeigt das Ganze, z. B. Baum, Blätter, Früchte, Rinde).
+   latin = true bei Lebewesen: Der Untertitel jedes Eintrags ist dann der lateinische Name. Sonst nennt er Ort, Kanton oder Art.
+3. Schreibe jeden Eintrag: Beschreibung in 3–4 Sätzen, Steckbrief mit 3–4 kurzen Zeilen,
+   genau 3 englische Suchbegriffe für Wikimedia Commons passend zu den Bildbeschriftungen 2, 3 und 4,
+   und wp = Titel des englischen Wikipedia-Artikels fürs Hauptbild (leer, wenn der lateinische Name genügt).
+
+Sprache: Deutsch mit Schweizer Rechtschreibung (nie Eszett, immer «ss»; Anführungszeichen «…»).
+Texte sachlich, anschaulich und für Sek I verständlich. Die Fakten müssen stimmen: Lieber eine Angabe weglassen als raten.
+
+Bestehende Kategorien: ${cats.map(c => c.name).join(", ")}
+Bestehende Einträge: ${cats.flatMap(c => c.entries.map(e => e.name)).join(", ")}
+
+Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel-Eintrag aus der Kategorie Bäume):
+\`\`\`json
+{
+  "passt": true,
+  "pruefung": "2–4 Sätze: Passt die Kategorie? Überschneidungen? Hinweise",
+  "name": "Bäume",
+  "description": "Die wichtigsten Waldbäume",
+  "latin": true,
+  "labels": ["Baum", "Blätter", "Früchte", "Rinde"],
+  "entries": [
+    {
+      "name": "Buche",
+      "subtitle": "Fagus sylvatica",
+      "description": "Die Rotbuche ist der häufigste Laubbaum der Schweiz und würde ohne menschlichen Einfluss grosse Teile des Mittellandes und des Juras bedecken. Typisch sind die glatte, silbergraue Rinde und die eiförmigen Blätter mit leicht gewelltem, bewimpertem Rand. Ihre dreikantigen Früchte heissen Bucheckern.",
+      "facts": [{"k": "Höhe", "v": "bis 40 m"}, {"k": "Alter", "v": "bis 300 Jahre"}, {"k": "Vorkommen", "v": "Mittelland, Jura, bis ca. 1500 m"}, {"k": "Merkmal", "v": "glatte, silbergraue Rinde"}],
+      "search_terms": ["Fagus sylvatica leaves", "Fagus sylvatica beechnuts", "Fagus sylvatica bark"],
+      "wp": ""
+    }
+  ]
+}
+\`\`\``;
+}
+
+// Eingefügte Antwort lesen: das JSON zwischen der ersten «{» und der letzten «}», Werte bereinigen
+function aiParse(text){
+  const a = text.indexOf("{"), b = text.lastIndexOf("}");
+  if(a < 0 || b < a) throw new Error("In der Antwort steht kein JSON. Bitte die ganze Antwort von Claude einfügen.");
+  let r;
+  try{ r = JSON.parse(text.slice(a, b + 1)); }
+  catch(e){ throw new Error("Die Antwort ist unvollständig oder beschädigt (" + e.message + "). Nochmals ganz kopieren."); }
+  const eszett = new RegExp(String.fromCharCode(223), "g");   // Schweizer Rechtschreibung: immer «ss»
+  const str = (v, max = 2000) => String(v ?? "").replace(eszett, "ss").trim().slice(0, max);
+  const entries = (Array.isArray(r.entries) ? r.entries : []).map(e => ({
+    name:str(e?.name, 100), subtitle:str(e?.subtitle, 100), description:str(e?.description),
+    facts:(Array.isArray(e?.facts) ? e.facts : []).map(f => ({ k:str(f?.k, 60), v:str(f?.v, 200) })).filter(f => f.k && f.v).slice(0, 6),
+    search_terms:(Array.isArray(e?.search_terms) ? e.search_terms : []).map(t => str(t, 120)).filter(Boolean).slice(0, 3),
+    wp:str(e?.wp, 200) || null
+  })).filter(e => e.name);
+  if(!entries.length) throw new Error("Die Antwort enthält keine Einträge.");
+  return {
+    passt:r.passt !== false, pruefung:str(r.pruefung), name:str(r.name, 100), description:str(r.description, 200),
+    latin:!!r.latin, labels:[0,1,2,3].map(i => str(r.labels?.[i], 40)), entries
+  };
+}
+
+// Angewählte Einträge aus dem Vorschlag (Name und Untertitel lassen sich vorher korrigieren)
+function aiChosen(){
+  return [...document.querySelectorAll("#aiResult .ai-entry")]
+    .filter(d => d.querySelector("input[type=checkbox]").checked)
+    .map(d => ({ ...aiEntries[+d.dataset.i],
+      name:d.querySelector("[data-n]").value.trim(), subtitle:d.querySelector("[data-s]").value.trim() }))
+    .filter(e => e.name);
+}
+
+function setupAi(form){
+  const F = form.elements;
+  const out = $("aiResult");
+  const submit = form.querySelector(".actions button:not([type=button])");
+  const updateSubmit = () => {
+    const n = aiChosen().length;
+    submit.textContent = n ? `Anlegen mit ${n} ${n === 1 ? "Eintrag" : "Einträgen"}` : "Anlegen";
+  };
+  aiEntries = [];
+  out.addEventListener("change", updateSubmit);
+
+  $("aiCopy").addEventListener("click", async () => {
+    const name = F.name.value.trim();
+    if(!name){ F.name.focus(); msg("Zuerst den Namen der Kategorie eingeben.", true); return; }
+    const count = Math.min(20, Math.max(1, +F.aiCount.value || 8));
+    try{
+      await navigator.clipboard.writeText(aiPrompt(name, count));
+      msg("Auftrag kopiert. Jetzt auf claude.ai einfügen und senden.");
+    }catch(e){
+      // Ohne Zugriff auf die Zwischenablage: Auftrag ins Feld schreiben und markieren
+      F.aiAnswer.value = aiPrompt(name, count);
+      F.aiAnswer.select();
+      msg("Kopieren nicht erlaubt: Auftrag steht im Feld und ist markiert (Strg+C).", true);
+    }
+  });
+
+  $("aiRead").addEventListener("click", () => {
+    let r;
+    try{ r = aiParse(F.aiAnswer.value); }
+    catch(err){ out.innerHTML = `<p class="ai-verdict warn">${esc(err.message)}</p>`; updateSubmit(); return; }
+    aiEntries = r.entries;
+    // Vorschlag ins Formular übernehmen
+    if(r.name){ F.name.value = r.name; F.id.value = slug(r.name); }
+    if(r.description) F.description.value = r.description;
+    F.latin.checked = r.latin;
+    F.visible.checked = false;   // wird ausgeblendet angelegt, siehe createWithAi
+    r.labels.forEach((l, i) => { if(l) F["label" + i].value = l; });
+    out.innerHTML = `
+      <p class="ai-verdict ${r.passt ? "" : "warn"}">${r.passt ? "✓" : "⚠"} ${esc(r.pruefung || "Keine Prüfung in der Antwort.")}</p>
+      <p class="hint">Name, Untertitel und Bildbeschriftungen stehen im Formular. Einträge durchsehen, nach Bedarf abwählen oder korrigieren
+        (Name, ${r.latin ? "lateinischer Name" : "Untertitel"}). Texte lassen sich nach dem Anlegen im Eintrag bearbeiten.</p>
+      <div class="ai-list">${r.entries.map((e, i) => `<div class="ai-entry" data-i="${i}">
+        <input type="checkbox" checked title="Eintrag anlegen">
+        <input type="text" value="${esc(e.name)}" data-n aria-label="Name">
+        <input type="text" value="${esc(e.subtitle)}" data-s aria-label="Untertitel">
+        <p class="hint">${esc(e.description)}<br>${e.facts.map(f => `${esc(f.k)}: ${esc(f.v)}`).join(" · ")}</p></div>`).join("")}</div>`;
+    updateSubmit();
+  });
+}
+
+async function createWithAi(form, row, chosen){
+  if(!confirm(`Kategorie «${row.name}» mit ${chosen.length} Einträgen anlegen?\n\n`
+    + `Danach werden die Bilder von Wikimedia übernommen. Das dauert einige Minuten; die Seite dabei offen lassen.`)) return;
+  const setDisabled = on => [...form.elements].forEach(el => { el.disabled = on; });
+  const status = t => { $("aiResult").innerHTML = `<p class="ai-verdict">${esc(t)}</p>`; };
+  setDisabled(true);
+  status("Kategorie und Einträge werden gespeichert …");
+  row.visible = false;   // erst nach dem Durchsehen einblenden
+  row.sort = cats.length;
+  try{
+    await must(sb.from("categories").insert(row));
+    await must(sb.from("entries").insert(chosen.map((e, i) => ({
+      category_id:row.id, name:e.name, subtitle:e.subtitle, description:e.description, facts:e.facts,
+      search_terms:e.search_terms, wp:e.wp, visible:true, sort:i
+    }))));
+  }catch(err){
+    // Kategorie gespeichert, Einträge nicht: auf die Kategorieseite wechseln, sonst im Formular bleiben
+    await reload().catch(() => {});
+    if(findCat(row.id)){
+      aiReport = { id:row.id, isErr:true, text:"Die Einträge konnten nicht gespeichert werden: " + err.message };
+      location.hash = "#/k/" + row.id;
+    }else{ setDisabled(false); msg("Fehler: " + err.message, true); }
+    return;
+  }
+
+  await reload().catch(() => {});
+  const cat = findCat(row.id);
+  const noImg = [];
+  for(const [n, e] of (cat?.entries || []).entries()){
+    status(`Bilder werden übernommen: ${e.name} (${n + 1} von ${cat.entries.length}) …`);
+    const failed = await importMissing(cat, e).catch(() => [1, 2, 3, 4]);
+    if(failed.length) noImg.push(`${e.name} (Bild ${failed.join(", ")})`);
+  }
+  await reload().catch(() => {});
+
+  aiReport = { id:row.id, isErr:false,
+    text:`${cat?.entries.length || 0} Einträge angelegt. Die Kategorie ist noch ausgeblendet: Texte und Bilder durchsehen, dann oben «Kategorie auf der Seite sichtbar» anwählen und speichern.`
+      + (noImg.length ? ` Bilder nicht gefunden: ${noImg.join("; ")}. Dort Suchbegriffe anpassen und im Eintrag nochmals versuchen.` : "") };
+  location.hash = "#/k/" + row.id;
 }
 
 /* ------------------------------------------------------------------
