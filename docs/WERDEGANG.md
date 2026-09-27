@@ -107,6 +107,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **PDF:** Die Bildquelle steht neu klein unter dem Text im jeweiligen Bild statt auf einer eigenen Seite am Schluss.
   Der Texthintergrund ist durchsichtiger und die Quelle kleiner, damit mehr vom Bild sichtbar ist.
   Wer «PDF drucken» aus einer Kategorie heraus wählt, findet diese Kategorie schon ausgewählt.
+- **Neue Versionen sofort sichtbar:** Die Offline-App fragt Seite und Programmdateien jetzt immer beim Server nach,
+  statt bis zu 10 Minuten eine ältere Kopie aus dem Browser zu zeigen.
 
 ---
 

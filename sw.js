@@ -6,7 +6,7 @@
      So landen keine Admin-Daten (z. B. ausgeblendete Einträge) im Zwischenspeicher.
    - Wikipedia/Wikimedia (Bild-Fallback) wird nicht gespeichert. */
 
-const APP = "sff-app-v3";      // Version erhöhen, wenn sich die Liste FILES ändert
+const APP = "sff-app-v4";      // Version erhöhen, wenn sich die Liste FILES ändert
 const DATA = "sff-daten";
 const IMAGES = "sff-bilder";   // wird auch von js/index.js gefüllt (Knopf «Für offline speichern»)
 const FILES = [
@@ -36,7 +36,13 @@ self.addEventListener("fetch", e => {
   if(url.origin === location.origin){
     const path = url.pathname.slice(new URL(self.registration.scope).pathname.length);
     if(req.mode === "navigate" ? (path === "" || path === "index.html") : FILES.includes(path)){
-      e.respondWith(networkFirst(e, APP, req, "index.html"));
+      // «no-cache»: beim Server nachfragen statt die bis zu 10 Minuten alte Kopie aus dem Browser-Speicher
+      // zu nehmen (GitHub Pages: max-age=600). Unverändert antwortet er kurz mit 304.
+      // Seitenaufrufe (navigate) lassen sich nicht mit neuen Optionen kopieren, darum neu aus der Adresse.
+      const fresh = req.mode === "navigate"
+        ? new Request(req.url, { cache:"no-cache", credentials:"same-origin" })
+        : new Request(req, { cache:"no-cache" });
+      e.respondWith(networkFirst(e, APP, req, "index.html", fresh));
     }
     return;
   }
@@ -48,9 +54,9 @@ self.addEventListener("fetch", e => {
 });
 
 // Netz zuerst. Antwortet das Netz nicht rechtzeitig oder gar nicht, kommt der gespeicherte Stand.
-async function networkFirst(e, name, req, fallback){
+async function networkFirst(e, name, req, fallback, netReq = req){
   const cache = await caches.open(name);
-  const net = fetch(req).then(r => {
+  const net = fetch(netReq).then(r => {
     if(r.ok) e.waitUntil(cache.put(req, r.clone()));
     return r;
   });

@@ -73,6 +73,9 @@ Die Anzeige lässt sich installieren (Startbildschirm) und funktioniert ohne Int
 - `sw.js` (Service Worker): Seite und `loadCats()`-Antwort «Netz zuerst» (nach 4 s oder ohne Netz der gespeicherte Stand), Storage-Bilder «Speicher zuerst» im Cache `sff-bilder`. Wikimedia-Fallback wird nicht gespeichert.
 - Anfragen mit `Authorization` (Verwaltung, supabase-js) und `admin.html` laufen nie über den Speicher, damit keine Admin-Daten im Cache landen.
 - Neue Datei für die Anzeige (JS, CSS, Symbol): in `FILES` in `sw.js` eintragen und `APP` (z. B. `sff-app-v2`) erhöhen.
+- GitHub Pages erlaubt dem Browser 10 Minuten Zwischenspeicher (`max-age=600`). Darum holt `sw.js` Seite und App-Dateien mit `cache:"no-cache"` (Seitenaufrufe über eine neue `Request` aus der Adresse, weil sich `navigate`-Anfragen nicht mit Optionen kopieren lassen). So sind neue Versionen nach dem Deploy sofort da.
+- Headless Chrome auf diesem Rechner installiert keine Service Worker (auch die alte `sw.js` nicht, vermutlich Richtlinien des verwalteten Chrome): Service-Worker-Verhalten darum im normalen Browser prüfen (Entwicklertools → Application → Service Workers).
+- Nach einem Push baut GitHub Pages die Seite neu (Aktion «pages build and deployment», meist 1–2 Minuten). Hängt der Build in «queued», stösst ein neuer Push einen frischen an. Stand prüfen: `https://api.github.com/repos/RustyKnive/sff/actions/runs?per_page=1`.
 - Knopf «Alle Bilder herunterladen» unter Menü → Einstellungen: lädt alle eigenen Bilder in `sff-bilder` und entfernt dort ersetzte oder gelöschte.
 - `manifest.webmanifest` und `icons/` (Steinbock, Vorlage `steinbock.svg`; PNG 512 per headless Chrome, 192/180 daraus verkleinert). Neues Symbol immer unter neuem Dateinamen, sonst zeigen Browser das alte weiter.
 
