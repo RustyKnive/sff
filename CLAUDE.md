@@ -26,8 +26,8 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 
 ## Bilder laden
 
-1. Hat ein Eintrag ein Bild in `images`, wird es aus Supabase Storage geladen.
-2. Sonst oder bei einem Fehler wird es online gesucht (Fallback):
+1. Karte und Lightbox zeigen nur die eigenen Bilder eines Eintrags (`shownSlots()` in `js/index.js`): Hat er 3, gibt es 3 Bildseiten und 3 Punkte, dann die Textseite. Die Beschriftung bleibt die des Bildplatzes (`data-k`). Die Übersichtskachel nimmt Bild 1, sonst das erste vorhandene.
+2. Hat ein Eintrag gar kein eigenes Bild, oder lässt sich ein eigenes nicht laden, wird online gesucht (Fallback):
    - Hauptbild: Titelbild des englischen Wikipedia-Artikels `wp` bzw. des lateinischen Namens.
    - Bilder 2–4: Suche auf Wikimedia Commons mit `q[i] filetype:bitmap`, bei Bedarf mit gekürzten Suchbegriffen. Innerhalb eines Eintrags erscheint kein Bild doppelt.
 3. Wikimedia bremst zu viele Anfragen (HTTP 429), eine ganze Schulklasse hinter einer Adresse erst recht. Darum gibt es `limiter` (3 API-Anfragen, 4 Downloads gleichzeitig) und `retry` (in `js/wikimedia.js`). Bilder 2–4 werden erst beim ersten Darüberfahren geladen.

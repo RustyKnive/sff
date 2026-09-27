@@ -58,6 +58,13 @@ function mainImage(cat, item){
   return mainCache.get(key);
 }
 
+// Welche Bildplätze (0–3) gezeigt werden: nur die eigenen Bilder.
+// Hat ein Eintrag gar keine, sucht die Seite alle 4 online (Notlösung, siehe CLAUDE.md).
+function shownSlots(item){
+  const own = [0, 1, 2, 3].filter(k => item.img[k]);
+  return own.length ? own : [0, 1, 2, 3];
+}
+
 // Eigenes Bild aus Supabase Storage (falls hinterlegt)
 function localImage(cat, item, k){
   return item.img[k] || null;
@@ -122,16 +129,17 @@ function fillSlide(slide, cat, item, k){
 }
 
 /* ------------------------------------------------------------------
-   KARTE EINES EINTRAGS (4 Bilder + Text) und LIGHTBOX (dieselben Seiten gross)
+   KARTE EINES EINTRAGS (bis 4 Bilder + Text) und LIGHTBOX (dieselben Seiten gross)
 ------------------------------------------------------------------- */
-// Die 5 Seiten eines Eintrags; in der Lightbox steht der Name zusätzlich in der Beschriftung
+// Die Seiten eines Eintrags (vorhandene Bilder, dann Text); data-k = Bildplatz 0–3.
+// In der Lightbox steht der Name zusätzlich in der Beschriftung.
 function slidesHtml(cat, item, labels, big){
   const facts = item.f.map(({k, v}) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
-  return labels.map(l => `
-    <div class="slide" data-alt="${esc(item.n + " – " + l)}">
+  return shownSlots(item).map(k => `
+    <div class="slide" data-k="${k}" data-alt="${esc(item.n + " – " + labels[k])}">
       <img alt="">
       <div class="status"><div class="spinner"></div></div>
-      <span class="tag">${esc(big ? item.n + " · " + l : l)}</span>
+      <span class="tag">${esc(big ? item.n + " · " + labels[k] : labels[k])}</span>
       <a class="credit" target="_blank" rel="noopener" hidden>Quelle</a>
     </div>`).join("") + `
     <div class="slide text"><div class="text-inner">
@@ -141,17 +149,18 @@ function slidesHtml(cat, item, labels, big){
       <dl>${facts}</dl>
     </div></div>`;
 }
-function controlsHtml(labels){
+function controlsHtml(item, labels){
+  const slots = shownSlots(item);
   return `
     <button class="nav prev" aria-label="Zurück">${ARROW_L}</button>
     <button class="nav next" aria-label="Weiter">${ARROW_R}</button>
     <div class="dots">
-      ${labels.map((l, k) => `<button class="dot" aria-label="${esc(l)}" data-i="${k}"></button>`).join("")}
-      <button class="dot txt" aria-label="Beschreibung" data-i="4"></button>
+      ${slots.map((k, i) => `<button class="dot" aria-label="${esc(labels[k])}" data-i="${i}"></button>`).join("")}
+      <button class="dot txt" aria-label="Beschreibung" data-i="${slots.length}"></button>
     </div>`;
 }
 
-// Blättern mit Pfeilen und Punkten; onChange bekommt die aktuelle Seite (4 = Text)
+// Blättern mit Pfeilen und Punkten; onChange bekommt die aktuelle Seite und ob es die Textseite (die letzte) ist
 function carousel(root, onChange){
   const track = root.querySelector(".track");
   const dots = [...root.querySelectorAll(".dot")];
@@ -161,7 +170,7 @@ function carousel(root, onChange){
     cur = (n + N) % N;
     track.style.transform = `translateX(-${cur * 100}%)`;
     dots.forEach((d, k) => d.classList.toggle("active", k === cur));
-    if(onChange) onChange(cur);
+    if(onChange) onChange(cur, cur === N - 1);
   };
   root.querySelector(".prev").addEventListener("click", e => { e.stopPropagation(); go(cur - 1); });
   root.querySelector(".next").addEventListener("click", e => { e.stopPropagation(); go(cur + 1); });
@@ -178,16 +187,17 @@ function buildCard(cat, item){
   card.innerHTML = `
     <div class="track">${slidesHtml(cat, item, labels, false)}</div>
     <div class="name">${esc(item.n)}</div>
-    ${controlsHtml(labels)}`;
+    ${controlsHtml(item, labels)}`;
 
-  const c = carousel(card, cur => card.classList.toggle("on-text", cur === 4));
+  const c = carousel(card, (cur, isText) => card.classList.toggle("on-text", isText));
   c.go(0);
 
-  // Hauptbild sofort laden, die weiteren Bilder erst beim ersten Darüberfahren
-  const slides = card.querySelectorAll(".slide:not(.text)");
-  fillSlide(slides[0], cat, item, 0);
+  // Erstes Bild sofort laden, die weiteren erst beim ersten Darüberfahren
+  const slides = [...card.querySelectorAll(".slide:not(.text)")];
+  const fill = s => fillSlide(s, cat, item, +s.dataset.k);
+  fill(slides[0]);
   let rest = false;
-  const loadRest = () => { if(rest) return; rest = true; for(let k = 1; k < slides.length; k++) fillSlide(slides[k], cat, item, k); };
+  const loadRest = () => { if(rest) return; rest = true; slides.slice(1).forEach(fill); };
   card.addEventListener("mouseenter", loadRest);
   card.addEventListener("focusin", loadRest);
   card.addEventListener("touchstart", loadRest, { passive:true });
@@ -219,13 +229,13 @@ function openLightbox(cat, item, start){
   lightbox.innerHTML = `
     <div class="lb">
       <div class="track">${slidesHtml(cat, item, labels, true)}</div>
-      ${controlsHtml(labels)}
+      ${controlsHtml(item, labels)}
       <button class="lb-close" aria-label="Schliessen">×</button>
     </div>`;
   const root = lightbox.querySelector(".lb");
   lbCarousel = carousel(root);
   // Die Bilder sind meist schon geladen (Browser- und Offline-Speicher), sonst werden sie jetzt geholt
-  root.querySelectorAll(".slide:not(.text)").forEach((s, k) => fillSlide(s, cat, item, k));
+  root.querySelectorAll(".slide:not(.text)").forEach(s => fillSlide(s, cat, item, +s.dataset.k));
   lbCarousel.go(start);
   root.querySelector(".lb-close").addEventListener("click", () => lightbox.close());
   document.body.classList.add("lb-open");
@@ -279,7 +289,7 @@ function buildOverview(){
     const item = cat.items[cat.cover];
     if(!item){ status.remove(); return b; }
     const online = () => resolveItem(cat, item)[0].then(d => showImg(img, d));
-    const loc = localImage(cat, item, 0);
+    const loc = localImage(cat, item, shownSlots(item)[0]);   // Hauptbild, sonst das erste vorhandene
     (loc ? showImg(img, loc).catch(online) : online()).finally(() => status.remove());
     return b;
   });
