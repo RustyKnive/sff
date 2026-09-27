@@ -80,6 +80,9 @@ aside h2 small{color:var(--muted);font-weight:400;font-size:.85rem}
 .ai h3{margin-top:0}
 .ai-row a{color:var(--accent);font-weight:600;padding:7px 0}
 .ai textarea{min-height:90px;margin-bottom:8px}
+.ai-mode{display:flex;flex-wrap:wrap;gap:4px 20px}
+.ai-mode label{margin-bottom:6px}
+.ai-photo{display:block;max-width:260px;max-height:200px;margin:8px 0 0;border-radius:8px}
 
 /* Dialog: Bild zuschneiden / Ausschnitt der Vorschau */
 dialog.editor{width:min(900px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:20px;

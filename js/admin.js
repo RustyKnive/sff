@@ -65,8 +65,8 @@ async function move(table, list, index, dir){
   render();
 }
 
-// Bild verkleinern (längste Seite max. 1600 px) und als JPEG zurückgeben
-function resizeImage(file, max = 1600){
+// Bild verkleinern (längste Seite max. 1600 px) und als JPEG zurückgeben (PNG für die Zwischenablage)
+function resizeImage(file, max = 1600, type = "image/jpeg"){
   return new Promise((res, rej) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
@@ -76,7 +76,7 @@ function resizeImage(file, max = 1600){
       c.width = Math.round(img.width * f); c.height = Math.round(img.height * f);
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      c.toBlob(b => b ? res(b) : rej(new Error("Bild konnte nicht umgewandelt werden")), "image/jpeg", .85);
+      c.toBlob(b => b ? res(b) : rej(new Error("Bild konnte nicht umgewandelt werden")), type, .85);
     };
     img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Datei ist kein lesbares Bild")); };
     img.src = url;
@@ -253,11 +253,29 @@ function renderCategory(cat){
 let aiEntries = [];   // Einträge aus der eingefügten Antwort
 let aiReport = null;  // Ergebnis für die Kategorieseite: { id, text, isErr }
 
-function aiPrompt(name, count){
-  return `Du arbeitest an «Natur und Schweiz», einer Lern- und Nachschlageseite für die Sekundarstufe I (12–15 Jahre).
+// Gemeinsame Teile aller Aufträge an Claude (neue Kategorie, neuer Eintrag)
+const AI_INTRO = `Du arbeitest an «Natur und Schweiz», einer Lern- und Nachschlageseite für die Sekundarstufe I (12–15 Jahre).
 Sie zeigt Kategorien (z. B. Bäume, Amphibien, Berge) mit Einträgen. Jeder Eintrag hat 4 Bilder, eine Beschreibung und einen Steckbrief.
 Es geht um Natur, Landschaft und Sehenswürdigkeiten der Schweiz: Einträge müssen in der Schweiz vorkommen bzw. liegen,
-und es sollen die bekanntesten und für Schülerinnen und Schüler wichtigsten sein.
+und es sollen die bekanntesten und für Schülerinnen und Schüler wichtigsten sein.`;
+const AI_RULES = `Sprache: Deutsch mit Schweizer Rechtschreibung (nie Eszett, immer «ss»; Anführungszeichen «…»).
+Texte sachlich, anschaulich und für Sek I verständlich. Die Fakten müssen stimmen: Lieber eine Angabe weglassen als raten.`;
+const AI_ENTRY_TASK = `Beschreibung in 3–4 Sätzen, Steckbrief mit 3–4 kurzen Zeilen,
+genau 3 englische Suchbegriffe für Wikimedia Commons passend zu den Bildbeschriftungen 2, 3 und 4,
+und wp = Titel des englischen Wikipedia-Artikels fürs Hauptbild (leer, wenn der lateinische Name genügt).`;
+// Beispiel-Eintrag aus der Kategorie Bäume (Bildbeschriftungen Baum, Blätter, Früchte, Rinde)
+const AI_EXAMPLE = `{
+      "name": "Buche",
+      "subtitle": "Fagus sylvatica",
+      "description": "Die Rotbuche ist der häufigste Laubbaum der Schweiz und würde ohne menschlichen Einfluss grosse Teile des Mittellandes und des Juras bedecken. Typisch sind die glatte, silbergraue Rinde und die eiförmigen Blätter mit leicht gewelltem, bewimpertem Rand. Ihre dreikantigen Früchte heissen Bucheckern.",
+      "facts": [{"k": "Höhe", "v": "bis 40 m"}, {"k": "Alter", "v": "bis 300 Jahre"}, {"k": "Vorkommen", "v": "Mittelland, Jura, bis ca. 1500 m"}, {"k": "Merkmal", "v": "glatte, silbergraue Rinde"}],
+      "search_terms": ["Fagus sylvatica leaves", "Fagus sylvatica beechnuts", "Fagus sylvatica bark"],
+      "wp": ""
+    }`;
+const allEntryNames = () => cats.flatMap(c => c.entries.map(e => e.name)).join(", ");
+
+function aiPrompt(name, count){
+  return `${AI_INTRO}
 
 Neue Kategorie: «${name}», mit ${count} Einträgen (die bekanntesten zuerst).
 
@@ -266,15 +284,12 @@ Neue Kategorie: «${name}», mit ${count} Einträgen (die bekanntesten zuerst).
 2. Schlage Name der Kategorie (Mehrzahl wie die bestehenden), einen kurzen Untertitel der Kachel und genau 4 kurze
    Bildbeschriftungen vor (Bild 1 zeigt das Ganze, z. B. Baum, Blätter, Früchte, Rinde).
    latin = true bei Lebewesen: Der Untertitel jedes Eintrags ist dann der lateinische Name. Sonst nennt er Ort, Kanton oder Art.
-3. Schreibe jeden Eintrag: Beschreibung in 3–4 Sätzen, Steckbrief mit 3–4 kurzen Zeilen,
-   genau 3 englische Suchbegriffe für Wikimedia Commons passend zu den Bildbeschriftungen 2, 3 und 4,
-   und wp = Titel des englischen Wikipedia-Artikels fürs Hauptbild (leer, wenn der lateinische Name genügt).
+3. Schreibe jeden Eintrag: ${AI_ENTRY_TASK}
 
-Sprache: Deutsch mit Schweizer Rechtschreibung (nie Eszett, immer «ss»; Anführungszeichen «…»).
-Texte sachlich, anschaulich und für Sek I verständlich. Die Fakten müssen stimmen: Lieber eine Angabe weglassen als raten.
+${AI_RULES}
 
 Bestehende Kategorien: ${cats.map(c => c.name).join(", ")}
-Bestehende Einträge: ${cats.flatMap(c => c.entries.map(e => e.name)).join(", ")}
+Bestehende Einträge: ${allEntryNames()}
 
 Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel-Eintrag aus der Kategorie Bäume):
 \`\`\`json
@@ -286,38 +301,38 @@ Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel-Eintrag aus
   "latin": true,
   "labels": ["Baum", "Blätter", "Früchte", "Rinde"],
   "entries": [
-    {
-      "name": "Buche",
-      "subtitle": "Fagus sylvatica",
-      "description": "Die Rotbuche ist der häufigste Laubbaum der Schweiz und würde ohne menschlichen Einfluss grosse Teile des Mittellandes und des Juras bedecken. Typisch sind die glatte, silbergraue Rinde und die eiförmigen Blätter mit leicht gewelltem, bewimpertem Rand. Ihre dreikantigen Früchte heissen Bucheckern.",
-      "facts": [{"k": "Höhe", "v": "bis 40 m"}, {"k": "Alter", "v": "bis 300 Jahre"}, {"k": "Vorkommen", "v": "Mittelland, Jura, bis ca. 1500 m"}, {"k": "Merkmal", "v": "glatte, silbergraue Rinde"}],
-      "search_terms": ["Fagus sylvatica leaves", "Fagus sylvatica beechnuts", "Fagus sylvatica bark"],
-      "wp": ""
-    }
+    ${AI_EXAMPLE}
   ]
 }
 \`\`\``;
 }
 
-// Eingefügte Antwort lesen: das JSON zwischen der ersten «{» und der letzten «}», Werte bereinigen
-function aiParse(text){
+// Eingefügte Antwort lesen: das JSON zwischen der ersten «{» und der letzten «}»
+function aiJson(text){
   const a = text.indexOf("{"), b = text.lastIndexOf("}");
   if(a < 0 || b < a) throw new Error("In der Antwort steht kein JSON. Bitte die ganze Antwort von Claude einfügen.");
-  let r;
-  try{ r = JSON.parse(text.slice(a, b + 1)); }
+  try{ return JSON.parse(text.slice(a, b + 1)); }
   catch(e){ throw new Error("Die Antwort ist unvollständig oder beschädigt (" + e.message + "). Nochmals ganz kopieren."); }
-  const eszett = new RegExp(String.fromCharCode(223), "g");   // Schweizer Rechtschreibung: immer «ss»
-  const str = (v, max = 2000) => String(v ?? "").replace(eszett, "ss").trim().slice(0, max);
-  const entries = (Array.isArray(r.entries) ? r.entries : []).map(e => ({
-    name:str(e?.name, 100), subtitle:str(e?.subtitle, 100), description:str(e?.description),
-    facts:(Array.isArray(e?.facts) ? e.facts : []).map(f => ({ k:str(f?.k, 60), v:str(f?.v, 200) })).filter(f => f.k && f.v).slice(0, 6),
-    search_terms:(Array.isArray(e?.search_terms) ? e.search_terms : []).map(t => str(t, 120)).filter(Boolean).slice(0, 3),
-    wp:str(e?.wp, 200) || null
-  })).filter(e => e.name);
+}
+const eszett = new RegExp(String.fromCharCode(223), "g");   // Schweizer Rechtschreibung: immer «ss»
+const aiStr = (v, max = 2000) => String(v ?? "").replace(eszett, "ss").trim().slice(0, max);
+// Einen Eintrag aus der Antwort bereinigen (Längen begrenzen, leere Zeilen weglassen)
+function aiEntry(e){
+  return {
+    name:aiStr(e?.name, 100), subtitle:aiStr(e?.subtitle, 100), description:aiStr(e?.description),
+    facts:(Array.isArray(e?.facts) ? e.facts : []).map(f => ({ k:aiStr(f?.k, 60), v:aiStr(f?.v, 200) })).filter(f => f.k && f.v).slice(0, 6),
+    search_terms:(Array.isArray(e?.search_terms) ? e.search_terms : []).map(t => aiStr(t, 120)).filter(Boolean).slice(0, 3),
+    wp:aiStr(e?.wp, 200) || null
+  };
+}
+
+function aiParse(text){
+  const r = aiJson(text);
+  const entries = (Array.isArray(r.entries) ? r.entries : []).map(aiEntry).filter(e => e.name);
   if(!entries.length) throw new Error("Die Antwort enthält keine Einträge.");
   return {
-    passt:r.passt !== false, pruefung:str(r.pruefung), name:str(r.name, 100), description:str(r.description, 200),
-    latin:!!r.latin, labels:[0,1,2,3].map(i => str(r.labels?.[i], 40)), entries
+    passt:r.passt !== false, pruefung:aiStr(r.pruefung), name:aiStr(r.name, 100), description:aiStr(r.description, 200),
+    latin:!!r.latin, labels:[0,1,2,3].map(i => aiStr(r.labels?.[i], 40)), entries
   };
 }
 
@@ -447,6 +462,149 @@ async function createWithAi(form, row, chosen){
   location.hash = "#/k/" + row.id;
 }
 
+/* ------------------------------------------------------------------
+   NEUER EINTRAG MIT CLAUDE (über den Namen oder ein Foto, kopieren und einfügen über claude.ai)
+   Die Antwort füllt das normale Formular: prüfen, ändern, dann «Anlegen» oder «Abbrechen».
+   Beim Anlegen wird das Foto Bild 1 (eigenes Foto), die übrigen Bilder kommen von Wikimedia.
+------------------------------------------------------------------- */
+let aiPhoto = null;     // gewähltes Foto (File)
+let aiFilled = false;   // Formular mit einer Antwort von Claude gefüllt
+
+function aiEntryPrompt(cat, name, photo){
+  const others = cat.entries.map(e => e.name).join(", ") || "noch keine";
+  return `${AI_INTRO}
+
+Kategorie «${cat.name}»${cat.description ? ` (${cat.description})` : ""}. Bildbeschriftungen: ${cat.labels.join(", ")}.
+${cat.latin ? "Der Untertitel eines Eintrags ist der lateinische Name." : "Der Untertitel eines Eintrags nennt Ort, Kanton oder Art."}
+
+${photo
+  ? `Neuer Eintrag über ein Foto: Bestimme so genau wie möglich, was auf dem beigefügten Foto zu sehen ist${name ? ` (Vermutung: «${name}»)` : ""}.
+Schreibe in «pruefung», wie sicher die Bestimmung ist, woran du sie erkennst und welche ähnlichen Arten in Frage kommen.`
+  : `Neuer Eintrag: «${name}».`}
+
+1. Prüfe, ob der Eintrag in diese Kategorie passt und ob es ihn auf der Seite schon gibt.
+2. Schreibe den Eintrag: ${AI_ENTRY_TASK}
+
+${AI_RULES}
+
+Einträge in dieser Kategorie: ${others}
+Alle Einträge der Seite: ${allEntryNames()}
+
+Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel aus der Kategorie Bäume):
+\`\`\`json
+{
+  "passt": true,
+  "pruefung": "1–3 Sätze: Passt der Eintrag? Gibt es ihn schon?${photo ? " Wie sicher ist die Bestimmung?" : ""}",
+  "entry": ${AI_EXAMPLE}
+}
+\`\`\``;
+}
+
+function aiParseEntry(text){
+  const r = aiJson(text);
+  const entry = aiEntry(r.entry ?? r);
+  if(!entry.name) throw new Error("Die Antwort enthält keinen Eintrag.");
+  return { passt:r.passt !== false, pruefung:aiStr(r.pruefung), entry };
+}
+
+function setupAiEntry(form, cat){
+  const F = form.elements;
+  const out = $("aiResult"), preview = $("aiPhotoPreview");
+  aiPhoto = null;
+  aiFilled = false;
+  const isPhoto = () => F.aiMode.value === "foto";
+  const showMode = () => {
+    $("aiPhotoBox").hidden = !isPhoto();
+    $("aiCopyPhoto").hidden = !isPhoto();
+    $("aiHowto").textContent = isPhoto()
+      ? "Foto wählen. «Auftrag kopieren», auf claude.ai in einem neuen Chat einfügen, dann «Foto kopieren» und im selben Chat einfügen "
+        + "(oder das Foto in den Chat ziehen) und senden. Die Antwort ganz kopieren und hier einfügen."
+      : "Oben den Namen eintragen. «Auftrag kopieren», auf claude.ai in einem neuen Chat einfügen und senden. Die Antwort ganz kopieren und hier einfügen.";
+  };
+  form.querySelectorAll("[name=aiMode]").forEach(r => r.addEventListener("change", showMode));
+  showMode();
+
+  F.aiPhotoFile.addEventListener("change", () => {
+    if(preview.src) URL.revokeObjectURL(preview.src);
+    aiPhoto = F.aiPhotoFile.files[0] || null;
+    preview.hidden = !aiPhoto;
+    if(aiPhoto) preview.src = URL.createObjectURL(aiPhoto);
+  });
+
+  $("aiCopy").addEventListener("click", async () => {
+    const name = F.name.value.trim();
+    if(isPhoto() && !aiPhoto){ msg("Zuerst ein Foto wählen.", true); return; }
+    if(!isPhoto() && !name){ F.name.focus(); msg("Zuerst den Namen eintragen.", true); return; }
+    const text = aiEntryPrompt(cat, name, isPhoto());
+    try{
+      await navigator.clipboard.writeText(text);
+      msg(isPhoto() ? "Auftrag kopiert. Auf claude.ai einfügen, dann «Foto kopieren»." : "Auftrag kopiert. Jetzt auf claude.ai einfügen und senden.");
+    }catch(e){
+      F.aiAnswer.value = text;
+      F.aiAnswer.select();
+      msg("Kopieren nicht erlaubt: Auftrag steht im Feld und ist markiert (Strg+C).", true);
+    }
+  });
+
+  $("aiCopyPhoto").addEventListener("click", async () => {
+    if(!aiPhoto){ msg("Zuerst ein Foto wählen.", true); return; }
+    try{
+      // Die Zwischenablage nimmt nur PNG; das Versprechen direkt übergeben, sonst verfällt die Erlaubnis
+      await navigator.clipboard.write([new ClipboardItem({ "image/png":resizeImage(aiPhoto, 1600, "image/png") })]);
+      msg("Foto kopiert. Im selben Chat auf claude.ai einfügen und senden.");
+    }catch(e){
+      msg("Foto kopieren geht in diesem Browser nicht: Das Foto bitte in den Chat ziehen.", true);
+    }
+  });
+
+  $("aiRead").addEventListener("click", () => {
+    let r;
+    try{ r = aiParseEntry(F.aiAnswer.value); }
+    catch(err){ out.innerHTML = `<p class="ai-verdict warn">${esc(err.message)}</p>`; return; }
+    const e = r.entry;
+    F.name.value = e.name;
+    F.subtitle.value = e.subtitle;
+    F.description.value = e.description;
+    $("facts").innerHTML = e.facts.map(f => factRow(f.k, f.v)).join("");
+    [0,1,2].forEach(i => { F["q" + i].value = e.search_terms[i] || ""; });
+    F.wp.value = e.wp || "";
+    aiFilled = true;
+    out.innerHTML = `<p class="ai-verdict ${r.passt ? "" : "warn"}">${r.passt ? "✓" : "⚠"} ${esc(r.pruefung || "Keine Prüfung in der Antwort.")}</p>
+      <p class="hint">Die Angaben stehen unten im Formular. Prüfen und nach Bedarf ändern, dann «Anlegen» (mit Bildern${aiPhoto ? ", das Foto wird Bild 1" : ""}) oder «Abbrechen».</p>`;
+  });
+}
+
+async function createEntryWithAi(form, cat, row){
+  const setDisabled = on => [...form.elements].forEach(el => { el.disabled = on; });
+  const status = t => { $("aiResult").innerHTML = `<p class="ai-verdict">${esc(t)}</p>`; };
+  setDisabled(true);
+  status("Eintrag wird gespeichert …");
+  let saved;
+  try{ saved = await act(() => must(sb.from("entries").insert(row).select("id").single()), null); }
+  catch(err){ setDisabled(false); return; }   // act zeigt den Fehler
+
+  let failed = [], err = null;
+  try{
+    if(aiPhoto){
+      status("Foto wird als Bild 1 gespeichert …");
+      await storeImage(cat, findEntry(saved.id).entry, 1, await resizeImage(aiPhoto), null, null, null);
+      await reload();
+    }
+    status("Bilder werden von Wikimedia übernommen …");
+    failed = await importMissing(cat, findEntry(saved.id).entry);
+  }catch(e){ err = e; }
+  await reload().catch(() => {});
+  aiPhoto = null;
+  aiFilled = false;
+
+  aiReport = { id:saved.id, isErr:!!err || failed.length > 0,
+    text:"Eintrag angelegt."
+      + (err ? ` Bilder: ${err.message}.` : "")
+      + (failed.length ? ` Bild ${failed.join(", ")} nicht gefunden: Suchbegriff anpassen, speichern und «Fehlende Bilder von Wikimedia übernehmen».` : "")
+      + " Nicht zufrieden: unten «Eintrag löschen» entfernt ihn wieder." };
+  location.hash = "#/e/" + saved.id;
+}
+
 // Kategorie mit allen Einträgen (die Datenbank löscht sie mit) und den Bilddateien entfernen
 async function deleteCategory(cat){
   const paths = cat.entries.flatMap(e => e.images.map(i => i.storage_path));
@@ -470,10 +628,33 @@ function renderEntry(cat, entry){
   const labels = e.labels || cat.labels;
   const terms = [0,1,2].map(i => e.search_terms[i] || "");
   const main = $("main");
+  if(aiReport && aiReport.id !== e.id) aiReport = null;
   main.innerHTML = `
     <p class="hint"><a href="#/k/${esc(cat.id)}">← ${esc(cat.name)}</a></p>
     <h2>${isNew ? "Neuer Eintrag" : esc(e.name)}</h2>
+    ${aiReport ? `<p class="ai-verdict ${aiReport.isErr ? "warn" : ""}">${esc(aiReport.text)}</p>` : ""}
     <form id="entryForm">
+      ${isNew ? `<div class="ai">
+        <h3>Mit Claude ausfüllen</h3>
+        <div class="ai-mode">
+          <label class="inline"><input type="radio" name="aiMode" value="name" checked> über den Namen</label>
+          <label class="inline"><input type="radio" name="aiMode" value="foto"> über ein Foto</label>
+        </div>
+        <div id="aiPhotoBox" hidden>
+          <input type="file" accept="image/*" name="aiPhotoFile">
+          <img id="aiPhotoPreview" class="ai-photo" alt="Gewähltes Foto" hidden>
+          <p class="hint">Das Foto wird beim Anlegen Bild 1 (im Bildnachweis «eigenes Foto»).</p>
+        </div>
+        <p class="hint" id="aiHowto"></p>
+        <div class="ai-row">
+          <button type="button" class="ghost" id="aiCopy">Auftrag kopieren</button>
+          <button type="button" class="ghost" id="aiCopyPhoto" hidden>Foto kopieren</button>
+          <a href="https://claude.ai/new" target="_blank" rel="noopener">claude.ai öffnen ↗</a>
+        </div>
+        <textarea name="aiAnswer" placeholder="Antwort von Claude hier einfügen"></textarea>
+        <button type="button" class="ghost" id="aiRead">Antwort übernehmen</button>
+        <div id="aiResult"></div>
+      </div>` : ""}
       <div class="row">
         <label>Name <input type="text" name="name" required value="${esc(e.name)}"></label>
         <label>${cat.latin ? "Lateinischer Name" : "Untertitel (Ort, Gesteinsart …)"} <input type="text" name="subtitle" value="${esc(e.subtitle)}"></label>
@@ -491,7 +672,7 @@ function renderEntry(cat, entry){
       <div class="row" id="labelRow" ${e.labels ? "" : "hidden"}>
         ${labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" value="${esc(l)}"></label>`).join("")}
       </div>
-      ${isNew ? `<p class="hint">Bilder können nach dem Anlegen hochgeladen werden.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>`}
+      ${isNew ? `<p class="hint">Mit Claude ausgefüllt: Die Bilder werden beim Anlegen übernommen. Sonst nach dem Anlegen hochladen.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>`}
       ${!isNew && e.images.length < 4 ? `<p><button type="button" class="ghost" id="importWm">Fehlende Bilder von Wikimedia übernehmen</button></p>
         <p class="hint">Sucht wie die Seite (Wikipedia-Titelbild, sonst Suchbegriffe unten) und speichert die Bilder mit Quellenangabe.
           Geänderte Suchbegriffe vorher speichern.</p>` : ""}
@@ -503,7 +684,8 @@ function renderEntry(cat, entry){
 
       <div class="actions">
         <button>${isNew ? "Anlegen" : "Speichern"}</button>
-        ${isNew ? "" : `<button type="button" class="danger" id="delEntry">Eintrag löschen</button>`}
+        ${isNew ? `<button type="button" class="ghost" id="cancelEntry">Abbrechen</button>`
+          : `<button type="button" class="danger" id="delEntry">Eintrag löschen</button>`}
       </div>
     </form>`;
 
@@ -513,6 +695,7 @@ function renderEntry(cat, entry){
   $("addFact").addEventListener("click", () => facts.insertAdjacentHTML("beforeend", factRow()));
   facts.addEventListener("click", ev => { if(ev.target.closest("[data-delfact]")) ev.target.closest(".fact").remove(); });
   F.ownLabels.addEventListener("change", () => { $("labelRow").hidden = !F.ownLabels.checked; });
+  if(isNew) setupAiEntry(form, cat);
 
   form.addEventListener("submit", async ev => {
     ev.preventDefault();
@@ -529,6 +712,7 @@ function renderEntry(cat, entry){
     };
     if(isNew){
       row.sort = cat.entries.length;
+      if(aiFilled || aiPhoto){ await createEntryWithAi(form, cat, row); return; }
       const saved = await act(() => must(sb.from("entries").insert(row).select("id").single()), "Eintrag angelegt.");
       location.hash = "#/e/" + saved.id;
       return;
@@ -546,7 +730,14 @@ function renderEntry(cat, entry){
     render();
   });
 
-  if(isNew) return;
+  if(isNew){
+    // Eingaben, Vorschlag und Foto verwerfen, gespeichert ist noch nichts
+    $("cancelEntry").addEventListener("click", () => {
+      if((F.name.value.trim() || aiPhoto || aiFilled) && !confirm("Eingaben und Vorschlag verwerfen? Es wird nichts gespeichert.")) return;
+      location.hash = "#/k/" + cat.id;
+    });
+    return;
+  }
   $("delEntry").addEventListener("click", async () => {
     if(!confirm(`Eintrag «${e.name}» mit allen Bildern endgültig löschen?`)) return;
     const paths = e.images.map(i => i.storage_path);

@@ -81,12 +81,14 @@ Ohne Claude-API und ohne zusätzliche Kosten: Der Auftrag wird über claude.ai (
 - Abbrechen: vor dem Anlegen «Abbrechen» neben «Anlegen» (nichts gespeichert, zurück zur Übersicht). Während des Anlegens «Abbrechen und alles löschen»: wirkt nach dem Eintrag, der gerade Bilder lädt, und entfernt die Kategorie mit Einträgen und Bilddateien (`deleteCategory()`, gleich wie «Kategorie löschen»).
 - Stil und Konventionen des Auftrags in `aiPrompt()` gleich halten wie hier unter «Konventionen».
 
-## Neuer Eintrag per Handyfoto (geplant)
+## Neuer Eintrag mit Claude (Kategorie → «+ Neuer Eintrag»)
 
-Mit dem Handy eine Art fotografieren, zum Beispiel einen Baum. Claude erkennt die Art und sucht den Namen (deutsch und lateinisch) und 3 weitere Bilder.
-Dazu schreibt Claude die Beschreibung und den Steckbrief (gemäss Konventionen) und legt den Eintrag automatisch in der Datenbank an. Das eigene Foto wird Bild 1.
-- Der Claude-API-Schlüssel darf nicht in den Browser. Den Aufruf deshalb serverseitig machen, zum Beispiel mit einer Supabase Edge Function. Nur Admins dürfen sie aufrufen.
-- Vor dem Speichern soll man den Vorschlag prüfen und korrigieren können, oder der Eintrag wird zuerst mit `visible = false` gespeichert.
+Ebenfalls ohne API über claude.ai. Oben im Formular «Mit Claude ausfüllen», wahlweise:
+- **über den Namen:** Name eintragen, «Auftrag kopieren» (`aiEntryPrompt()`), auf claude.ai einfügen und senden.
+- **über ein Foto:** Foto wählen (Vorschau), «Auftrag kopieren» und auf claude.ai einfügen, dann «Foto kopieren» (PNG über `navigator.clipboard.write`, max. 1600 px) und im selben Chat einfügen oder das Foto in den Chat ziehen. Claude bestimmt die Art und sagt in `pruefung`, wie sicher.
+Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt das normale Formular. Dort prüfen und ändern, dann «Anlegen» oder «Abbrechen» (nichts gespeichert, zurück zur Kategorie).
+«Anlegen» (`createEntryWithAi()`): Eintrag speichern, das Foto wird Bild 1 (ohne Quelle, also «eigenes Foto»), die übrigen Bilder von Wikimedia. Der Bericht steht oben auf der Eintragsseite.
+- Auftrag für Kategorie und Eintrag teilen `AI_INTRO`, `AI_RULES`, `AI_ENTRY_TASK`, `AI_EXAMPLE`, `aiJson()` und `aiEntry()` in `js/admin.js`.
 
 ## Konventionen
 
