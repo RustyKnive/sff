@@ -173,11 +173,11 @@ dialog.lightbox.zoomed .slide:not(.text):active{cursor:grabbing}
     print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .print-cell img{display:block;width:100%;height:100%;object-fit:cover;
     object-position:var(--fx,50%) var(--fy,50%);transform-origin:var(--fx,50%) var(--fy,50%);transform:scale(var(--z,1))}
-  .print-cell figcaption{position:absolute;left:0;right:0;bottom:0;padding:1.5mm 2mm;background:rgba(255,255,255,.85);
+  .print-cell figcaption{position:absolute;left:0;right:0;bottom:0;padding:1.5mm 2mm;background:rgba(255,255,255,.65);
     font-size:6.5pt;line-height:1.25}
   .print-cell strong{font-size:8pt}
   .print-cell .latin{font-style:italic}
   .print-cell p{margin:.6mm 0 0}
   .print-page:last-child{break-after:auto}
-  .print-src{display:block;margin-top:.6mm;font-size:5pt;color:#333;word-break:break-all}
+  .print-src{display:block;margin-top:.4mm;font-size:4pt;color:#333;word-break:break-all}
 }

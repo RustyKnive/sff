@@ -415,9 +415,11 @@ const PER_PAGE = 8;
 const printBox = document.getElementById("print");
 const pdfMsg = document.getElementById("pdfMsg");
 
+// Kommt man aus einer Kategorie (lastCat, gesetzt in render), ist sie vorgewählt; sonst bleibt die letzte Wahl
+let lastCat = null;
 function fillPdfSelect(){
   const sel = document.getElementById("pdfCat");
-  const keep = sel.value;
+  const keep = lastCat || sel.value;
   sel.innerHTML = CATS.map(c => `<option value="${esc(c.id)}">${esc(c.name)} (${c.items.length})</option>`).join("");
   if(CATS.some(c => c.id === keep)) sel.value = keep;
 }
@@ -494,8 +496,10 @@ function render(){
     document.title = page.title + " – Natur und Schweiz by toj";
     if(id === "copyright"){ buildCredits(); refresh(); }
     if(id === "pdf") fillPdfSelect();
+    lastCat = null;
     return;
   }
+  lastCat = cat ? cat.id : null;
   if(!cat){
     document.body.classList.remove("in-sub");
     titleEl.textContent = "Natur und Schweiz by toj";
