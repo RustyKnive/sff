@@ -658,6 +658,8 @@ function renderEntry(cat, entry){
       <div class="row">
         <label>Name <input type="text" name="name" required value="${esc(e.name)}"></label>
         <label>${cat.latin ? "Lateinischer Name" : "Untertitel (Ort, Gesteinsart …)"} <input type="text" name="subtitle" value="${esc(e.subtitle)}"></label>
+        ${isNew ? "" : `<label>Kategorie (zum Verschieben ändern)
+          <select name="category">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === cat.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>`}
       </div>
       <label class="inline"><input type="checkbox" name="visible" ${e.visible ? "checked" : ""}> Eintrag auf der Seite sichtbar</label>
       <label>Beschreibung <textarea name="description">${esc(e.description)}</textarea></label>
@@ -717,6 +719,15 @@ function renderEntry(cat, entry){
       location.hash = "#/e/" + saved.id;
       return;
     }
+    // In eine andere Kategorie verschieben: ans Ende der Zielkategorie, Bildbeschriftungen behalten
+    const target = findCat(F.category.value);
+    const moving = target && target.id !== cat.id;
+    if(moving){
+      if(!confirm(`Eintrag «${row.name}» mit allen Bildern nach «${target.name}» verschieben?`)) return;
+      row.category_id = target.id;
+      row.sort = target.entries.length;
+      if(!row.labels && target.labels.join("|") !== cat.labels.join("|")) row.labels = cat.labels;
+    }
     // Quellenangaben der vorhandenen Bilder mitspeichern
     await act(async () => {
       const imgRows = e.images.map(img => ({
@@ -726,7 +737,9 @@ function renderEntry(cat, entry){
       }));
       await must(sb.from("entries").update(row).eq("id", e.id));
       if(imgRows.length) await must(sb.from("images").upsert(imgRows));
-    }, "Gespeichert.");
+      // War er das Titelbild der alten Kategorie, nimmt diese wieder ihren ersten Eintrag
+      if(moving && cat.cover_entry_id === e.id) await must(sb.from("categories").update({ cover_entry_id:null }).eq("id", cat.id));
+    }, moving ? `Nach «${target.name}» verschoben.` : "Gespeichert.");
     render();
   });
 

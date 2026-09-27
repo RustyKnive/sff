@@ -55,6 +55,7 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
 - Adressen: `#/k/<id>` Kategorie, `#/k/neu`, `#/e/<entry-id>` Eintrag, `#/e/neu/<kat-id>`.
 - Nach jeder Änderung lädt `reload()` alle Daten neu. Die Datenmenge ist klein, das ist gewollt einfach.
 - Hochgeladene Bilder werden im Browser auf höchstens 1600 px verkleinert (JPEG, Qualität 0.85).
+- Eintrag verschieben: Auswahl «Kategorie» im Eintrag ändern und speichern (mit Rückfrage). Er kommt ans Ende der Zielkategorie; unterscheiden sich die Bildbeschriftungen, behält er die alten als eigene (`labels`). War er Titelbild der alten Kategorie, wird `cover_entry_id` dort geleert. Die Bilddateien bleiben unter ihrem Pfad (`<alte-kat>/…`); das stört nicht.
 - «Fehlende Bilder von Wikimedia übernehmen» (Übersicht: alle Einträge; im Eintrag: nur dieser) sucht wie die Anzeige, lädt herunter, verkleinert und speichert mit `source_page`/`source_file`. «Anderes Bild suchen» ersetzt ein Bild durch den nächsten Treffer; verworfene Dateien merkt sich die Seite bis zum Neuladen.
 - Pro Bild öffnen zwei Knöpfe den Dialog `#editor`:
   - «Zuschneiden»: Rahmen aufziehen (frei oder festes Seitenverhältnis), das Bild wird per canvas zugeschnitten und wie ein Ersatz gespeichert (neuer Pfad, JPEG 0.9, Quelle bleibt).
