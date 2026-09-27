@@ -114,6 +114,9 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bilder aus Liste übernehmen:** Mehrere Bilder auf einmal von Commons übernehmen oder entfernen, indem man eine Liste
   einfügt (Eintrag, Bildnummer, Adresse). Anlass war die Durchsicht der 140 neuen Bilder, bei der gut 20 falsche
   Motive auffielen, etwa ein Schädel statt eines Steinmarders oder eine Gedenktafel von den Philippinen.
+- **LernApp mit allen Bildern:** Während der Abfrage lässt sich zwischen den Bildern eines Eintrags umschalten
+  (ohne die Textseite mit der Lösung), und die Bilder lassen sich wie in der Grossansicht vergrössern, ohne dass das
+  Eingabefeld verschwindet. Die Quellenangabe erscheint erst nach der Antwort, weil der Dateiname oft den Namen verrät.
 - **Bewusst leere Bildplätze:** Wer ein Bild entfernt, lässt den Platz bewusst leer; «Fehlende Bilder übernehmen»
   füllt ihn nicht mehr mit einem zufälligen Suchtreffer. Im Eintrag lässt sich das mit «Leer lassen» bzw.
   «Wieder füllen lassen» ändern, ein neues Bild hebt es von selbst auf.

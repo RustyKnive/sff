@@ -28,9 +28,9 @@ a.menu-item:hover,a.menu-item:focus-visible{background:var(--accent-soft);color:
 .page p{margin:0 0 .8rem}
 .page a{color:var(--accent)}
 .page .offline{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:14px}
-.page button{padding:8px 16px;border:none;border-radius:99px;background:var(--accent);color:var(--card);
+.page button:not(.nav):not(.dot){padding:8px 16px;border:none;border-radius:99px;background:var(--accent);color:var(--card);
   font:inherit;font-weight:600;cursor:pointer}
-.page button:disabled{opacity:.6;cursor:default}
+.page button:not(.nav):not(.dot):disabled{opacity:.6;cursor:default}
 .page a.button{display:inline-block;padding:8px 16px;border-radius:99px;background:var(--accent);color:var(--card);
   font-weight:600;text-decoration:none}
 .page a.button:hover{filter:brightness(1.08)}
@@ -129,9 +129,9 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lb .slide{background:transparent}
 .lb .slide img{object-fit:contain;object-position:50% 50%;transform:none;transform-origin:0 0}
 /* Zoomen (js/index.js zoomTo): Gesten auf den Bildseiten selbst behandeln, nicht vom Browser */
-.lb .slide:not(.text){touch-action:none;cursor:zoom-in}
-dialog.lightbox.zoomed .slide:not(.text){cursor:grab}
-dialog.lightbox.zoomed .slide:not(.text):active{cursor:grabbing}
+.lb .slide:not(.text),.lern-card .slide{touch-action:none;cursor:zoom-in}
+.zoomed .slide:not(.text){cursor:grab}
+.zoomed .slide:not(.text):active{cursor:grabbing}
 .lb .slide.text{display:grid;place-items:center;padding:64px 84px;background:transparent;overflow-y:auto}
 .lb .text-inner{max-width:720px;background:var(--card);border-radius:var(--radius);padding:28px 32px}
 .lb .text h2{font-size:1.8rem}
@@ -163,7 +163,7 @@ dialog.lightbox.zoomed .slide:not(.text):active{cursor:grabbing}
 .page select{padding:8px 12px;border:1px solid var(--accent-soft);border-radius:99px;background:var(--card);color:var(--ink);font:inherit}
 
 /* LernApp (js/index.js renderLern) */
-.page button.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.page button.ghost:not(.nav):not(.dot){background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
 .lern-cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 14px;margin:12px 0}
 .lern-cats label{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:var(--card);cursor:pointer}
 .lern-cats input{accent-color:var(--accent);width:18px;height:18px}
@@ -178,7 +178,11 @@ dialog.lightbox.zoomed .slide:not(.text):active{cursor:grabbing}
 .lern-box span{display:flex;align-items:flex-end;height:48px;border-radius:6px;background:var(--accent-soft);overflow:hidden}
 .lern-box i{display:block;width:100%;background:var(--accent);opacity:.75}
 .lern-card{position:relative;margin:0 0 8px;aspect-ratio:4/3;max-height:60vh;border-radius:var(--radius);overflow:hidden;background:var(--accent-soft)}
-.lern-card img{width:100%;height:100%;object-fit:contain;display:block}
+.lern-card .slide img{object-fit:contain;object-position:50% 50%;transform:none;transform-origin:0 0}
+.lern-card .nav,.lern-card .dots,.lern-card .tag{opacity:1}
+.lern-card.single .nav,.lern-card.single .dots{display:none}
+.lern-card .credit{display:none}
+.lern-card.revealed .credit{display:block;opacity:1}
 .lern-form{display:flex;flex-wrap:wrap;gap:8px}
 .lern-form input{flex:1 1 220px;padding:10px 14px;border:1.5px solid var(--accent);border-radius:99px;background:var(--card);color:var(--ink);font:inherit;font-size:1.05rem}
 .lern-feedback p{margin:12px 0 8px;padding:10px 14px;border-radius:12px;background:var(--card)}

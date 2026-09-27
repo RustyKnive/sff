@@ -233,7 +233,7 @@ function openLightbox(cat, item, start){
       <button class="lb-close" aria-label="Schliessen">×</button>
     </div>`;
   const root = lightbox.querySelector(".lb");
-  lbCarousel = carousel(root, resetZoom);
+  lbCarousel = carousel(root, () => lbZoom.reset());
   // Die Bilder sind meist schon geladen (Browser- und Offline-Speicher), sonst werden sie jetzt geholt
   root.querySelectorAll(".slide:not(.text)").forEach(s => fillSlide(s, cat, item, +s.dataset.k));
   lbCarousel.go(start);
@@ -245,7 +245,7 @@ function openLightbox(cat, item, start){
 }
 lightbox.addEventListener("close", () => {
   document.body.classList.remove("lb-open");
-  resetZoom();
+  lbZoom.reset();
   lightbox.replaceChildren();
   lbCarousel = null;
   // Mit × oder Esc geschlossen: den Verlaufseintrag der Lightbox wieder entfernen
@@ -258,100 +258,108 @@ lightbox.addEventListener("keydown", e => {
   if(e.key === "ArrowLeft"){ lbCarousel.go(lbCarousel.cur - 1); e.preventDefault(); }
   // Zoomen mit + und -, 0 setzt zurück (auf die Fenstermitte)
   const zoomKey = { "+":1.5, "=":1.5, "-":1 / 1.5 }[e.key];
-  if(zoomKey){ zoomTo(zoom.s * zoomKey, innerWidth / 2, innerHeight / 2); e.preventDefault(); }
-  if(e.key === "0"){ resetZoom(); e.preventDefault(); }
+  if(zoomKey){ lbZoom.zoomTo(lbZoom.scale * zoomKey, innerWidth / 2, innerHeight / 2); e.preventDefault(); }
+  if(e.key === "0"){ lbZoom.reset(); e.preventDefault(); }
 });
 
-/* Zoomen in der Lightbox: Mausrad, Doppelklick bzw. doppelt tippen, zwei Finger.
-   Vergrössert lässt sich das Bild ziehen; Wischen blättert nur ungezoomt.
-   Das Bild wird mit translate/scale (Ursprung oben links, css/index.css) über seiner Seite verschoben. */
+/* Zoomen (Lightbox und LernApp): Mausrad, Doppelklick bzw. doppelt tippen, zwei Finger.
+   Vergrössert lässt sich das Bild ziehen; Wischen blättert nur ungezoomt (onSwipe).
+   Das Bild wird mit translate/scale (Ursprung oben links, css/index.css) über seiner Seite verschoben.
+   image(): das aktuell gezeigte, geladene <img> oder null (Textseite, noch nicht geladen). */
 const MAX_ZOOM = 5;
-const zoom = { s:1, x:0, y:0, img:null };
-
-function applyZoom(){
-  zoom.img.style.transform = `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
-  lightbox.classList.add("zoomed");
-}
-function resetZoom(){
-  if(zoom.img) zoom.img.style.transform = "";
-  Object.assign(zoom, { s:1, x:0, y:0, img:null });
-  lightbox.classList.remove("zoomed");
-}
-// Auf den Faktor s zoomen; der Bildpunkt unter (cx, cy) bleibt dabei an seiner Stelle
-function zoomTo(s, cx, cy){
-  const img = zoom.img || lightbox.querySelectorAll(".lb .slide")[lbCarousel?.cur]?.querySelector("img.loaded");
-  if(!img) return;   // Textseite oder Bild noch nicht geladen
-  s = Math.min(MAX_ZOOM, Math.max(1, s));
-  if(s === 1){ resetZoom(); return; }
-  const r = img.parentElement.getBoundingClientRect();   // die Seite = ungezoomte Fläche
-  const px = cx - r.left, py = cy - r.top;
-  zoom.x = px - (px - zoom.x) * s / zoom.s;
-  zoom.y = py - (py - zoom.y) * s / zoom.s;
-  zoom.s = s;
-  zoom.img = img;
-  panBy(0, 0);
-}
-// Verschieben, ohne dass neben dem Bild leere Fläche entsteht
-function panBy(dx, dy){
-  if(!zoom.img) return;
-  const r = zoom.img.parentElement.getBoundingClientRect();
-  zoom.x = Math.min(0, Math.max(r.width * (1 - zoom.s), zoom.x + dx));
-  zoom.y = Math.min(0, Math.max(r.height * (1 - zoom.s), zoom.y + dy));
-  applyZoom();
-}
-
-lightbox.addEventListener("wheel", e => {
-  if(!lbCarousel || !e.target.closest(".slide:not(.text)")) return;
-  e.preventDefault();
-  zoomTo(zoom.s * Math.exp(-e.deltaY * 0.002), e.clientX, e.clientY);
-}, { passive:false });
-
-// Finger und Maus: ziehen (vergrössert), zwei Finger zoomen, doppelt tippen, wischen (ungezoomt)
-const pointers = new Map();
-let gesture = null, lastTap = null;
 const gap = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-lightbox.addEventListener("pointerdown", e => {
-  if(!lbCarousel || e.target.closest("button, a")) return;
-  pointers.set(e.pointerId, e);
-  if(pointers.size === 1) gesture = { x0:e.clientX, y0:e.clientY, last:e, pinch:null, moved:false };
-  if(pointers.size === 2 && gesture){
-    const [a, b] = pointers.values();
-    gesture.pinch = { d:gap(a, b), s:zoom.s };
-    gesture.moved = true;
-  }
+function zoomable(root, { image, onSwipe }){
+  const z = { s:1, x:0, y:0, img:null };
+  const apply = () => {
+    z.img.style.transform = `translate(${z.x}px, ${z.y}px) scale(${z.s})`;
+    root.classList.add("zoomed");
+  };
+  const reset = () => {
+    if(z.img) z.img.style.transform = "";
+    Object.assign(z, { s:1, x:0, y:0, img:null });
+    root.classList.remove("zoomed");
+  };
+  // Verschieben, ohne dass neben dem Bild leere Fläche entsteht
+  const panBy = (dx, dy) => {
+    if(!z.img) return;
+    const r = z.img.parentElement.getBoundingClientRect();
+    z.x = Math.min(0, Math.max(r.width * (1 - z.s), z.x + dx));
+    z.y = Math.min(0, Math.max(r.height * (1 - z.s), z.y + dy));
+    apply();
+  };
+  // Auf den Faktor s zoomen; der Bildpunkt unter (cx, cy) bleibt dabei an seiner Stelle
+  const zoomTo = (s, cx, cy) => {
+    const img = z.img || image();
+    if(!img) return;
+    s = Math.min(MAX_ZOOM, Math.max(1, s));
+    if(s === 1){ reset(); return; }
+    const r = img.parentElement.getBoundingClientRect();   // die Seite = ungezoomte Fläche
+    const px = cx - r.left, py = cy - r.top;
+    z.x = px - (px - z.x) * s / z.s;
+    z.y = py - (py - z.y) * s / z.s;
+    z.s = s;
+    z.img = img;
+    panBy(0, 0);
+  };
+
+  root.addEventListener("wheel", e => {
+    if(!e.target.closest(".slide:not(.text)")) return;
+    e.preventDefault();
+    zoomTo(z.s * Math.exp(-e.deltaY * 0.002), e.clientX, e.clientY);
+  }, { passive:false });
+
+  // Finger und Maus: ziehen (vergrössert), zwei Finger zoomen, doppelt tippen, wischen (ungezoomt)
+  const pointers = new Map();
+  let gesture = null, lastTap = null;
+  root.addEventListener("pointerdown", e => {
+    if(e.target.closest("button, a, input")) return;
+    pointers.set(e.pointerId, e);
+    if(pointers.size === 1) gesture = { x0:e.clientX, y0:e.clientY, last:e, pinch:null, moved:false };
+    if(pointers.size === 2 && gesture){
+      const [a, b] = pointers.values();
+      gesture.pinch = { d:gap(a, b), s:z.s };
+      gesture.moved = true;
+    }
+  });
+  root.addEventListener("pointermove", e => {
+    if(!pointers.has(e.pointerId) || !gesture) return;
+    pointers.set(e.pointerId, e);
+    if(gesture.pinch && pointers.size >= 2){
+      const [a, b] = pointers.values();
+      zoomTo(gesture.pinch.s * gap(a, b) / gesture.pinch.d, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+    }else if(z.s > 1){
+      panBy(e.clientX - gesture.last.clientX, e.clientY - gesture.last.clientY);
+    }
+    if(gap(e, { clientX:gesture.x0, clientY:gesture.y0 }) > 8) gesture.moved = true;
+    gesture.last = e;
+  });
+  const pointerEnd = e => {
+    if(!pointers.delete(e.pointerId) || !gesture || pointers.size) return;
+    const g = gesture;
+    gesture = null;
+    if(e.type !== "pointerup" || g.pinch) return;
+    const dx = e.clientX - g.x0;
+    // Wischen blättert, aber nur ungezoomt
+    if(z.s === 1 && Math.abs(dx) > 50){ onSwipe(dx < 0 ? 1 : -1); return; }
+    if(g.moved) return;
+    // Doppelt tippen oder klicken: vergrössern bzw. zurück
+    const now = Date.now();
+    if(lastTap && now - lastTap.t < 350 && gap(e, lastTap.e) < 30){
+      zoomTo(z.s > 1 ? 1 : 2.5, e.clientX, e.clientY);
+      lastTap = null;
+    }else lastTap = { t:now, e };
+  };
+  root.addEventListener("pointerup", pointerEnd);
+  root.addEventListener("pointercancel", pointerEnd);
+  // Sonst zieht die Maus eine Kopie des Bildes, statt es zu verschieben
+  root.addEventListener("dragstart", e => e.preventDefault());
+
+  return { zoomTo, reset, get scale(){ return z.s; } };
+}
+const lbZoom = zoomable(lightbox, {
+  image:() => lbCarousel && lightbox.querySelectorAll(".lb .slide")[lbCarousel.cur]?.querySelector("img.loaded"),
+  onSwipe:dir => lbCarousel?.go(lbCarousel.cur + dir)
 });
-lightbox.addEventListener("pointermove", e => {
-  if(!pointers.has(e.pointerId) || !gesture) return;
-  pointers.set(e.pointerId, e);
-  if(gesture.pinch && pointers.size >= 2){
-    const [a, b] = pointers.values();
-    zoomTo(gesture.pinch.s * gap(a, b) / gesture.pinch.d, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
-  }else if(zoom.s > 1){
-    panBy(e.clientX - gesture.last.clientX, e.clientY - gesture.last.clientY);
-  }
-  if(gap(e, { clientX:gesture.x0, clientY:gesture.y0 }) > 8) gesture.moved = true;
-  gesture.last = e;
-});
-const pointerEnd = e => {
-  if(!pointers.delete(e.pointerId) || !gesture || pointers.size) return;
-  const g = gesture;
-  gesture = null;
-  if(e.type !== "pointerup" || g.pinch) return;
-  const dx = e.clientX - g.x0;
-  // Wischen blättert, aber nur ungezoomt
-  if(zoom.s === 1 && Math.abs(dx) > 50){ lbCarousel.go(lbCarousel.cur + (dx < 0 ? 1 : -1)); return; }
-  if(g.moved) return;
-  // Doppelt tippen oder klicken: vergrössern bzw. zurück
-  const now = Date.now();
-  if(lastTap && now - lastTap.t < 350 && gap(e, lastTap.e) < 30){
-    zoomTo(zoom.s > 1 ? 1 : 2.5, e.clientX, e.clientY);
-    lastTap = null;
-  }else lastTap = { t:now, e };
-};
-lightbox.addEventListener("pointerup", pointerEnd);
-lightbox.addEventListener("pointercancel", pointerEnd);
-// Sonst zieht die Maus eine Kopie des Bildes, statt es zu verschieben
-lightbox.addEventListener("dragstart", e => e.preventDefault());
 
 /* ------------------------------------------------------------------
    ANSICHTEN: Übersicht und Kategorie
@@ -556,6 +564,25 @@ function lernWhen(due){
   return `in ${days} Tagen (${new Date(due).toLocaleDateString("de-CH")})`;
 }
 
+// Bildfläche einer Frage: nur die vorhandenen Bilder, ohne Textseite. Beschriftung und Alternativtext
+// verraten den Namen nicht («Bild 1», «Blätter» …).
+function lernCardHtml({ cat, item }){
+  const labels = item.lb || cat.labels;
+  const slots = shownSlots(item);
+  return `<figure class="lern-card${slots.length === 1 ? " single" : ""}">
+    <div class="track">${slots.map((k, i) => `
+      <div class="slide" data-k="${k}" data-alt="Bild ${i + 1}">
+        <img alt="">
+        <div class="status"><div class="spinner"></div></div>
+        <span class="tag">${esc(labels[k])}</span>
+        <a class="credit" target="_blank" rel="noopener" hidden>Quelle</a>
+      </div>`).join("")}</div>
+    <button class="nav prev" aria-label="Voriges Bild">${ARROW_L}</button>
+    <button class="nav next" aria-label="Nächstes Bild">${ARROW_R}</button>
+    <div class="dots">${slots.map((k, i) => `<button class="dot" aria-label="Bild ${i + 1}" data-i="${i}"></button>`).join("")}</div>
+  </figure>`;
+}
+
 function renderLern(){
   if(lern && lernSync().length) renderLernQuiz(); else renderLernSetup();
 }
@@ -622,7 +649,7 @@ function renderLernQuiz(){
     <div class="lern-bar" title="${s.richtig} von ${s.total} richtig beantwortet"><i></i></div>
     <div class="lern-boxes">${s.boxes.map((n, i) => `<div class="lern-box"><span><i></i></span><small>Fach ${i + 1}<br>${n}</small></div>`).join("")}</div>
     ${lernCur ? `
-      <figure class="lern-card"><img alt="Welcher Eintrag ist das?"><div class="status"><div class="spinner"></div></div></figure>
+      ${lernCardHtml(lernCur)}
       <p class="lern-hint">${esc(lernCur.cat.name)} · ${counting ? `Fach ${lern.cards[lernCur.item.id].box}` : "freies Üben (zählt nicht)"}
         · noch ${s.due} für heute</p>
       <form id="lernForm" class="lern-form" autocomplete="off">
@@ -649,31 +676,36 @@ function renderLernQuiz(){
   document.getElementById("lernPracticeBtn")?.addEventListener("click", () => { lernPractice = true; renderLernQuiz(); });
   if(!lernCur) return;
 
-  // Erstes vorhandenes Bild zeigen, sonst online suchen
+  // Bilder zum Umschalten und Vergrössern (ohne Textseite); die Quelle erst nach der Antwort zeigen
   const { cat, item } = lernCur;
-  const img = lernEl.querySelector(".lern-card img"), status = lernEl.querySelector(".lern-card .status");
-  const show = d => showImg(img, d).then(() => status.remove());
-  const online = () => resolveItem(cat, item)[0].then(show);
-  const loc = localImage(cat, item, shownSlots(item)[0]);
-  (loc ? show(loc).catch(online) : online()).catch(() => { status.textContent = "Bild nicht verfügbar"; });
+  const card = lernEl.querySelector(".lern-card");
+  let cardZoom = null;
+  const cardCarousel = carousel(card, () => cardZoom?.reset());
+  cardZoom = zoomable(card, {
+    image:() => card.querySelectorAll(".slide")[cardCarousel.cur]?.querySelector("img.loaded"),
+    onSwipe:dir => cardCarousel.go(cardCarousel.cur + dir)
+  });
+  cardCarousel.go(0);
+  card.querySelectorAll(".slide").forEach(s => fillSlide(s, cat, item, +s.dataset.k));
 
   const form = document.getElementById("lernForm"), input = document.getElementById("lernInput");
   const answer = given => {
     const result = given === null ? false : lernMatch(given, item.n);
-    const card = lern.cards[item.id];
+    const progress = lern.cards[item.id];
     if(counting){
-      card.box = result ? Math.min(5, card.box + 1) : 1;
-      card.due = result ? startOfToday() + LEITNER_TAGE[card.box - 1] * DAY : 0;
+      progress.box = result ? Math.min(5, progress.box + 1) : 1;
+      progress.due = result ? startOfToday() + LEITNER_TAGE[progress.box - 1] * DAY : 0;
       lernSave();
     }
     const name = `<b>${esc(item.n)}</b>${item.s ? `, <span class="${cat.latin ? "latin" : ""}">${esc(item.s)}</span>` : ""}`;
-    const where = counting ? (result ? ` Kommt in Fach ${card.box}, nächste Abfrage ${esc(lernWhen(card.due))}.`
+    const where = counting ? (result ? ` Kommt in Fach ${progress.box}, nächste Abfrage ${esc(lernWhen(progress.due))}.`
       : " Zurück in Fach 1, kommt bald nochmals.") : "";
     document.getElementById("lernFeedback").innerHTML = `
       <p class="${result ? "ok" : "bad"}">${result === "exact" ? "Richtig!" : result === "typo" ? "Fast richtig, es heisst" : given === null ? "Das ist" : "Leider falsch. Richtig ist"} ${name}.${where}</p>
       <button id="lernNext">Weiter</button>`;
     input.disabled = true;
     form.querySelectorAll("button").forEach(b => { b.disabled = true; });
+    card.classList.add("revealed");   // jetzt darf «Quelle» (mit dem Dateinamen) sichtbar sein
     const next = document.getElementById("lernNext");
     next.addEventListener("click", renderLernQuiz);
     next.focus();
