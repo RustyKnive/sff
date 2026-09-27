@@ -494,14 +494,18 @@ document.getElementById("pdfBtn").addEventListener("click", () => {
    Fach 1–5; richtig = ein Fach weiter, falsch = zurück in Fach 1. Ein Fach wird erst nach
    LEITNER_TAGE wieder abgefragt, so kommen gut gekonnte Begriffe immer seltener dran.
    Auswahl und Fortschritt liegen im Browser (localStorage, pro Gerät). Neue Auswahl = neuer Anfang.
+   Neue Begriffe warten in «Fach 0» und kommen dosiert dazu (NEU_PRO_TAG); abgefragt wird in Runden (RUNDE).
 ------------------------------------------------------------------- */
 const LERN_KEY = "sff-lernen";
 const LEITNER_TAGE = [0, 1, 3, 7, 30];   // Fach 1 sofort, Fach 2 nach 1 Tag … Fach 5 nach 30 Tagen
+const NEU_PRO_TAG = 10;   // so viele neue Begriffe kommen pro Tag ins Fach 1
+const RUNDE = 15;         // Fragen pro Runde
 const DAY = 86400000;
 const lernEl = document.getElementById("lern");
-let lern = lernLoad();   // { cats:[ids], cards:{ entryId:{ box, due } } } oder null
+let lern = lernLoad();   // { cats:[ids], cards:{ entryId:{ box, due } }, newDay, newCount } oder null; box 0 = neu
 let lernCur = null;      // aktuelle Frage { cat, item }
 let lernPractice = false;   // freies Üben, wenn für heute alles wiederholt ist (zählt nicht)
+let lernRound = null;    // laufende Runde { size, n, right } (nur für diese Sitzung)
 
 function lernLoad(){
   try{
@@ -513,21 +517,35 @@ function lernLoad(){
 function lernSave(){ try{ localStorage.setItem(LERN_KEY, JSON.stringify(lern)); }catch(e){} }
 const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
-// Karten mit den aktuellen Einträgen abgleichen: neue kommen in Fach 1, verschwundene fallen weg
+// Karten mit den aktuellen Einträgen abgleichen: neue warten als «neu» (Fach 0), verschwundene fallen weg
 function lernSync(){
   const items = lern.cats.map(id => CATS.find(c => c.id === id)).filter(Boolean)
     .flatMap(cat => cat.items.map(item => ({ cat, item })));
   const cards = {};
-  for(const { item } of items) cards[item.id] = lern.cards[item.id] || { box:1, due:0 };
+  for(const { item } of items) cards[item.id] = lern.cards[item.id] || { box:0, due:0 };
   lern.cards = cards;
   return items;
 }
 
+// Neue Begriffe dosieren: pro Tag höchstens NEU_PRO_TAG ins Fach 1 (zufällig gewählt); «extra» holt freiwillig mehr
+function lernIntroduce(items, extra = 0){
+  const today = startOfToday();
+  if(lern.newDay !== today){ lern.newDay = today; lern.newCount = 0; }
+  const waiting = items.filter(({ item }) => lern.cards[item.id].box === 0);
+  let n = Math.max(0, NEU_PRO_TAG - lern.newCount) + extra;
+  while(n-- > 0 && waiting.length){
+    const [{ item }] = waiting.splice(Math.floor(Math.random() * waiting.length), 1);
+    lern.cards[item.id] = { box:1, due:0 };
+    lern.newCount++;
+  }
+}
+
 function lernStats(items){
-  const s = { total:items.length, richtig:0, fach5:0, due:0, next:Infinity, boxes:[0, 0, 0, 0, 0] };
+  const s = { total:items.length, neu:0, richtig:0, fach5:0, due:0, next:Infinity, boxes:[0, 0, 0, 0, 0] };
   const now = Date.now();
   for(const { item } of items){
     const c = lern.cards[item.id];
+    if(c.box === 0){ s.neu++; continue; }
     s.boxes[c.box - 1]++;
     if(c.box >= 2) s.richtig++;
     if(c.box === 5) s.fach5++;
@@ -623,6 +641,7 @@ function renderLernSetup(){
     }
     lernPractice = false;
     lernCur = null;
+    lernRound = null;
     lernSync();
     lernSave();
     renderLernQuiz();
@@ -631,14 +650,22 @@ function renderLernSetup(){
 
 function renderLernQuiz(){
   const items = lernSync();
+  lernIntroduce(items);
   lernSave();
   const s = lernStats(items);
   const now = Date.now();
-  let pool = items.filter(({ item }) => lern.cards[item.id].due <= now);
-  if(!pool.length && lernPractice) pool = items;
+  const active = items.filter(({ item }) => lern.cards[item.id].box > 0);
+  // Runden zu höchstens RUNDE Fragen; nach der letzten Frage kommt die Auswertung
+  if(!lernPractice && !lernRound && s.due) lernRound = { size:Math.min(RUNDE, s.due), n:0, right:0 };
+  const roundDone = !!lernRound && lernRound.n >= lernRound.size;
+  let pool = roundDone ? [] : active.filter(({ item }) => lern.cards[item.id].due <= now);
+  if(!pool.length && lernPractice) pool = active;
   if(pool.length > 1 && lernCur) pool = pool.filter(p => p.item.id !== lernCur.item.id);   // nicht zweimal hintereinander
   lernCur = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
   const counting = lernCur && lern.cards[lernCur.item.id].due <= now;
+  const round = lernRound;
+  const roundText = round && round.n ? `Runde: ${round.right} von ${round.n} richtig.` : "";
+  if(!lernCur && !(roundDone && s.due)) lernRound = null;   // Tagesende: nächstes Mal beginnt eine neue Runde
 
   lernEl.innerHTML = `
     <div class="lern-stats">
@@ -648,22 +675,35 @@ function renderLernQuiz(){
     </div>
     <div class="lern-bar" title="${s.richtig} von ${s.total} richtig beantwortet"><i></i></div>
     <div class="lern-boxes">${s.boxes.map((n, i) => `<div class="lern-box"><span><i></i></span><small>Fach ${i + 1}<br>${n}</small></div>`).join("")}</div>
+    ${s.neu ? `<p class="lern-hint">${s.neu} neue Begriffe warten noch, pro Tag kommen bis zu ${NEU_PRO_TAG} dazu.</p>` : ""}
     ${lernCur ? `
       ${lernCardHtml(lernCur)}
-      <p class="lern-hint">${esc(lernCur.cat.name)} · ${counting ? `Fach ${lern.cards[lernCur.item.id].box}` : "freies Üben (zählt nicht)"}
-        · noch ${s.due} für heute</p>
+      <p class="lern-hint">${counting && round ? `Frage ${round.n + 1} von ${round.size} · ` : ""}${esc(lernCur.cat.name)}
+        · ${counting ? `Fach ${lern.cards[lernCur.item.id].box}` : "freies Üben (zählt nicht)"}</p>
       <form id="lernForm" class="lern-form" autocomplete="off">
         <input id="lernInput" type="text" placeholder="Name eintippen" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Name">
         <button>Prüfen</button>
         <button type="button" class="ghost" id="lernSkip">Weiss nicht</button>
       </form>
       <div id="lernFeedback" class="lern-feedback" aria-live="polite"></div>`
+    : roundDone && s.due ? `
+      <div class="lern-done">
+        <h3>Runde geschafft!</h3>
+        <p>${round.right} von ${round.size} richtig. Heute ${s.due === 1 ? "ist noch 1 Begriff" : `sind noch ${s.due} Begriffe`} fällig.</p>
+        <div class="offline">
+          <button id="lernNextRound">Nächste Runde</button>
+          <button class="ghost" id="lernStop">Fertig für heute</button>
+        </div>
+      </div>`
     : `
       <div class="lern-done">
         <h3>Für heute ist alles wiederholt.</h3>
-        <p>Die nächste Abfrage ist ${esc(lernWhen(s.next))}. Komm dann wieder: Mit jeder Wiederholung wandern die Begriffe
-          weiter ins Langzeitgedächtnis.</p>
-        <button id="lernPracticeBtn">Trotzdem weiterüben</button>
+        <p>${roundText} ${s.next < Infinity ? `Die nächste Abfrage ist ${esc(lernWhen(s.next))}.` : "Morgen kommen neue Begriffe dazu."}
+          Komm dann wieder: Mit jeder Wiederholung wandern die Begriffe weiter ins Langzeitgedächtnis.</p>
+        <div class="offline">
+          ${s.neu ? `<button id="lernMoreNew">${Math.min(NEU_PRO_TAG, s.neu)} weitere neue Begriffe</button>` : ""}
+          <button class="${s.neu ? "ghost" : ""}" id="lernPracticeBtn">Trotzdem weiterüben</button>
+        </div>
         <p class="lern-hint">Freies Üben zählt nicht fürs Lernsystem.</p>
       </div>`}
     <p><button class="ghost" id="lernCats">Kategorien ändern</button></p>`;
@@ -674,6 +714,15 @@ function renderLernQuiz(){
   lernEl.querySelectorAll(".lern-box i").forEach((el, i) => { el.style.height = (100 * s.boxes[i] / max) + "%"; });
   document.getElementById("lernCats").addEventListener("click", renderLernSetup);
   document.getElementById("lernPracticeBtn")?.addEventListener("click", () => { lernPractice = true; renderLernQuiz(); });
+  document.getElementById("lernNextRound")?.addEventListener("click", () => { lernRound = null; renderLernQuiz(); });
+  document.getElementById("lernStop")?.addEventListener("click", () => { lernRound = null; location.hash = "#/"; });
+  document.getElementById("lernMoreNew")?.addEventListener("click", () => {
+    lernIntroduce(items, NEU_PRO_TAG);
+    lernSave();
+    lernPractice = false;
+    lernRound = null;
+    renderLernQuiz();
+  });
   if(!lernCur) return;
 
   // Bilder zum Umschalten und Vergrössern (ohne Textseite); die Quelle erst nach der Antwort zeigen
@@ -696,6 +745,7 @@ function renderLernQuiz(){
       progress.box = result ? Math.min(5, progress.box + 1) : 1;
       progress.due = result ? startOfToday() + LEITNER_TAGE[progress.box - 1] * DAY : 0;
       lernSave();
+      if(lernRound){ lernRound.n++; if(result) lernRound.right++; }
     }
     const name = `<b>${esc(item.n)}</b>${item.s ? `, <span class="${cat.latin ? "latin" : ""}">${esc(item.s)}</span>` : ""}`;
     const where = counting ? (result ? ` Kommt in Fach ${progress.box}, nächste Abfrage ${esc(lernWhen(progress.due))}.`

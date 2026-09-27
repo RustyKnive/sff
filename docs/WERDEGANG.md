@@ -114,6 +114,9 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bilder aus Liste übernehmen:** Mehrere Bilder auf einmal von Commons übernehmen oder entfernen, indem man eine Liste
   einfügt (Eintrag, Bildnummer, Adresse). Anlass war die Durchsicht der 140 neuen Bilder, bei der gut 20 falsche
   Motive auffielen, etwa ein Schädel statt eines Steinmarders oder eine Gedenktafel von den Philippinen.
+- **LernApp in kleinen Portionen:** Neue Begriffe kommen dosiert dazu, höchstens 10 pro Tag (freiwillig mehr möglich),
+  statt alle auf einmal. Abgefragt wird in Runden zu höchstens 15 Fragen mit einer kurzen Auswertung am Schluss.
+  So bleibt das Leitner-System wirksam und das Lernen überschaubar.
 - **LernApp mit allen Bildern:** Während der Abfrage lässt sich zwischen den Bildern eines Eintrags umschalten
   (ohne die Textseite mit der Lösung), und die Bilder lassen sich wie in der Grossansicht vergrössern, ohne dass das
   Eingabefeld verschwindet. Die Quellenangabe erscheint erst nach der Antwort, weil der Dateiname oft den Namen verrät.
