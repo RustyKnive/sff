@@ -475,6 +475,10 @@ function render(){
   renderSidebar();
   const r = route();
   const main = $("main");
+  // Knopf «Übersicht» nur zeigen, wenn nicht schon die Übersicht offen ist
+  $("toOverview").hidden = !(
+    (r.type === "k" && (r.id === "neu" || findCat(r.id))) ||
+    (r.type === "e" && ((r.id === "neu" && findCat(r.extra)) || findEntry(r.id))));
   if(r.type === "k" && r.id === "neu") return renderCategory(null);
   if(r.type === "k" && findCat(r.id)) return renderCategory(findCat(r.id));
   if(r.type === "e" && r.id === "neu" && findCat(r.extra)) return renderEntry(findCat(r.extra), null);
