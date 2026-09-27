@@ -293,10 +293,7 @@ const PAGES = {
 
 // Bildnachweis: alle eigenen Bilder mit Link zur Quellseite (Urheber und Lizenz).
 // Ohne Quelle gilt ein Bild als eigenes Foto; zugeschnittene Bilder bekommen einen Hinweis (CC-Lizenzen verlangen ihn).
-let creditsBuilt = false;
 function buildCredits(){
-  if(creditsBuilt) return;
-  creditsBuilt = true;
   document.getElementById("credits").innerHTML = CATS.map(cat => `
     <h3>${esc(cat.name)}</h3>
     <ul class="credits">${cat.items.map(it => {
@@ -324,7 +321,7 @@ function render(){
     titleEl.textContent = page.title;
     introEl.textContent = page.intro;
     document.title = page.title + " – Natur und Schweiz by toj";
-    if(id === "copyright") buildCredits();
+    if(id === "copyright"){ buildCredits(); refresh(); }
     return;
   }
   if(!cat){
@@ -409,10 +406,29 @@ menu.addEventListener("click", e => { if(e.target.closest("a")) setMenu(false); 
 document.addEventListener("click", e => { if(!menu.hidden && !e.target.closest(".menu-wrap")) setMenu(false); });
 document.addEventListener("keydown", e => { if(e.key === "Escape" && !menu.hidden){ setMenu(false); menuBtn.focus(); } });
 
+/* Neuer Stand aus der Verwaltung, ohne die Seite neu zu laden (offener Tab, installierte App):
+   beim Zurückkehren auf die Seite und beim Öffnen des Bildnachweises. Hat sich etwas geändert,
+   werden die gebauten Karten verworfen und bei der nächsten Ansicht neu gebaut. Die offene Ansicht
+   wird nur beim Bildnachweis neu gezeichnet, damit nichts unter dem Finger springt. */
+let lastData = "";
+async function refresh(){
+  let cats;
+  try{ cats = await loadCats(); }catch(e){ return; }
+  const json = JSON.stringify(cats);
+  if(json === lastData) return;
+  lastData = json;
+  CATS = cats;
+  catCards.clear();
+  overviewCards = null;
+  if(location.hash.replace(/^#\/?/, "") === "copyright") buildCredits();
+}
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && lastData) refresh(); });
+
 document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
 introEl.textContent = "Inhalte werden geladen …";
 loadCats().then(cats => {
   CATS = cats;
+  lastData = JSON.stringify(cats);
   window.addEventListener("hashchange", render);
   render();
   setupOffline().catch(() => {

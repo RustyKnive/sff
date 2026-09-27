@@ -332,7 +332,10 @@ function renderEntry(cat, entry){
     slot.querySelector("[data-focus]")?.addEventListener("click", () => editFocus(e, img));
     slot.querySelector("input[type=file]").addEventListener("change", ev => {
       const f = ev.target.files[0];
-      if(f) uploadImage(cat, e, p, f, img, page.value.trim(), file.value.trim());
+      if(!f) return;
+      // Unveränderte Angaben gehören zum alten Bild: nicht übernehmen (sonst verlinkt der Bildnachweis das falsche Bild)
+      const keep = (input, old) => input.value.trim() === (old || "") ? "" : input.value.trim();
+      uploadImage(cat, e, p, f, img, keep(page, img?.source_page), keep(file, img?.source_file));
     });
     slot.querySelector("[data-delimg]")?.addEventListener("click", async () => {
       if(!confirm(`Bild ${p} entfernen?`)) return;
@@ -367,7 +370,8 @@ function slotHtml(e, p, label){
     <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
     <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
-    ${img && !img.source_page ? `<p class="hint">Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto.</p>` : ""}
+    ${img && !img.source_page ? `<p class="hint">Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto. Quelle nachtragen und «Speichern».</p>` : ""}
+    ${img ? "" : `<p class="hint">Stammt das Bild nicht von dir: Quelle vor dem Hochladen eintragen oder danach nachtragen.</p>`}
     ${img?.edited ? `<p class="hint">Zugeschnitten (steht so im Bildnachweis).</p>` : ""}
     ${img ? `<div class="slot-actions">
       <button type="button" class="ghost" data-crop title="Bild dauerhaft zuschneiden">Zuschneiden</button>

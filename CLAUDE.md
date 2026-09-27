@@ -59,6 +59,8 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
   - «Ausschnitt Vorschau»: Bild im 4:3-Rahmen verschieben und vergrössern. Gespeichert in `thumb_x`/`thumb_y` (Punkt in %, wie `object-position`) und `thumb_zoom` (1–4), `null` = Mitte. Die Anzeige setzt daraus die CSS-Variablen `--fx`, `--fy`, `--z` (`setFocus` in `js/index.js`, `applyFocus` in `js/admin.js`); Karten, Übersichtskachel und die Vorschau im Admin werten sie gleich aus, die Lightbox nicht.
   - Jedes neue Bild (`storeImage`) setzt den Ausschnitt zurück.
 - Bildnachweis (Menü → Copyright) entsteht automatisch aus `images`: mit `source_page` ein Link, ohne Quelle «eigenes Foto». Zuschneiden setzt `edited = true` (011), der Nachweis zeigt dann «(zugeschnitten)», weil CC BY / BY-SA 4.0 einen Hinweis auf Änderungen verlangen. Ein neues Bild setzt `edited` wieder auf false.
+- Hochladen von Hand: Unveränderte Felder «Quelle»/«Dateiname» gehören zum alten Bild und werden nicht übernommen (neues Bild ohne Quelle = eigenes Foto, Quelle lässt sich nachtragen).
+- Die Anzeige lädt die Daten neu (`refresh()` in `js/index.js`), wenn man auf die Seite zurückkehrt (`visibilitychange`) und beim Öffnen des Bildnachweises. So zeigen ein offener Tab und die installierte App Änderungen aus der Verwaltung ohne Neuladen.
 
 ## Offline-App (PWA)
 
