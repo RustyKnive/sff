@@ -505,7 +505,7 @@ const lernEl = document.getElementById("lern");
 let lern = lernLoad();   // { cats:[ids], cards:{ entryId:{ box, due } }, newDay, newCount } oder null; box 0 = neu
 let lernCur = null;      // aktuelle Frage { cat, item }
 let lernPractice = false;   // freies Üben, wenn für heute alles wiederholt ist (zählt nicht)
-let lernRound = null;    // laufende Runde { size, n, right } (nur für diese Sitzung)
+let lernRound = null;    // laufende Runde { size, n, right, helped } (nur für diese Sitzung)
 
 function lernLoad(){
   try{
@@ -582,6 +582,27 @@ function lernWhen(due){
   return `in ${days} Tagen (${new Date(due).toLocaleDateString("de-CH")})`;
 }
 
+// Tipp: erster Buchstabe und Länge des Namens («B _ _ _ _»), Wörter mit Abstand, ohne Klammerteil
+function lernHint(name){
+  const main = name.replace(/\s*\([^)]*\)/g, "").trim();
+  const letters = main.replace(/[^\p{L}]/gu, "").length;
+  const pattern = [...main].map((ch, i) => i === 0 ? ch : /\p{L}/u.test(ch) ? "_" : ch === " " ? " " : ch).join(" ");
+  return `${pattern} (${letters} Buchstaben)`;
+}
+// Auswahl in Fach 1: der richtige Name und 3 andere, möglichst aus derselben Kategorie, gemischt
+function lernChoices({ cat, item }, items){
+  const shuffle = a => { for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const same = shuffle(cat.items.filter(it => it.id !== item.id).map(it => it.n));
+  const other = shuffle(items.filter(p => p.cat.id !== cat.id).map(p => p.item.n));
+  const wrong = [...new Set([...same, ...other])].filter(n => n !== item.n).slice(0, 3);
+  return shuffle([item.n, ...wrong]);
+}
+// Merksatz nach der Antwort: der erste Satz der Beschreibung
+function lernMerksatz(item){
+  const m = (item.t || "").match(/^.+?[.!?](?=\s+\p{Lu}|$)/u);
+  return m ? m[0] : "";
+}
+
 // Bildfläche einer Frage: nur die vorhandenen Bilder, ohne Textseite. Beschriftung und Alternativtext
 // verraten den Namen nicht («Bild 1», «Blätter» …).
 function lernCardHtml({ cat, item }){
@@ -656,7 +677,7 @@ function renderLernQuiz(){
   const now = Date.now();
   const active = items.filter(({ item }) => lern.cards[item.id].box > 0);
   // Runden zu höchstens RUNDE Fragen; nach der letzten Frage kommt die Auswertung
-  if(!lernPractice && !lernRound && s.due) lernRound = { size:Math.min(RUNDE, s.due), n:0, right:0 };
+  if(!lernPractice && !lernRound && s.due) lernRound = { size:Math.min(RUNDE, s.due), n:0, right:0, helped:0 };
   const roundDone = !!lernRound && lernRound.n >= lernRound.size;
   let pool = roundDone ? [] : active.filter(({ item }) => lern.cards[item.id].due <= now);
   if(!pool.length && lernPractice) pool = active;
@@ -664,7 +685,9 @@ function renderLernQuiz(){
   lernCur = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
   const counting = lernCur && lern.cards[lernCur.item.id].due <= now;
   const round = lernRound;
-  const roundText = round && round.n ? `Runde: ${round.right} von ${round.n} richtig.` : "";
+  const roundText = round && round.n ? `Runde: ${round.right} von ${round.n} richtig${round.helped ? `, ${round.helped} mit Tipp` : ""}.` : "";
+  // Fach 1: aus 4 Namen wählen; ab Fach 2 und beim freien Üben selbst eintippen
+  const choice = counting && lern.cards[lernCur.item.id].box === 1;
   if(!lernCur && !(roundDone && s.due)) lernRound = null;   // Tagesende: nächstes Mal beginnt eine neue Runde
 
   lernEl.innerHTML = `
@@ -680,16 +703,25 @@ function renderLernQuiz(){
       ${lernCardHtml(lernCur)}
       <p class="lern-hint">${counting && round ? `Frage ${round.n + 1} von ${round.size} · ` : ""}${esc(lernCur.cat.name)}
         · ${counting ? `Fach ${lern.cards[lernCur.item.id].box}` : "freies Üben (zählt nicht)"}</p>
+      ${choice ? `
+      <div class="lern-choices" id="lernChoices">${lernChoices(lernCur, items).map(n =>
+        `<button type="button" class="ghost" data-name="${esc(n)}">${esc(n)}</button>`).join("")}</div>
+      <p class="lern-hint">Neue Begriffe wählst du aus. Ab Fach 2 tippst du den Namen selbst ein.</p>
+      <p><button type="button" class="ghost" id="lernSkip">Weiss nicht</button></p>`
+      : `
       <form id="lernForm" class="lern-form" autocomplete="off">
         <input id="lernInput" type="text" placeholder="Name eintippen" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Name">
         <button>Prüfen</button>
+        <button type="button" class="ghost" id="lernTip">Tipp</button>
         <button type="button" class="ghost" id="lernSkip">Weiss nicht</button>
       </form>
+      <p class="lern-tip" id="lernTipText" hidden></p>`}
       <div id="lernFeedback" class="lern-feedback" aria-live="polite"></div>`
     : roundDone && s.due ? `
       <div class="lern-done">
         <h3>Runde geschafft!</h3>
-        <p>${round.right} von ${round.size} richtig. Heute ${s.due === 1 ? "ist noch 1 Begriff" : `sind noch ${s.due} Begriffe`} fällig.</p>
+        <p>${round.right} von ${round.size} richtig${round.helped ? `, ${round.helped} mit Tipp` : ""}.
+          Heute ${s.due === 1 ? "ist noch 1 Begriff" : `sind noch ${s.due} Begriffe`} fällig.</p>
         <div class="offline">
           <button id="lernNextRound">Nächste Runde</button>
           <button class="ghost" id="lernStop">Fertig für heute</button>
@@ -738,30 +770,60 @@ function renderLernQuiz(){
   card.querySelectorAll(".slide").forEach(s => fillSlide(s, cat, item, +s.dataset.k));
 
   const form = document.getElementById("lernForm"), input = document.getElementById("lernInput");
+  const choices = document.getElementById("lernChoices");
+  let helped = false;   // Tipp benutzt: richtig zählt nur halb (bleibt im selben Fach)
+
   const answer = given => {
-    const result = given === null ? false : lernMatch(given, item.n);
+    const result = given === null ? false : choice ? (given === item.n ? "exact" : false) : lernMatch(given, item.n);
     const progress = lern.cards[item.id];
     if(counting){
-      progress.box = result ? Math.min(5, progress.box + 1) : 1;
-      progress.due = result ? startOfToday() + LEITNER_TAGE[progress.box - 1] * DAY : 0;
+      if(result && helped){
+        progress.due = startOfToday() + LEITNER_TAGE[progress.box - 1] * DAY;
+      }else{
+        progress.box = result ? Math.min(5, progress.box + 1) : 1;
+        progress.due = result ? startOfToday() + LEITNER_TAGE[progress.box - 1] * DAY : 0;
+      }
       lernSave();
-      if(lernRound){ lernRound.n++; if(result) lernRound.right++; }
+      if(lernRound){ lernRound.n++; if(result && helped) lernRound.helped++; else if(result) lernRound.right++; }
     }
     const name = `<b>${esc(item.n)}</b>${item.s ? `, <span class="${cat.latin ? "latin" : ""}">${esc(item.s)}</span>` : ""}`;
-    const where = counting ? (result ? ` Kommt in Fach ${progress.box}, nächste Abfrage ${esc(lernWhen(progress.due))}.`
-      : " Zurück in Fach 1, kommt bald nochmals.") : "";
+    const where = !counting ? "" : !result ? " Zurück in Fach 1, kommt bald nochmals."
+      : helped ? ` Mit Tipp bleibt der Begriff in Fach ${progress.box}, nächste Abfrage ${esc(lernWhen(progress.due))}.`
+      : ` Kommt in Fach ${progress.box}, nächste Abfrage ${esc(lernWhen(progress.due))}.`;
+    const lead = result === "exact" ? (helped ? "Richtig, mit Tipp:" : "Richtig!") : result === "typo" ? "Fast richtig, es heisst"
+      : given === null ? "Das ist" : "Leider falsch. Richtig ist";
+    const merksatz = lernMerksatz(item);
     document.getElementById("lernFeedback").innerHTML = `
-      <p class="${result ? "ok" : "bad"}">${result === "exact" ? "Richtig!" : result === "typo" ? "Fast richtig, es heisst" : given === null ? "Das ist" : "Leider falsch. Richtig ist"} ${name}.${where}</p>
+      <p class="${result ? "ok" : "bad"}">${lead} ${name}.${where}</p>
+      ${merksatz ? `<p class="lern-fact"><b>Merksatz:</b> ${esc(merksatz)}</p>` : ""}
       <button id="lernNext">Weiter</button>`;
-    input.disabled = true;
-    form.querySelectorAll("button").forEach(b => { b.disabled = true; });
+    // Bedienelemente sperren; bei der Auswahl die richtige und die gewählte Antwort markieren
+    lernEl.querySelectorAll("#lernForm button, #lernChoices button, #lernSkip").forEach(b => { b.disabled = true; });
+    if(input) input.disabled = true;
+    choices?.querySelectorAll("button").forEach(b => {
+      if(b.dataset.name === item.n) b.classList.add("right");
+      else if(b.dataset.name === given) b.classList.add("wrong");
+    });
     card.classList.add("revealed");   // jetzt darf «Quelle» (mit dem Dateinamen) sichtbar sein
     const next = document.getElementById("lernNext");
     next.addEventListener("click", renderLernQuiz);
     next.focus();
   };
-  form.addEventListener("submit", e => { e.preventDefault(); if(input.value.trim()) answer(input.value); else input.focus(); });
+
   document.getElementById("lernSkip").addEventListener("click", () => answer(null));
+  if(choice){
+    choices.addEventListener("click", e => { const b = e.target.closest("button[data-name]"); if(b && !b.disabled) answer(b.dataset.name); });
+    return;
+  }
+  form.addEventListener("submit", e => { e.preventDefault(); if(input.value.trim()) answer(input.value); else input.focus(); });
+  document.getElementById("lernTip").addEventListener("click", ev => {
+    helped = true;
+    const tip = document.getElementById("lernTipText");
+    tip.textContent = "Tipp: " + lernHint(item.n);
+    tip.hidden = false;
+    ev.target.disabled = true;
+    input.focus();
+  });
   input.focus();
 }
 
