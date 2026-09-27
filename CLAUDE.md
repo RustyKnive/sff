@@ -78,6 +78,7 @@ Ohne Claude-API und ohne zusätzliche Kosten: Der Auftrag wird über claude.ai (
 2. Auf claude.ai einfügen. Claude prüft die Kategorie und antwortet mit einem JSON-Codeblock: `passt`, `pruefung`, `name`, `description`, `latin`, `labels`, `entries` (mit Beschreibung, Steckbrief, Suchbegriffen, `wp`).
 3. Antwort einfügen, «Antwort übernehmen» (`aiParse()`: nimmt das JSON zwischen erster «{» und letzter «}», ersetzt Eszett durch «ss», begrenzt Längen). Die Angaben landen im Formular, die Einträge als Liste zum Abwählen und Korrigieren.
 4. «Anlegen mit N Einträgen» (`createWithAi()`): Kategorie mit `visible = false`, Einträge, danach Bilder mit `importMissing`. Das Ergebnis steht oben auf der Kategorieseite. Einblenden erst nach dem Durchsehen.
+- Abbrechen: vor dem Anlegen «Abbrechen» neben «Anlegen» (nichts gespeichert, zurück zur Übersicht). Während des Anlegens «Abbrechen und alles löschen»: wirkt nach dem Eintrag, der gerade Bilder lädt, und entfernt die Kategorie mit Einträgen und Bilddateien (`deleteCategory()`, gleich wie «Kategorie löschen»).
 - Stil und Konventionen des Auftrags in `aiPrompt()` gleich halten wie hier unter «Konventionen».
 
 ## Neuer Eintrag per Handyfoto (geplant)

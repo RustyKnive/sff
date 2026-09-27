@@ -175,7 +175,8 @@ function renderCategory(cat){
         </select></label>`}
       <div class="actions">
         <button>${isNew ? "Anlegen" : "Speichern"}</button>
-        ${isNew ? "" : `<button type="button" class="danger" id="delCat">Kategorie löschen</button>`}
+        ${isNew ? `<button type="button" class="ghost" id="cancelNew">Abbrechen</button>`
+          : `<button type="button" class="danger" id="delCat">Kategorie löschen</button>`}
       </div>
     </form>
     ${isNew ? "" : `
@@ -218,14 +219,17 @@ function renderCategory(cat){
     if(location.hash !== "#/k/" + row.id) location.hash = "#/k/" + row.id; else render();
   });
 
-  if(isNew) return;
+  if(isNew){
+    // Eingaben und Vorschlag verwerfen, gespeichert ist noch nichts
+    $("cancelNew").addEventListener("click", () => {
+      if((F.name.value.trim() || aiEntries.length) && !confirm("Eingaben und Vorschlag verwerfen? Es wird nichts gespeichert.")) return;
+      location.hash = "#/";
+    });
+    return;
+  }
   $("delCat").addEventListener("click", async () => {
     if(!confirm(`Kategorie «${c.name}» mit allen ${n} Einträgen und Bildern endgültig löschen?`)) return;
-    const paths = c.entries.flatMap(e => e.images.map(i => i.storage_path));
-    await act(async () => {
-      await must(sb.from("categories").delete().eq("id", c.id));
-      if(paths.length) await must(sb.storage.from(CFG.bucket).remove(paths));
-    }, "Kategorie gelöscht.");
+    await act(() => deleteCategory(c), "Kategorie gelöscht.");
     location.hash = "#/";
   });
   $("entryList").addEventListener("click", e => {
@@ -380,8 +384,18 @@ async function createWithAi(form, row, chosen){
   if(!confirm(`Kategorie «${row.name}» mit ${chosen.length} Einträgen anlegen?\n\n`
     + `Danach werden die Bilder von Wikimedia übernommen. Das dauert einige Minuten; die Seite dabei offen lassen.`)) return;
   const setDisabled = on => [...form.elements].forEach(el => { el.disabled = on; });
-  const status = t => { $("aiResult").innerHTML = `<p class="ai-verdict">${esc(t)}</p>`; };
   setDisabled(true);
+  // Stand anzeigen, dazu ein Knopf zum Abbrechen (wirkt nach dem Eintrag, der gerade Bilder lädt)
+  $("aiResult").innerHTML = `<p class="ai-verdict" id="aiStatus"></p>
+    <button type="button" class="danger" id="aiAbort">Abbrechen und alles löschen</button>`;
+  const status = t => { $("aiStatus").textContent = t; };
+  let aborted = false;
+  $("aiAbort").addEventListener("click", ev => {
+    if(!confirm("Anlegen abbrechen? Die Kategorie wird mit allen Einträgen und Bildern wieder gelöscht.")) return;
+    aborted = true;
+    ev.target.disabled = true;
+    status("Wird abgebrochen …");
+  });
   status("Kategorie und Einträge werden gespeichert …");
   row.visible = false;   // erst nach dem Durchsehen einblenden
   row.sort = cats.length;
@@ -405,16 +419,39 @@ async function createWithAi(form, row, chosen){
   const cat = findCat(row.id);
   const noImg = [];
   for(const [n, e] of (cat?.entries || []).entries()){
+    if(aborted) break;
     status(`Bilder werden übernommen: ${e.name} (${n + 1} von ${cat.entries.length}) …`);
     const failed = await importMissing(cat, e).catch(() => [1, 2, 3, 4]);
     if(failed.length) noImg.push(`${e.name} (Bild ${failed.join(", ")})`);
   }
   await reload().catch(() => {});
 
+  if(aborted){
+    // Alles wieder entfernen, auch die schon übernommenen Bilder
+    try{
+      await deleteCategory(findCat(row.id));
+      await reload().catch(() => {});
+      location.hash = "#/";
+      msg("Abgebrochen. Die Kategorie wurde wieder gelöscht.");
+    }catch(err){
+      aiReport = { id:row.id, isErr:true, text:"Abbrechen hat nicht ganz geklappt (" + err.message + "). Bitte unten «Kategorie löschen» wählen." };
+      location.hash = "#/k/" + row.id;
+    }
+    return;
+  }
+
   aiReport = { id:row.id, isErr:false,
     text:`${cat?.entries.length || 0} Einträge angelegt. Die Kategorie ist noch ausgeblendet: Texte und Bilder durchsehen, dann oben «Kategorie auf der Seite sichtbar» anwählen und speichern.`
-      + (noImg.length ? ` Bilder nicht gefunden: ${noImg.join("; ")}. Dort Suchbegriffe anpassen und im Eintrag nochmals versuchen.` : "") };
+      + (noImg.length ? ` Bilder nicht gefunden: ${noImg.join("; ")}. Dort Suchbegriffe anpassen und im Eintrag nochmals versuchen.` : "")
+      + ` Nicht zufrieden: unten «Kategorie löschen» entfernt alles wieder.` };
   location.hash = "#/k/" + row.id;
+}
+
+// Kategorie mit allen Einträgen (die Datenbank löscht sie mit) und den Bilddateien entfernen
+async function deleteCategory(cat){
+  const paths = cat.entries.flatMap(e => e.images.map(i => i.storage_path));
+  await must(sb.from("categories").delete().eq("id", cat.id));
+  if(paths.length) await must(sb.storage.from(CFG.bucket).remove(paths));
 }
 
 /* ------------------------------------------------------------------
