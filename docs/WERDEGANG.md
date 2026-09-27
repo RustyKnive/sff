@@ -114,6 +114,9 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bilder aus Liste übernehmen:** Mehrere Bilder auf einmal von Commons übernehmen oder entfernen, indem man eine Liste
   einfügt (Eintrag, Bildnummer, Adresse). Anlass war die Durchsicht der 140 neuen Bilder, bei der gut 20 falsche
   Motive auffielen, etwa ein Schädel statt eines Steinmarders oder eine Gedenktafel von den Philippinen.
+- **Bewusst leere Bildplätze:** Wer ein Bild entfernt, lässt den Platz bewusst leer; «Fehlende Bilder übernehmen»
+  füllt ihn nicht mehr mit einem zufälligen Suchtreffer. Im Eintrag lässt sich das mit «Leer lassen» bzw.
+  «Wieder füllen lassen» ändern, ein neues Bild hebt es von selbst auf.
 - **LernApp:** Nach der Wahl beliebiger Kategorien zeigt sie das Bild eines zufälligen Eintrags, und man tippt den Namen ein.
   Kleine Tippfehler und ä/ae spielen keine Rolle. Wiederholt wird nach dem **Leitner-System** mit 5 Fächern:
   Wer richtig antwortet, bekommt den Begriff erst nach 1, 3, 7 und schliesslich 30 Tagen wieder; wer falsch antwortet,
@@ -153,6 +156,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 | `010_bildausschnitt.sql` | Ausschnitt der Vorschau pro Bild |
 | `011_bild_bearbeitet.sql` | Kennzeichnung zugeschnittener Bilder |
 | `012_16_eintraege.sql` | 16 Einträge pro Kategorie, neue Kategorie Naturwunder, Hunde ohne lateinische Untertitel |
+| `013_leere_plaetze.sql` | bewusst leere Bildplätze, die nicht automatisch gefüllt werden |
 
 ## Offen und geplant
 

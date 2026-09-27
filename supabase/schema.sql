@@ -59,6 +59,8 @@ create table if not exists public.entries (
   wp           text,                                   -- Titel des englischen Wikipedia-Artikels (Fallback Hauptbild)
   labels       text[] check (labels is null or cardinality(labels) = 4),  -- eigene Bildbeschriftungen
   visible      boolean not null default true,          -- false = auf der Seite ausgeblendet
+  -- bewusst leere Bildplätze, die «Fehlende Bilder übernehmen» nicht füllt (013_leere_plaetze.sql)
+  empty_slots  smallint[] not null default '{}' constraint entries_empty_slots_1_4 check (empty_slots <@ array[1,2,3,4]::smallint[]),
   sort         integer not null default 0,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()

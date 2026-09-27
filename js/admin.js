@@ -675,7 +675,7 @@ function renderEntry(cat, entry){
         ${labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" value="${esc(l)}"></label>`).join("")}
       </div>
       ${isNew ? `<p class="hint">Mit Claude ausgefüllt: Die Bilder werden beim Anlegen übernommen. Sonst nach dem Anlegen hochladen.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>`}
-      ${!isNew && e.images.length < 4 ? `<p><button type="button" class="ghost" id="importWm">Fehlende Bilder von Wikimedia übernehmen</button></p>
+      ${!isNew && openSlots(e).length ? `<p><button type="button" class="ghost" id="importWm">Fehlende Bilder von Wikimedia übernehmen</button></p>
         <p class="hint">Sucht wie die Seite (Wikipedia-Titelbild, sonst Suchbegriffe unten) und speichert die Bilder mit Quellenangabe.
           Geänderte Suchbegriffe vorher speichern.</p>` : ""}
 
@@ -782,6 +782,14 @@ function renderEntry(cat, entry){
       await act(() => removeImage(e, img), "Bild entfernt.");
       render();
     });
+    slot.querySelector("[data-slotempty]")?.addEventListener("click", async () => {
+      await act(() => setEmptySlot(e, p, true), `Bildplatz ${p} bleibt leer.`).catch(() => {});
+      render();
+    });
+    slot.querySelector("[data-slotfill]")?.addEventListener("click", async () => {
+      await act(() => setEmptySlot(e, p, false), `Bildplatz ${p} darf wieder gefüllt werden.`).catch(() => {});
+      render();
+    });
     // Commons-Adresse aus «Quelle»: dieses Bild herunterladen, verkleinern und mit Quelle speichern
     slot.querySelector("[data-commons]").addEventListener("click", async ev => {
       const name = commonsFile(page.value.trim());
@@ -817,7 +825,7 @@ function slotHtml(e, p, label){
   const img = e.images.find(i => i.position === p);
   return `<div class="slot" data-pos="${p}">
     <strong>${p} · ${esc(label)}${p === 1 ? " (Hauptbild)" : ""}</strong>
-    <div class="thumb">${img ? `<img src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy">` : "kein eigenes Bild<br>(wird online gesucht)"}</div>
+    <div class="thumb">${img ? `<img src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy">` : isEmptySlot(e, p) ? "bewusst leer<br>(wird nicht automatisch gefüllt)" : "kein eigenes Bild"}</div>
     <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
     <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
@@ -829,7 +837,10 @@ function slotHtml(e, p, label){
       <button type="button" class="ghost" data-crop title="Bild dauerhaft zuschneiden">Zuschneiden</button>
       <button type="button" class="ghost" data-focus title="Welcher Teil in der kleinen Vorschau (Karte, Übersicht) zu sehen ist">Ausschnitt Vorschau</button>
       <button type="button" class="ghost" data-otherimg title="Nächstes passendes Bild von Wikimedia Commons">Anderes Bild suchen</button>
-      <button type="button" class="danger" data-delimg>Bild entfernen</button></div>` : ""}
+      <button type="button" class="danger" data-delimg>Bild entfernen</button></div>`
+    : isEmptySlot(e, p)
+      ? `<button type="button" class="ghost small" data-slotfill title="«Fehlende Bilder übernehmen» darf diesen Platz wieder füllen">Wieder füllen lassen</button>`
+      : `<button type="button" class="ghost small" data-slotempty title="«Fehlende Bilder übernehmen» lässt diesen Platz aus">Leer lassen</button>`}
   </div>`;
 }
 
@@ -842,10 +853,23 @@ async function uploadImage(cat, entry, pos, file, old, page, fileName){
   render();
 }
 
-// Bild entfernen: Zeile in «images» und Datei im Bucket
+// Bewusst leere Bildplätze (entries.empty_slots, 013): «Fehlende Bilder übernehmen» füllt sie nicht.
+// Entfernen setzt einen Platz auf leer, ein neues Bild an diesem Platz hebt das wieder auf.
+const isEmptySlot = (e, p) => (e.empty_slots || []).includes(p);
+const openSlots = e => [1, 2, 3, 4].filter(p => !e.images.some(i => i.position === p) && !isEmptySlot(e, p));
+async function setEmptySlot(entry, pos, on){
+  const cur = entry.empty_slots || [];
+  if(cur.includes(pos) === on) return;
+  const next = on ? [...cur, pos].sort() : cur.filter(p => p !== pos);
+  await must(sb.from("entries").update({ empty_slots:next }).eq("id", entry.id));
+  entry.empty_slots = next;
+}
+
+// Bild entfernen: Zeile in «images» und Datei im Bucket; der Platz bleibt danach bewusst leer
 async function removeImage(entry, img){
   await must(sb.from("images").delete().eq("entry_id", entry.id).eq("position", img.position));
   await must(sb.storage.from(CFG.bucket).remove([img.storage_path]));
+  await setEmptySlot(entry, img.position, true);
 }
 
 // Bild speichern: Datei in den Bucket, Zeile in «images», altes Bild löschen.
@@ -860,6 +884,7 @@ async function storeImage(cat, entry, pos, blob, old, page, fileName, edited = f
     thumb_x:null, thumb_y:null, thumb_zoom:null, edited
   }));
   if(old && old.storage_path !== path) await sb.storage.from(CFG.bucket).remove([old.storage_path]);
+  await setEmptySlot(entry, pos, false);
 }
 
 /* ------------------------------------------------------------------
@@ -1101,7 +1126,7 @@ async function importMissing(cat, e, onImage){
   const used = usedFiles(e);
   const failed = [];
   for(const p of [1, 2, 3, 4]){
-    if(e.images.some(i => i.position === p)) continue;
+    if(e.images.some(i => i.position === p) || isEmptySlot(e, p)) continue;
     try{ await importImage(cat, e, p, used); onImage?.(true); }
     catch(err){ failed.push(p); onImage?.(false); }
     await sleep(300);   // Wikimedia schonen
@@ -1156,19 +1181,20 @@ function render(){
   if(r.type === "e" && r.id === "neu" && findCat(r.extra)) return renderEntry(findCat(r.extra), null);
   if(r.type === "e" && findEntry(r.id)){ const { cat, entry } = findEntry(r.id); return renderEntry(cat, entry); }
   const total = cats.reduce((s, c) => s + c.entries.length, 0);
-  const todo = cats.flatMap(c => c.entries.filter(e => e.images.length < 4).map(e => ({ cat:c, e })));
-  const missing = todo.reduce((s, t) => s + 4 - t.e.images.length, 0);
+  const todo = cats.flatMap(c => c.entries.filter(e => openSlots(e).length).map(e => ({ cat:c, e })));
+  const missing = todo.reduce((s, t) => s + openSlots(t.e).length, 0);
+  const empty = cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + (e.empty_slots || []).length, 0), 0);
   main.innerHTML = `<h2>Übersicht</h2>
     <p>${cats.length} Kategorien, ${total} Einträge.</p>
     <p class="hint">Links eine Kategorie wählen oder eine neue anlegen.</p>
     <h3>Eigene Bilder</h3>
     ${todo.length || bulk ? `
-      <p>${todo.length} Einträge haben nicht alle 4 eigenen Bilder (${missing} fehlen). Diese Bilder sucht die Seite bei jedem Besuch online:
-        das ist langsam, Wikimedia sperrt bei vielen Anfragen, und offline fehlen sie.</p>
+      <p>Bei ${todo.length} ${todo.length === 1 ? "Eintrag" : "Einträgen"} ${missing === 1 ? "fehlt 1 Bild" : `fehlen insgesamt ${missing} Bilder`}.</p>
       <button id="importAll" ${bulk ? "disabled" : ""}>Fehlende Bilder von Wikimedia übernehmen</button>
-      <p class="hint" id="importMsg">Die Bilder werden nacheinander gesucht, verkleinert und gespeichert. Das dauert einige Minuten; die Seite dabei offen lassen.
-        Achtung: Auch bewusst leer gelassene Plätze werden wieder gefüllt.</p>`
-    : `<p class="hint">Alle Einträge haben 4 eigene Bilder.</p>`}
+      <p class="hint" id="importMsg">Die Bilder werden nacheinander gesucht, verkleinert und gespeichert. Das dauert einige Minuten; die Seite dabei offen lassen.</p>`
+    : `<p class="hint">Es fehlen keine Bilder.</p>`}
+    ${empty ? `<p class="hint">${empty === 1 ? "1 Bildplatz ist" : `${empty} Bildplätze sind`} bewusst leer und ${empty === 1 ? "wird" : "werden"} nicht gefüllt
+      (im Eintrag mit «Wieder füllen lassen» änderbar).</p>` : ""}
     ${bulkResult && !bulk ? `<p class="hint">${esc(bulkResult)}</p>` : ""}
     <h3>Bilder aus Liste übernehmen</h3>
     <p class="hint">Mehrere Bilder auf einmal von Commons übernehmen oder entfernen. Eine Zeile pro Bild:
