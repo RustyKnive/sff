@@ -233,7 +233,7 @@ function openLightbox(cat, item, start){
       <button class="lb-close" aria-label="Schliessen">×</button>
     </div>`;
   const root = lightbox.querySelector(".lb");
-  lbCarousel = carousel(root);
+  lbCarousel = carousel(root, resetZoom);
   // Die Bilder sind meist schon geladen (Browser- und Offline-Speicher), sonst werden sie jetzt geholt
   root.querySelectorAll(".slide:not(.text)").forEach(s => fillSlide(s, cat, item, +s.dataset.k));
   lbCarousel.go(start);
@@ -245,6 +245,7 @@ function openLightbox(cat, item, start){
 }
 lightbox.addEventListener("close", () => {
   document.body.classList.remove("lb-open");
+  resetZoom();
   lightbox.replaceChildren();
   lbCarousel = null;
   // Mit × oder Esc geschlossen: den Verlaufseintrag der Lightbox wieder entfernen
@@ -255,16 +256,102 @@ lightbox.addEventListener("keydown", e => {
   if(!lbCarousel) return;
   if(e.key === "ArrowRight"){ lbCarousel.go(lbCarousel.cur + 1); e.preventDefault(); }
   if(e.key === "ArrowLeft"){ lbCarousel.go(lbCarousel.cur - 1); e.preventDefault(); }
+  // Zoomen mit + und -, 0 setzt zurück (auf die Fenstermitte)
+  const zoomKey = { "+":1.5, "=":1.5, "-":1 / 1.5 }[e.key];
+  if(zoomKey){ zoomTo(zoom.s * zoomKey, innerWidth / 2, innerHeight / 2); e.preventDefault(); }
+  if(e.key === "0"){ resetZoom(); e.preventDefault(); }
 });
-// Wischen auf dem Handy
-let swipeX = null;
-lightbox.addEventListener("pointerdown", e => { swipeX = e.clientX; });
-lightbox.addEventListener("pointerup", e => {
-  if(swipeX === null || !lbCarousel) return;
-  const dx = e.clientX - swipeX;
-  swipeX = null;
-  if(Math.abs(dx) > 50) lbCarousel.go(lbCarousel.cur + (dx < 0 ? 1 : -1));
+
+/* Zoomen in der Lightbox: Mausrad, Doppelklick bzw. doppelt tippen, zwei Finger.
+   Vergrössert lässt sich das Bild ziehen; Wischen blättert nur ungezoomt.
+   Das Bild wird mit translate/scale (Ursprung oben links, css/index.css) über seiner Seite verschoben. */
+const MAX_ZOOM = 5;
+const zoom = { s:1, x:0, y:0, img:null };
+
+function applyZoom(){
+  zoom.img.style.transform = `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.s})`;
+  lightbox.classList.add("zoomed");
+}
+function resetZoom(){
+  if(zoom.img) zoom.img.style.transform = "";
+  Object.assign(zoom, { s:1, x:0, y:0, img:null });
+  lightbox.classList.remove("zoomed");
+}
+// Auf den Faktor s zoomen; der Bildpunkt unter (cx, cy) bleibt dabei an seiner Stelle
+function zoomTo(s, cx, cy){
+  const img = zoom.img || lightbox.querySelectorAll(".lb .slide")[lbCarousel?.cur]?.querySelector("img.loaded");
+  if(!img) return;   // Textseite oder Bild noch nicht geladen
+  s = Math.min(MAX_ZOOM, Math.max(1, s));
+  if(s === 1){ resetZoom(); return; }
+  const r = img.parentElement.getBoundingClientRect();   // die Seite = ungezoomte Fläche
+  const px = cx - r.left, py = cy - r.top;
+  zoom.x = px - (px - zoom.x) * s / zoom.s;
+  zoom.y = py - (py - zoom.y) * s / zoom.s;
+  zoom.s = s;
+  zoom.img = img;
+  panBy(0, 0);
+}
+// Verschieben, ohne dass neben dem Bild leere Fläche entsteht
+function panBy(dx, dy){
+  if(!zoom.img) return;
+  const r = zoom.img.parentElement.getBoundingClientRect();
+  zoom.x = Math.min(0, Math.max(r.width * (1 - zoom.s), zoom.x + dx));
+  zoom.y = Math.min(0, Math.max(r.height * (1 - zoom.s), zoom.y + dy));
+  applyZoom();
+}
+
+lightbox.addEventListener("wheel", e => {
+  if(!lbCarousel || !e.target.closest(".slide:not(.text)")) return;
+  e.preventDefault();
+  zoomTo(zoom.s * Math.exp(-e.deltaY * 0.002), e.clientX, e.clientY);
+}, { passive:false });
+
+// Finger und Maus: ziehen (vergrössert), zwei Finger zoomen, doppelt tippen, wischen (ungezoomt)
+const pointers = new Map();
+let gesture = null, lastTap = null;
+const gap = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+lightbox.addEventListener("pointerdown", e => {
+  if(!lbCarousel || e.target.closest("button, a")) return;
+  pointers.set(e.pointerId, e);
+  if(pointers.size === 1) gesture = { x0:e.clientX, y0:e.clientY, last:e, pinch:null, moved:false };
+  if(pointers.size === 2 && gesture){
+    const [a, b] = pointers.values();
+    gesture.pinch = { d:gap(a, b), s:zoom.s };
+    gesture.moved = true;
+  }
 });
+lightbox.addEventListener("pointermove", e => {
+  if(!pointers.has(e.pointerId) || !gesture) return;
+  pointers.set(e.pointerId, e);
+  if(gesture.pinch && pointers.size >= 2){
+    const [a, b] = pointers.values();
+    zoomTo(gesture.pinch.s * gap(a, b) / gesture.pinch.d, (a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+  }else if(zoom.s > 1){
+    panBy(e.clientX - gesture.last.clientX, e.clientY - gesture.last.clientY);
+  }
+  if(gap(e, { clientX:gesture.x0, clientY:gesture.y0 }) > 8) gesture.moved = true;
+  gesture.last = e;
+});
+const pointerEnd = e => {
+  if(!pointers.delete(e.pointerId) || !gesture || pointers.size) return;
+  const g = gesture;
+  gesture = null;
+  if(e.type !== "pointerup" || g.pinch) return;
+  const dx = e.clientX - g.x0;
+  // Wischen blättert, aber nur ungezoomt
+  if(zoom.s === 1 && Math.abs(dx) > 50){ lbCarousel.go(lbCarousel.cur + (dx < 0 ? 1 : -1)); return; }
+  if(g.moved) return;
+  // Doppelt tippen oder klicken: vergrössern bzw. zurück
+  const now = Date.now();
+  if(lastTap && now - lastTap.t < 350 && gap(e, lastTap.e) < 30){
+    zoomTo(zoom.s > 1 ? 1 : 2.5, e.clientX, e.clientY);
+    lastTap = null;
+  }else lastTap = { t:now, e };
+};
+lightbox.addEventListener("pointerup", pointerEnd);
+lightbox.addEventListener("pointercancel", pointerEnd);
+// Sonst zieht die Maus eine Kopie des Bildes, statt es zu verschieben
+lightbox.addEventListener("dragstart", e => e.preventDefault());
 
 /* ------------------------------------------------------------------
    ANSICHTEN: Übersicht und Kategorie
@@ -345,7 +432,8 @@ function render(){
   }
   document.body.classList.add("in-sub");
   titleEl.textContent = cat.name;
-  introEl.textContent = "Mit der Maus auf ein Bild fahren und mit den Pfeilen durch die Bilder und den Steckbrief blättern.";
+  introEl.textContent = "Mit der Maus auf ein Bild fahren und mit den Pfeilen durch die Bilder und den Steckbrief blättern. "
+    + "Ein Klick vergrössert; dort lässt sich mit Mausrad, Doppelklick oder zwei Fingern zoomen.";
   document.title = cat.name + " – Natur und Schweiz by toj";
   if(!catCards.has(cat.id)) catCards.set(cat.id, cat.items.map(it => buildCard(cat, it)));
   grid.append(...catCards.get(cat.id));

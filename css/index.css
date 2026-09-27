@@ -122,7 +122,11 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lb{position:relative;width:100%;height:100%;overflow:hidden;touch-action:pan-y}
 .lb .track{height:100%}
 .lb .slide{background:transparent}
-.lb .slide img{object-fit:contain;object-position:50% 50%;transform:none}
+.lb .slide img{object-fit:contain;object-position:50% 50%;transform:none;transform-origin:0 0}
+/* Zoomen (js/index.js zoomTo): Gesten auf den Bildseiten selbst behandeln, nicht vom Browser */
+.lb .slide:not(.text){touch-action:none;cursor:zoom-in}
+dialog.lightbox.zoomed .slide:not(.text){cursor:grab}
+dialog.lightbox.zoomed .slide:not(.text):active{cursor:grabbing}
 .lb .slide.text{display:grid;place-items:center;padding:64px 84px;background:transparent;overflow-y:auto}
 .lb .text-inner{max-width:720px;background:var(--card);border-radius:var(--radius);padding:28px 32px}
 .lb .text h2{font-size:1.8rem}
