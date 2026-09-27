@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 27. September 2026 · 19 sichtbare Kategorien · 287 Einträge · 1147 eigene Bilder
+**Stand:** 27. September 2026 · 20 Kategorien mit je 16 sichtbaren Einträgen (320) · Bilder der 35 neuen Einträge folgen
 
 ---
 
@@ -107,6 +107,10 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **PDF:** Die Bildquelle steht neu klein unter dem Text im jeweiligen Bild statt auf einer eigenen Seite am Schluss.
   Der Texthintergrund ist durchsichtiger und die Quelle kleiner, damit mehr vom Bild sichtbar ist.
   Wer «PDF drucken» aus einer Kategorie heraus wählt, findet diese Kategorie schon ausgewählt.
+- **16 Einträge pro Kategorie:** Damit ein doppelseitig gedrucktes A4-Blatt kein leeres Feld hat, hat jede Kategorie
+  genau 16 sichtbare Einträge. 35 neue Einträge kamen dazu, je ein typischer Schweizer Vertreter, bei den Nutztieren vier.
+  Die Sehenswürdigkeiten wurden aufgeteilt: Bauwerke und Orte bleiben, Wasserfälle, Schluchten, Gletscher und Felsen
+  bilden die neue Kategorie **Naturwunder**. Bei den Hunden sind die Untertitel keine lateinischen Namen mehr.
 - **Neue Versionen sofort sichtbar:** Die Offline-App fragt Seite und Programmdateien jetzt immer beim Server nach,
   statt bis zu 10 Minuten eine ältere Kopie aus dem Browser zu zeigen.
 
@@ -123,6 +127,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 | PDF über den Druckdialog des Browsers | keine zusätzliche Bibliothek nötig |
 | Neue Kategorien zuerst ausgeblendet | Inhalte werden vor dem Veröffentlichen geprüft |
 | Einträge nur einzeln verschieben | Mehrfach-Verschieben ist nicht gewünscht |
+| Genau 16 sichtbare Einträge pro Kategorie | 2 volle A4-Seiten im PDF, doppelseitig ohne leeres Feld; weitere werden ausgeblendet, nicht gelöscht |
 | Schweizer Rechtschreibung (immer «ss») | Zielpublikum Schweizer Schulen |
 
 ## Änderungen an der Datenbank
@@ -136,6 +141,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 | `005`–`009` | neue Einträge und Kategorien |
 | `010_bildausschnitt.sql` | Ausschnitt der Vorschau pro Bild |
 | `011_bild_bearbeitet.sql` | Kennzeichnung zugeschnittener Bilder |
+| `012_16_eintraege.sql` | 16 Einträge pro Kategorie, neue Kategorie Naturwunder, Hunde ohne lateinische Untertitel |
 
 ## Offen und geplant
 

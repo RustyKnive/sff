@@ -102,7 +102,7 @@ Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt da
 
 - Sprache Deutsch, **Schweizer Rechtschreibung: nie «ß», immer «ss»** (auch im Code und in Kommentaren).
 - Texte sachlich und für Sek I verständlich: 3–4 Sätze Beschreibung, 3–4 Steckbrief-Zeilen.
-- Die Anzahl Einträge pro Kategorie ist frei (auf dem Handy steht ohnehin eine Karte pro Zeile). Richtwert 3 Suchbegriffe pro Eintrag.
+- **Jede Kategorie hat genau 16 sichtbare Einträge** (2 volle A4-Seiten im PDF, doppelseitig ohne leeres Feld). Fehlt einer: typischen Schweizer Vertreter ergänzen. Sind es mehr: die weniger typischen ausblenden (`visible = false`), nie löschen. Die Zahl der Kategorien ist frei. Richtwert 3 Suchbegriffe pro Eintrag, passend zu den Bildbeschriftungen 2–4.
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
 - Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin.
 - In `config.js` nur den öffentlichen Schlüssel eintragen, nie den Service-Key.
