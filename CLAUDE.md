@@ -11,6 +11,7 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 - `css/basis.css` gemeinsame Farben und Grundlagen, `css/index.css`, `css/admin.css` pro Seite
 - `sw.js`, `manifest.webmanifest`, `icons/` Offline-App (siehe unten)
 - `supabase/` Datenbankschema und nummerierte Änderungen
+- `docs/WERDEGANG.md` Dokumentation für den User: was die Seite kann und wie sie entstanden ist. **Bei jeder neuen Möglichkeit im selben Commit nachführen** (Abschnitt «Was die Seite heute kann», neuer Eintrag unter «Werdegang» mit Datum, bei Bedarf «Bewusste Entscheide», Datenbank-Tabelle und «Stand» mit den aktuellen Zahlen). Für den User geschrieben, nicht für Entwickler: keine Funktionsnamen.
 
 Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurden nach der Migration entfernt (in der Git-Geschichte noch vorhanden).
 
