@@ -19,7 +19,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   (Mausrad, Doppelklick, zwei Finger, Tasten `+` `-` `0`), vergrössert verschieben und auf dem Handy wischen.
 - **Menü:**
   - *PDF drucken:* eine Kategorie als PDF speichern oder drucken (A4, 8 Einträge pro Seite, Bildquelle klein im jeweiligen Bild).
-  - *Einstellungen:* alle Bilder für die Nutzung ohne Internet herunterladen.
+  - *Einstellungen:* Anleitung, wie man die Seite als App installiert (mit Knopf, wo der Browser das anbietet), und alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
   - *LernApp:* Platzhalter, noch ohne Funktion.
@@ -114,6 +114,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bilder aus Liste übernehmen:** Mehrere Bilder auf einmal von Commons übernehmen oder entfernen, indem man eine Liste
   einfügt (Eintrag, Bildnummer, Adresse). Anlass war die Durchsicht der 140 neuen Bilder, bei der gut 20 falsche
   Motive auffielen, etwa ein Schädel statt eines Steinmarders oder eine Gedenktafel von den Philippinen.
+- **Als App installieren:** Die Einstellungen erklären für iPhone/iPad, Android und Computer, wie man die Seite als App
+  installiert. Wo der Browser es anbietet, genügt der Knopf «Jetzt installieren».
 - **Neue Versionen sofort sichtbar:** Die Offline-App fragt Seite und Programmdateien jetzt immer beim Server nach,
   statt bis zu 10 Minuten eine ältere Kopie aus dem Browser zu zeigen.
 

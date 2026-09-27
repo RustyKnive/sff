@@ -529,6 +529,34 @@ if(OFFLINE_OK) navigator.serviceWorker.register("sw.js").catch(() => {});
 
 const allImageUrls = () => CATS.flatMap(c => c.items.flatMap(it => it.img.filter(Boolean).map(i => i.src)));
 
+/* App installieren (Einstellungen): Chrome, Edge und Android melden mit «beforeinstallprompt», dass sie die Seite
+   installieren können; dann erscheint der Knopf. iPhone/iPad kennen das nicht (Anleitung in index.html). */
+let installPrompt = null;
+const installBtn = document.getElementById("installBtn");
+const installWrap = document.getElementById("installWrap");
+const installState = document.getElementById("installState");
+const runsAsApp = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function showInstallState(){
+  installWrap.hidden = runsAsApp() || !installPrompt;
+  installState.textContent = runsAsApp() ? "Die Seite läuft bereits als App."
+    : installPrompt ? "Dein Browser kann die Seite direkt installieren:"
+    : "So installierst du die Seite, je nach Gerät:";
+}
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; showInstallState(); });
+installBtn.addEventListener("click", async () => {
+  if(!installPrompt) return;
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;   // lässt sich nur einmal verwenden
+  showInstallState();
+});
+window.addEventListener("appinstalled", () => {
+  installPrompt = null;
+  installWrap.hidden = true;
+  installState.textContent = "Installiert. Die App findest du jetzt auf dem Startbildschirm bzw. bei den Programmen.";
+});
+showInstallState();
+
 async function setupOffline(){
   const btn = document.getElementById("offlineBtn");
   const info = document.getElementById("offlineMsg");
