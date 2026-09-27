@@ -779,10 +779,7 @@ function renderEntry(cat, entry){
     });
     slot.querySelector("[data-delimg]")?.addEventListener("click", async () => {
       if(!confirm(`Bild ${p} entfernen?`)) return;
-      await act(async () => {
-        await must(sb.from("images").delete().eq("entry_id", e.id).eq("position", p));
-        await must(sb.storage.from(CFG.bucket).remove([img.storage_path]));
-      }, "Bild entfernt.");
+      await act(() => removeImage(e, img), "Bild entfernt.");
       render();
     });
     // Commons-Adresse aus «Quelle»: dieses Bild herunterladen, verkleinern und mit Quelle speichern
@@ -843,6 +840,12 @@ async function uploadImage(cat, entry, pos, file, old, page, fileName){
     await storeImage(cat, entry, pos, await resizeImage(file), old, page, fileName);
   }, "Bild gespeichert.");
   render();
+}
+
+// Bild entfernen: Zeile in «images» und Datei im Bucket
+async function removeImage(entry, img){
+  await must(sb.from("images").delete().eq("entry_id", entry.id).eq("position", img.position));
+  await must(sb.storage.from(CFG.bucket).remove([img.storage_path]));
 }
 
 // Bild speichern: Datei in den Bucket, Zeile in «images», altes Bild löschen.
@@ -1163,11 +1166,93 @@ function render(){
       <p>${todo.length} Einträge haben nicht alle 4 eigenen Bilder (${missing} fehlen). Diese Bilder sucht die Seite bei jedem Besuch online:
         das ist langsam, Wikimedia sperrt bei vielen Anfragen, und offline fehlen sie.</p>
       <button id="importAll" ${bulk ? "disabled" : ""}>Fehlende Bilder von Wikimedia übernehmen</button>
-      <p class="hint" id="importMsg">Die Bilder werden nacheinander gesucht, verkleinert und gespeichert. Das dauert einige Minuten; die Seite dabei offen lassen.</p>`
+      <p class="hint" id="importMsg">Die Bilder werden nacheinander gesucht, verkleinert und gespeichert. Das dauert einige Minuten; die Seite dabei offen lassen.
+        Achtung: Auch bewusst leer gelassene Plätze werden wieder gefüllt.</p>`
     : `<p class="hint">Alle Einträge haben 4 eigene Bilder.</p>`}
-    ${bulkResult && !bulk ? `<p class="hint">${esc(bulkResult)}</p>` : ""}`;
+    ${bulkResult && !bulk ? `<p class="hint">${esc(bulkResult)}</p>` : ""}
+    <h3>Bilder aus Liste übernehmen</h3>
+    <p class="hint">Mehrere Bilder auf einmal von Commons übernehmen oder entfernen. Eine Zeile pro Bild:
+      <code>Eintrag | Bildnummer | Commons-Adresse</code> oder <code>Eintrag | Bildnummer | entfernen</code>
+      (statt «|» geht auch ein Tabulator oder «;»).</p>
+    <textarea id="batchList" placeholder="Steinmarder | 2 | https://commons.wikimedia.org/wiki/File:…"></textarea>
+    <p><button type="button" class="ghost" id="batchCheck">Liste prüfen</button></p>
+    <div id="batchResult"></div>`;
   showBulk();
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
+  setupBatch();
+}
+
+/* ------------------------------------------------------------------
+   BILDER AUS LISTE (Übersicht): mehrere Bilder auf einmal von Commons übernehmen oder entfernen.
+   Zuerst prüfen (Tabelle mit Stand pro Zeile), dann ausführen. Zeilen laufen nacheinander.
+------------------------------------------------------------------- */
+function parseBatch(text){
+  return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map((line, i) => {
+    const m = line.match(/^(.+?)\s*[|;\t]\s*(\d+)\s*[|;\t]\s*(.+)$/);
+    const r = { nr:i + 1, name:m ? m[1].trim() : line, pos:m ? +m[2] : 0, what:m ? m[3].trim() : "" };
+    if(!m) return { ...r, err:"Form: Eintrag | Bildnummer | Adresse oder «entfernen»" };
+    const hits = cats.flatMap(c => c.entries.filter(e => e.name.toLowerCase() === r.name.toLowerCase()).map(e => ({ cat:c, entry:e })));
+    if(!hits.length) return { ...r, err:"Eintrag nicht gefunden" };
+    if(hits.length > 1) return { ...r, err:"Name kommt in mehreren Kategorien vor" };
+    r.entry = hits[0].entry;
+    if(r.pos < 1 || r.pos > 4) return { ...r, err:"Bildnummer muss 1–4 sein" };
+    if(/^entfernen$/i.test(r.what)){
+      r.remove = true;
+      if(!r.entry.images.some(im => im.position === r.pos)) r.err = "An diesem Platz ist kein Bild";
+    }else{
+      r.file = commonsFile(r.what);
+      if(!r.file) r.err = "Keine Commons-Adresse (…/wiki/File:…)";
+    }
+    return r;
+  });
+}
+
+function setupBatch(){
+  const out = $("batchResult");
+  let rows = [];
+  const setStatus = (r, text, cls) => {
+    const td = $("batch" + r.nr)?.querySelector(".stand");
+    if(td){ td.textContent = text; td.className = "stand " + (cls || ""); }
+  };
+  $("batchCheck").addEventListener("click", () => {
+    rows = parseBatch($("batchList").value);
+    const good = rows.filter(r => !r.err).length;
+    out.innerHTML = rows.length ? `<table class="batch">
+      <tr><th>#</th><th>Eintrag</th><th>Bild</th><th>Aktion</th><th>Stand</th></tr>
+      ${rows.map(r => `<tr id="batch${r.nr}"><td>${r.nr}</td><td>${esc(r.entry?.name || r.name)}</td><td>${r.pos || ""}</td>
+        <td>${r.remove ? "entfernen" : esc(r.file || r.what)}</td>
+        <td class="stand ${r.err ? "bad" : ""}">${esc(r.err || "bereit")}</td></tr>`).join("")}</table>
+      <p>${good ? `<button type="button" id="batchRun">${good} ${good === 1 ? "Zeile" : "Zeilen"} ausführen</button>` : ""}
+        ${rows.length - good ? `<span class="hint">${rows.length - good} fehlerhafte Zeilen werden übersprungen.</span>` : ""}</p>`
+      : `<p class="hint">Die Liste ist leer.</p>`;
+    $("batchRun")?.addEventListener("click", async ev => {
+      ev.target.disabled = true;
+      $("batchCheck").disabled = true;
+      let ok = 0;
+      const todo = rows.filter(r => !r.err);
+      for(const r of todo){
+        setStatus(r, "läuft …");
+        try{
+          // Aktuellen Stand holen: frühere Zeilen können denselben Eintrag schon geändert haben
+          const found = findEntry(r.entry.id);
+          if(!found) throw new Error("Eintrag nicht mehr vorhanden");
+          const old = found.entry.images.find(im => im.position === r.pos);
+          if(r.remove){
+            if(!old) throw new Error("kein Bild an diesem Platz");
+            await removeImage(found.entry, old);
+          }else{
+            await storeWikimedia(found.cat, found.entry, r.pos, await commonsFileImage(r.file), old);
+          }
+          await reload();
+          setStatus(r, "✓ erledigt", "ok");
+          ok++;
+        }catch(err){ setStatus(r, "✗ " + err.message, "bad"); }
+        await sleep(300);   // Wikimedia schonen
+      }
+      $("batchCheck").disabled = false;
+      msg(`${ok} von ${todo.length} Zeilen erledigt.`, ok < todo.length);
+    });
+  });
 }
 
 /* ------------------------------------------------------------------

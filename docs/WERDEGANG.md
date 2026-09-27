@@ -32,7 +32,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - Kategorien und Einträge anlegen, bearbeiten, sortieren, ein- und ausblenden, löschen.
 - Einträge in eine andere Kategorie verschieben.
 - **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»,
-  oder ein bestimmtes Commons-Bild über seine Adresse), dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
+  ein bestimmtes Commons-Bild über seine Adresse oder viele auf einmal über eine Liste), dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
 - **Mit Claude (über claude.ai, ohne Zusatzkosten):**
   - *Neue Kategorie:* Claude prüft die Idee und schreibt alle Einträge; Vorschlag durchsehen, abwählen, korrigieren oder abbrechen.
   - *Neuer Eintrag* über einen Namen oder ein Foto: Claude bestimmt die Art bzw. schreibt den Eintrag,
@@ -111,6 +111,9 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   genau 16 sichtbare Einträge. 35 neue Einträge kamen dazu, je ein typischer Schweizer Vertreter, bei den Nutztieren vier.
   Die Sehenswürdigkeiten wurden aufgeteilt: Bauwerke und Orte bleiben, Wasserfälle, Schluchten, Gletscher und Felsen
   bilden die neue Kategorie **Naturwunder**. Bei den Hunden sind die Untertitel keine lateinischen Namen mehr.
+- **Bilder aus Liste übernehmen:** Mehrere Bilder auf einmal von Commons übernehmen oder entfernen, indem man eine Liste
+  einfügt (Eintrag, Bildnummer, Adresse). Anlass war die Durchsicht der 140 neuen Bilder, bei der gut 20 falsche
+  Motive auffielen, etwa ein Schädel statt eines Steinmarders oder eine Gedenktafel von den Philippinen.
 - **Neue Versionen sofort sichtbar:** Die Offline-App fragt Seite und Programmdateien jetzt immer beim Server nach,
   statt bis zu 10 Minuten eine ältere Kopie aus dem Browser zu zeigen.
 
