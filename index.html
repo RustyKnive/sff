@@ -22,7 +22,7 @@
   <div class="menu-wrap">
     <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="menu" id="menu" hidden>
-      <span class="menu-item off" aria-disabled="true">LernApp <small>bald</small></span>
+      <a class="menu-item" href="#/lernapp">LernApp</a>
       <a class="menu-item" href="#/pdf">PDF drucken</a>
       <a class="menu-item" href="#/einstellungen">Einstellungen</a>
       <a class="menu-item" href="#/admin">Admin</a>
@@ -35,7 +35,10 @@
 </header>
 <main id="grid"></main>
 
-<!-- Seiten aus dem Menü (Adresse #/pdf, #/einstellungen, #/admin, #/copyright) -->
+<!-- Seiten aus dem Menü (Adresse #/lernapp, #/pdf, #/einstellungen, #/admin, #/copyright) -->
+<section class="page" id="page-lernapp" hidden>
+  <div id="lern"></div>
+</section>
 <section class="page" id="page-admin" hidden>
   <h2>Verwaltung</h2>
   <p>In der Verwaltung werden Kategorien, Einträge und Bilder bearbeitet. Sie ist nur für Berechtigte:

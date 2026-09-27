@@ -22,7 +22,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   - *Einstellungen:* Anleitung, wie man die Seite als App installiert (mit Knopf, wo der Browser das anbietet), und alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
-  - *LernApp:* Platzhalter, noch ohne Funktion.
+  - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -114,6 +114,12 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bilder aus Liste übernehmen:** Mehrere Bilder auf einmal von Commons übernehmen oder entfernen, indem man eine Liste
   einfügt (Eintrag, Bildnummer, Adresse). Anlass war die Durchsicht der 140 neuen Bilder, bei der gut 20 falsche
   Motive auffielen, etwa ein Schädel statt eines Steinmarders oder eine Gedenktafel von den Philippinen.
+- **LernApp:** Nach der Wahl beliebiger Kategorien zeigt sie das Bild eines zufälligen Eintrags, und man tippt den Namen ein.
+  Kleine Tippfehler und ä/ae spielen keine Rolle. Wiederholt wird nach dem **Leitner-System** mit 5 Fächern:
+  Wer richtig antwortet, bekommt den Begriff erst nach 1, 3, 7 und schliesslich 30 Tagen wieder; wer falsch antwortet,
+  beginnt beim Begriff wieder vorn. So wandern die Namen ins Langzeitgedächtnis. Angezeigt wird, wie viele Einträge
+  zu lernen, wie viele richtig beantwortet und wie viele im Langzeitgedächtnis sind. Auswahl und Fortschritt bleiben
+  auf dem Gerät gespeichert; eine neue Auswahl beginnt von vorn.
 - **Als App installieren:** Die Einstellungen erklären für iPhone/iPad, Android und Computer, wie man die Seite als App
   installiert. Wo der Browser es anbietet, genügt der Knopf «Jetzt installieren».
 - **Neue Versionen sofort sichtbar:** Die Offline-App fragt Seite und Programmdateien jetzt immer beim Server nach,
@@ -150,5 +156,5 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 
 ## Offen und geplant
 
-- **LernApp:** Was sie können soll, ist noch offen.
+- Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder Auswahl aus mehreren Namen) sind offen.
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).

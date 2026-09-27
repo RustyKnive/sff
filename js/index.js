@@ -384,6 +384,7 @@ function buildOverview(){
 
 // Seiten aus dem Menü (stehen in index.html); gehen vor gleichnamigen Kategorien
 const PAGES = {
+  lernapp:{ title:"LernApp", intro:"Namen zu Bildern lernen, mit dem Leitner-System." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
   einstellungen:{ title:"Einstellungen", intro:"Einstellungen für dieses Gerät." },
   admin:{ title:"Admin", intro:"Zugang zur Verwaltung." },
@@ -480,6 +481,208 @@ document.getElementById("pdfBtn").addEventListener("click", () => {
   });
 });
 
+/* ------------------------------------------------------------------
+   LERNAPP: Bild zeigen, Namen eintippen, nach dem Leitner-System wiederholen.
+   Fach 1–5; richtig = ein Fach weiter, falsch = zurück in Fach 1. Ein Fach wird erst nach
+   LEITNER_TAGE wieder abgefragt, so kommen gut gekonnte Begriffe immer seltener dran.
+   Auswahl und Fortschritt liegen im Browser (localStorage, pro Gerät). Neue Auswahl = neuer Anfang.
+------------------------------------------------------------------- */
+const LERN_KEY = "sff-lernen";
+const LEITNER_TAGE = [0, 1, 3, 7, 30];   // Fach 1 sofort, Fach 2 nach 1 Tag … Fach 5 nach 30 Tagen
+const DAY = 86400000;
+const lernEl = document.getElementById("lern");
+let lern = lernLoad();   // { cats:[ids], cards:{ entryId:{ box, due } } } oder null
+let lernCur = null;      // aktuelle Frage { cat, item }
+let lernPractice = false;   // freies Üben, wenn für heute alles wiederholt ist (zählt nicht)
+
+function lernLoad(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LERN_KEY));
+    if(s && Array.isArray(s.cats) && s.cats.length && s.cards && typeof s.cards === "object") return s;
+  }catch(e){}
+  return null;
+}
+function lernSave(){ try{ localStorage.setItem(LERN_KEY, JSON.stringify(lern)); }catch(e){} }
+const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
+
+// Karten mit den aktuellen Einträgen abgleichen: neue kommen in Fach 1, verschwundene fallen weg
+function lernSync(){
+  const items = lern.cats.map(id => CATS.find(c => c.id === id)).filter(Boolean)
+    .flatMap(cat => cat.items.map(item => ({ cat, item })));
+  const cards = {};
+  for(const { item } of items) cards[item.id] = lern.cards[item.id] || { box:1, due:0 };
+  lern.cards = cards;
+  return items;
+}
+
+function lernStats(items){
+  const s = { total:items.length, richtig:0, fach5:0, due:0, next:Infinity, boxes:[0, 0, 0, 0, 0] };
+  const now = Date.now();
+  for(const { item } of items){
+    const c = lern.cards[item.id];
+    s.boxes[c.box - 1]++;
+    if(c.box >= 2) s.richtig++;
+    if(c.box === 5) s.fach5++;
+    if(c.due <= now) s.due++; else s.next = Math.min(s.next, c.due);
+  }
+  return s;
+}
+
+// Antwort vergleichen: ohne Gross-/Kleinschreibung, ä = ae, ohne Leer- und Satzzeichen.
+// Bei «Fichte (Rottanne)» gilt jeder Teil. Kleine Tippfehler zählen als richtig («typo»).
+const lernNorm = s => s.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue")
+  .replace(new RegExp(String.fromCharCode(223), "g"), "ss")
+  .normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]/g, "");
+function lernDistance(a, b){
+  const d = Array.from({ length:a.length + 1 }, (_, i) => [i]);
+  for(let j = 1; j <= b.length; j++) d[0][j] = j;
+  for(let i = 1; i <= a.length; i++) for(let j = 1; j <= b.length; j++)
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+function lernMatch(answer, name){
+  const a = lernNorm(answer);
+  if(!a) return false;
+  const inBrackets = (name.match(/\(([^)]+)\)/) || [])[1];
+  const variants = [name, name.replace(/\s*\([^)]*\)/g, ""), inBrackets].filter(Boolean).map(lernNorm);
+  if(variants.includes(a)) return "exact";
+  return variants.some(v => lernDistance(a, v) <= (v.length >= 10 ? 2 : v.length >= 5 ? 1 : 0)) ? "typo" : false;
+}
+
+function lernWhen(due){
+  const days = Math.round((due - startOfToday()) / DAY);
+  if(days <= 0) return "gleich nochmals";
+  if(days === 1) return "morgen";
+  return `in ${days} Tagen (${new Date(due).toLocaleDateString("de-CH")})`;
+}
+
+function renderLern(){
+  if(lern && lernSync().length) renderLernQuiz(); else renderLernSetup();
+}
+
+function renderLernSetup(){
+  const sel = new Set(lern ? lern.cats : []);
+  lernEl.innerHTML = `
+    <h2>Kategorien wählen</h2>
+    <p>Wähle eine oder mehrere Kategorien. Die LernApp zeigt ein Bild, und du tippst den Namen ein.
+      Nach dem Leitner-System kommen Begriffe, die du gut kannst, immer seltener dran, schwierige öfter.
+      So bleiben sie dauerhaft im Gedächtnis. Dein Fortschritt wird auf diesem Gerät gespeichert.</p>
+    <div class="lern-cats">${CATS.map(c => `<label><input type="checkbox" value="${esc(c.id)}" ${sel.has(c.id) ? "checked" : ""}>
+      ${esc(c.name)} <small>(${c.items.length})</small></label>`).join("")}</div>
+    <p id="lernSum" class="lern-sum"></p>
+    <div class="offline">
+      <button id="lernStart">Lernen starten</button>
+      ${lern ? `<button class="ghost" id="lernBack">Zurück, nichts ändern</button>` : ""}
+    </div>
+    ${lern ? `<p class="lern-hint">Änderst du die Auswahl, beginnt das Lernen von vorn.</p>` : ""}`;
+  const boxes = [...lernEl.querySelectorAll(".lern-cats input")];
+  const chosen = () => boxes.filter(b => b.checked).map(b => b.value);
+  const sum = () => {
+    const ids = chosen();
+    const n = CATS.filter(c => ids.includes(c.id)).reduce((s, c) => s + c.items.length, 0);
+    document.getElementById("lernSum").textContent = ids.length
+      ? `${ids.length} ${ids.length === 1 ? "Kategorie" : "Kategorien"} mit ${n} Einträgen gewählt.` : "Noch keine Kategorie gewählt.";
+    document.getElementById("lernStart").disabled = !ids.length;
+  };
+  lernEl.querySelector(".lern-cats").addEventListener("change", sum);
+  sum();
+  document.getElementById("lernBack")?.addEventListener("click", renderLernQuiz);
+  document.getElementById("lernStart").addEventListener("click", () => {
+    const ids = chosen();
+    const same = lern && ids.length === lern.cats.length && ids.every(id => lern.cats.includes(id));
+    if(!same){
+      if(lern && !confirm("Die Auswahl hat sich geändert. Das Lernen beginnt dann von vorn, der bisherige Fortschritt wird gelöscht. Weiter?")) return;
+      lern = { cats:ids, cards:{} };
+    }
+    lernPractice = false;
+    lernCur = null;
+    lernSync();
+    lernSave();
+    renderLernQuiz();
+  });
+}
+
+function renderLernQuiz(){
+  const items = lernSync();
+  lernSave();
+  const s = lernStats(items);
+  const now = Date.now();
+  let pool = items.filter(({ item }) => lern.cards[item.id].due <= now);
+  if(!pool.length && lernPractice) pool = items;
+  if(pool.length > 1 && lernCur) pool = pool.filter(p => p.item.id !== lernCur.item.id);   // nicht zweimal hintereinander
+  lernCur = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  const counting = lernCur && lern.cards[lernCur.item.id].due <= now;
+
+  lernEl.innerHTML = `
+    <div class="lern-stats">
+      <div><b>${s.total}</b> Einträge zu lernen</div>
+      <div><b>${s.richtig}</b> richtig beantwortet</div>
+      <div><b>${s.fach5}</b> im Langzeitgedächtnis</div>
+    </div>
+    <div class="lern-bar" title="${s.richtig} von ${s.total} richtig beantwortet"><i></i></div>
+    <div class="lern-boxes">${s.boxes.map((n, i) => `<div class="lern-box"><span><i></i></span><small>Fach ${i + 1}<br>${n}</small></div>`).join("")}</div>
+    ${lernCur ? `
+      <figure class="lern-card"><img alt="Welcher Eintrag ist das?"><div class="status"><div class="spinner"></div></div></figure>
+      <p class="lern-hint">${esc(lernCur.cat.name)} · ${counting ? `Fach ${lern.cards[lernCur.item.id].box}` : "freies Üben (zählt nicht)"}
+        · noch ${s.due} für heute</p>
+      <form id="lernForm" class="lern-form" autocomplete="off">
+        <input id="lernInput" type="text" placeholder="Name eintippen" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="Name">
+        <button>Prüfen</button>
+        <button type="button" class="ghost" id="lernSkip">Weiss nicht</button>
+      </form>
+      <div id="lernFeedback" class="lern-feedback" aria-live="polite"></div>`
+    : `
+      <div class="lern-done">
+        <h3>Für heute ist alles wiederholt.</h3>
+        <p>Die nächste Abfrage ist ${esc(lernWhen(s.next))}. Komm dann wieder: Mit jeder Wiederholung wandern die Begriffe
+          weiter ins Langzeitgedächtnis.</p>
+        <button id="lernPracticeBtn">Trotzdem weiterüben</button>
+        <p class="lern-hint">Freies Üben zählt nicht fürs Lernsystem.</p>
+      </div>`}
+    <p><button class="ghost" id="lernCats">Kategorien ändern</button></p>`;
+
+  // Balken über CSSOM (die Content-Security-Policy verbietet style-Attribute)
+  lernEl.querySelector(".lern-bar i").style.width = (s.total ? 100 * s.richtig / s.total : 0) + "%";
+  const max = Math.max(1, ...s.boxes);
+  lernEl.querySelectorAll(".lern-box i").forEach((el, i) => { el.style.height = (100 * s.boxes[i] / max) + "%"; });
+  document.getElementById("lernCats").addEventListener("click", renderLernSetup);
+  document.getElementById("lernPracticeBtn")?.addEventListener("click", () => { lernPractice = true; renderLernQuiz(); });
+  if(!lernCur) return;
+
+  // Erstes vorhandenes Bild zeigen, sonst online suchen
+  const { cat, item } = lernCur;
+  const img = lernEl.querySelector(".lern-card img"), status = lernEl.querySelector(".lern-card .status");
+  const show = d => showImg(img, d).then(() => status.remove());
+  const online = () => resolveItem(cat, item)[0].then(show);
+  const loc = localImage(cat, item, shownSlots(item)[0]);
+  (loc ? show(loc).catch(online) : online()).catch(() => { status.textContent = "Bild nicht verfügbar"; });
+
+  const form = document.getElementById("lernForm"), input = document.getElementById("lernInput");
+  const answer = given => {
+    const result = given === null ? false : lernMatch(given, item.n);
+    const card = lern.cards[item.id];
+    if(counting){
+      card.box = result ? Math.min(5, card.box + 1) : 1;
+      card.due = result ? startOfToday() + LEITNER_TAGE[card.box - 1] * DAY : 0;
+      lernSave();
+    }
+    const name = `<b>${esc(item.n)}</b>${item.s ? `, <span class="${cat.latin ? "latin" : ""}">${esc(item.s)}</span>` : ""}`;
+    const where = counting ? (result ? ` Kommt in Fach ${card.box}, nächste Abfrage ${esc(lernWhen(card.due))}.`
+      : " Zurück in Fach 1, kommt bald nochmals.") : "";
+    document.getElementById("lernFeedback").innerHTML = `
+      <p class="${result ? "ok" : "bad"}">${result === "exact" ? "Richtig!" : result === "typo" ? "Fast richtig, es heisst" : given === null ? "Das ist" : "Leider falsch. Richtig ist"} ${name}.${where}</p>
+      <button id="lernNext">Weiter</button>`;
+    input.disabled = true;
+    form.querySelectorAll("button").forEach(b => { b.disabled = true; });
+    const next = document.getElementById("lernNext");
+    next.addEventListener("click", renderLernQuiz);
+    next.focus();
+  };
+  form.addEventListener("submit", e => { e.preventDefault(); if(input.value.trim()) answer(input.value); else input.focus(); });
+  document.getElementById("lernSkip").addEventListener("click", () => answer(null));
+  input.focus();
+}
+
 function render(){
   const id = location.hash.replace(/^#\/?/, "");
   const page = PAGES[id];
@@ -496,6 +699,7 @@ function render(){
     document.title = page.title + " – Natur und Schweiz by toj";
     if(id === "copyright"){ buildCredits(); refresh(); }
     if(id === "pdf") fillPdfSelect();
+    if(id === "lernapp") renderLern();
     lastCat = null;
     return;
   }
