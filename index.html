@@ -25,7 +25,7 @@
       <span class="menu-item off" aria-disabled="true">LernApp <small>bald</small></span>
       <a class="menu-item" href="#/pdf">PDF drucken</a>
       <a class="menu-item" href="#/einstellungen">Einstellungen</a>
-      <a class="menu-item" href="admin.html">Admin</a>
+      <a class="menu-item" href="#/admin">Admin</a>
       <a class="menu-item" href="#/copyright">Copyright</a>
     </nav>
   </div>
@@ -35,7 +35,14 @@
 </header>
 <main id="grid"></main>
 
-<!-- Seiten aus dem Menü (Adresse #/pdf, #/einstellungen, #/copyright) -->
+<!-- Seiten aus dem Menü (Adresse #/pdf, #/einstellungen, #/admin, #/copyright) -->
+<section class="page" id="page-admin" hidden>
+  <h2>Verwaltung</h2>
+  <p>In der Verwaltung werden Kategorien, Einträge und Bilder bearbeitet. Sie ist nur für Berechtigte:
+    Die Anmeldung braucht E-Mail, Passwort und einen Code aus einer Authenticator-App.</p>
+  <p><a class="button" href="admin.html" target="_blank" rel="noopener">Verwaltung öffnen ↗</a></p>
+  <p>Die Verwaltung öffnet sich in einem neuen Tab. Diese Seite bleibt offen.</p>
+</section>
 <section class="page" id="page-pdf" hidden>
   <h2>Kategorie als PDF</h2>
   <p>Pro Eintrag das Hauptbild mit Name, Beschreibung und Steckbrief, 8 Einträge pro A4-Seite, am Schluss der Bildnachweis.

@@ -31,6 +31,9 @@ a.menu-item:hover,a.menu-item:focus-visible{background:var(--accent-soft);color:
 .page button{padding:8px 16px;border:none;border-radius:99px;background:var(--accent);color:var(--card);
   font:inherit;font-weight:600;cursor:pointer}
 .page button:disabled{opacity:.6;cursor:default}
+.page a.button{display:inline-block;padding:8px 16px;border-radius:99px;background:var(--accent);color:var(--card);
+  font-weight:600;text-decoration:none}
+.page a.button:hover{filter:brightness(1.08)}
 .page h3{margin:1.2rem 0 .3rem;font-size:1rem}
 .credits{margin:0;padding:0;list-style:none;font-size:.88rem}
 .credits li{padding:2px 0}

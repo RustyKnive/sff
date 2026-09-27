@@ -386,6 +386,7 @@ function buildOverview(){
 const PAGES = {
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
   einstellungen:{ title:"Einstellungen", intro:"Einstellungen für dieses Gerät." },
+  admin:{ title:"Admin", intro:"Zugang zur Verwaltung." },
   copyright:{ title:"Copyright", intro:"Urheberrecht und Bildnachweis." }
 };
 
