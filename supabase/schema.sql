@@ -84,6 +84,7 @@ create table if not exists public.images (
   thumb_x      real constraint images_thumb_x check (thumb_x between 0 and 100),
   thumb_y      real constraint images_thumb_y check (thumb_y between 0 and 100),
   thumb_zoom   real constraint images_thumb_zoom check (thumb_zoom between 1 and 4),
+  edited       boolean not null default false,                      -- zugeschnitten (Hinweis im Bildnachweis, 011)
   updated_at  timestamptz not null default now(),
   primary key (entry_id, position)
 );

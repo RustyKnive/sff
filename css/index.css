@@ -34,7 +34,8 @@ a.menu-item:hover,a.menu-item:focus-visible{background:var(--accent-soft);color:
 .page h3{margin:1.2rem 0 .3rem;font-size:1rem}
 .credits{margin:0;padding:0;list-style:none;font-size:.88rem}
 .credits li{padding:2px 0}
-.credits a{margin-left:6px}
+.credits li > span{margin-left:10px}
+.credits small{color:var(--muted)}
 header p{margin:.4rem 0 0;color:var(--muted)}
 .back{display:none;align-items:center;gap:6px;margin-bottom:12px;padding:7px 14px 7px 10px;border:none;border-radius:99px;
   background:var(--accent-soft);color:var(--accent);font:inherit;font-weight:600;cursor:pointer}

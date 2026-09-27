@@ -8,11 +8,12 @@ let CATS = [];
    und in die Form bringen, mit der der Rest der Seite arbeitet:
    Eintrag: n Name, s Untertitel, t Beschreibung, f Steckbrief [{k,v}], q Suchbegriffe,
    wp Wikipedia-Titel, lb eigene Bildbeschriftungen, img[0..3] eigene Bilder (oder null)
-   Bild: src, page, file, fx/fy/z Ausschnitt für die 4:3-Kacheln (null = Mitte, nicht vergrössert) */
+   Bild: src, page, file, fx/fy/z Ausschnitt für die 4:3-Kacheln (null = Mitte, nicht vergrössert),
+   edited zugeschnitten (Hinweis im Bildnachweis) */
 async function loadCats(){
   const select = "id,name,description,latin,labels,cover_entry_id,"
     + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,"
-    + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom))";
+    + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited))";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
     + "&order=sort.asc,name.asc&entries.order=sort.asc,name.asc";
   const r = await fetch(url, { headers:{ apikey:CFG.key } });
@@ -29,7 +30,7 @@ async function loadCats(){
       img:[1,2,3,4].map(p => {
         const i = e.images.find(x => x.position === p);
         return i ? { src:publicUrl(i.storage_path), page:i.source_page, file:i.source_file,
-          fx:i.thumb_x, fy:i.thumb_y, z:i.thumb_zoom } : null;
+          fx:i.thumb_x, fy:i.thumb_y, z:i.thumb_zoom, edited:i.edited } : null;
       })
     }))
   }));
@@ -290,7 +291,8 @@ const PAGES = {
   copyright:{ title:"Copyright", intro:"Urheberrecht und Bildnachweis." }
 };
 
-// Bildnachweis: alle eigenen Bilder mit Link zur Quellseite (Urheber und Lizenz)
+// Bildnachweis: alle eigenen Bilder mit Link zur Quellseite (Urheber und Lizenz).
+// Ohne Quelle gilt ein Bild als eigenes Foto; zugeschnittene Bilder bekommen einen Hinweis (CC-Lizenzen verlangen ihn).
 let creditsBuilt = false;
 function buildCredits(){
   if(creditsBuilt) return;
@@ -298,9 +300,13 @@ function buildCredits(){
   document.getElementById("credits").innerHTML = CATS.map(cat => `
     <h3>${esc(cat.name)}</h3>
     <ul class="credits">${cat.items.map(it => {
-      const links = it.img.map((i, k) => i && safeUrl(i.page)
-        ? `<a href="${esc(i.page)}" target="_blank" rel="noopener" title="${esc(i.file || "")}">Bild ${k + 1}</a>` : "").join("");
-      return `<li>${esc(it.n)}${links || " <small>(Bilder werden live von Wikimedia geladen)</small>"}</li>`;
+      const parts = it.img.map((i, k) => {
+        if(!i) return "";
+        if(!safeUrl(i.page)) return `<span>Bild ${k + 1}: eigenes Foto</span>`;
+        return `<span><a href="${esc(i.page)}" target="_blank" rel="noopener" title="${esc(i.file || "")}">Bild ${k + 1}</a>`
+          + `${i.edited ? " <small>(zugeschnitten)</small>" : ""}</span>`;
+      }).join("");
+      return `<li>${esc(it.n)}${parts || " <small>(Bilder werden live von Wikimedia geladen)</small>"}</li>`;
     }).join("")}</ul>`).join("");
 }
 

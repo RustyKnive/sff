@@ -367,6 +367,8 @@ function slotHtml(e, p, label){
     <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
     <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
+    ${img && !img.source_page ? `<p class="hint">Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto.</p>` : ""}
+    ${img?.edited ? `<p class="hint">Zugeschnitten (steht so im Bildnachweis).</p>` : ""}
     ${img ? `<div class="slot-actions">
       <button type="button" class="ghost" data-crop title="Bild dauerhaft zuschneiden">Zuschneiden</button>
       <button type="button" class="ghost" data-focus title="Welcher Teil in der kleinen Vorschau (Karte, Übersicht) zu sehen ist">Ausschnitt Vorschau</button>
@@ -386,13 +388,14 @@ async function uploadImage(cat, entry, pos, file, old, page, fileName){
 
 // Bild speichern: Datei in den Bucket, Zeile in «images», altes Bild löschen.
 // Der Ausschnitt der Vorschau gehört zum alten Bild und wird zurückgesetzt.
-async function storeImage(cat, entry, pos, blob, old, page, fileName){
+// edited: zugeschnitten (Hinweis im Bildnachweis); ein neues Bild ist unverändert.
+async function storeImage(cat, entry, pos, blob, old, page, fileName, edited = false){
   // Immer ein neuer Dateiname: so zeigt kein Zwischenspeicher (CDN, Browser) das alte Bild
   const path = `${cat.id}/${entry.id}-${pos}-${Date.now()}.jpg`;
   await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"image/jpeg" }));
   await must(sb.from("images").upsert({
     entry_id:entry.id, position:pos, storage_path:path, source_page:page || null, source_file:fileName || null,
-    thumb_x:null, thumb_y:null, thumb_zoom:null
+    thumb_x:null, thumb_y:null, thumb_zoom:null, edited
   }));
   if(old && old.storage_path !== path) await sb.storage.from(CFG.bucket).remove([old.storage_path]);
 }
@@ -583,7 +586,7 @@ function editCrop(cat, entry, img){
       c.getContext("2d").drawImage(pic, x, y, w, h, 0, 0, w, h);
       await act(async () => {
         const blob = await new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error("Bild konnte nicht umgewandelt werden")), "image/jpeg", .9));
-        await storeImage(cat, entry, img.position, blob, img, img.source_page, img.source_file);
+        await storeImage(cat, entry, img.position, blob, img, img.source_page, img.source_file, true);
       }, "Bild zugeschnitten.").catch(() => {});
       editor.close();
       render();
