@@ -31,8 +31,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - Anmeldung mit E-Mail, Passwort und Code aus einer Authenticator-App (Zwei-Faktor).
 - Kategorien und Einträge anlegen, bearbeiten, sortieren, ein- und ausblenden, löschen.
 - Einträge in eine andere Kategorie verschieben.
-- **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»),
-  dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
+- **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»,
+  oder ein bestimmtes Commons-Bild über seine Adresse), dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
 - **Mit Claude (über claude.ai, ohne Zusatzkosten):**
   - *Neue Kategorie:* Claude prüft die Idee und schreibt alle Einträge; Vorschlag durchsehen, abwählen, korrigieren oder abbrechen.
   - *Neuer Eintrag* über einen Namen oder ein Foto: Claude bestimmt die Art bzw. schreibt den Eintrag,
@@ -100,6 +100,10 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **PDF drucken:** eine ganze Kategorie als PDF (A4, Rand 5 mm, 8 Einträge pro Seite, Text klein über dem Hauptbild).
 - **Einträge verschieben** in eine andere Kategorie.
 - Der Menüpunkt **Admin** führt auf eine eigene Seite; die Verwaltung öffnet sich in einem neuen Tab.
+- Diese **Dokumentation** des Werdegangs, die bei jeder neuen Möglichkeit ergänzt wird.
+- **Bild von Commons übernehmen:** Adresse eines Commons-Bildes einfügen, die Verwaltung lädt es herunter und trägt die Quelle ein.
+  Anlass war die Prüfung der offenen Bildkorrekturen (Rhone, Inn, Ringelnatter, Toggenburger Ziege), für die passende Bilder
+  gezielt ausgesucht wurden.
 
 ---
 

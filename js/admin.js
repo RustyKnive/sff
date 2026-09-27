@@ -91,7 +91,7 @@ function sourceUrl(s){
 
 // Aus einer Commons-Dateiseite den Dateinamen ableiten
 function commonsFile(page){
-  const m = String(page).match(/\/wiki\/File:([^?#]+)/);
+  const m = String(page).match(/\/wiki\/(?:File|Datei):([^?#]+)/);
   return m ? decodeURIComponent(m[1]).replace(/_/g, " ") : "";
 }
 
@@ -785,6 +785,20 @@ function renderEntry(cat, entry){
       }, "Bild entfernt.");
       render();
     });
+    // Commons-Adresse aus «Quelle»: dieses Bild herunterladen, verkleinern und mit Quelle speichern
+    slot.querySelector("[data-commons]").addEventListener("click", async ev => {
+      const name = commonsFile(page.value.trim());
+      if(!name){
+        page.focus();
+        msg("Zuerst die Adresse der Commons-Dateiseite in «Quelle» einfügen (…/wiki/File:…).", true);
+        return;
+      }
+      if(img && !confirm(`Bild ${p} durch «${name}» ersetzen?`)) return;
+      ev.target.disabled = true;
+      msg("Bild wird von Commons übernommen …");
+      await act(async () => storeWikimedia(cat, e, p, await commonsFileImage(name), img), "Bild übernommen.").catch(() => {});
+      render();
+    });
     slot.querySelector("[data-otherimg]")?.addEventListener("click", async ev => {
       ev.target.disabled = true;
       msg("Anderes Bild wird gesucht …");
@@ -810,8 +824,9 @@ function slotHtml(e, p, label){
     <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
     <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
+    <button type="button" class="ghost small" data-commons title="Commons-Adresse in «Quelle» einfügen, dann klicken: Bild wird heruntergeladen und gespeichert">Bild von dieser Quelle übernehmen</button>
     ${img && !img.source_page ? `<p class="hint">Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto. Quelle nachtragen und «Speichern».</p>` : ""}
-    ${img ? "" : `<p class="hint">Stammt das Bild nicht von dir: Quelle vor dem Hochladen eintragen oder danach nachtragen.</p>`}
+    ${img ? "" : `<p class="hint">Bild von Commons: Adresse in «Quelle» einfügen und übernehmen. Eigenes Foto: Datei wählen.</p>`}
     ${img?.edited ? `<p class="hint">Zugeschnitten (steht so im Bildnachweis).</p>` : ""}
     ${img ? `<div class="slot-actions">
       <button type="button" class="ghost" data-crop title="Bild dauerhaft zuschneiden">Zuschneiden</button>
@@ -1065,7 +1080,11 @@ async function findWikimedia(cat, e, pos, used){
 }
 
 async function importImage(cat, e, pos, used, old){
-  const img = await findWikimedia(cat, e, pos, used);
+  await storeWikimedia(cat, e, pos, await findWikimedia(cat, e, pos, used), old);
+}
+
+// Gefundenes Wikimedia-Bild herunterladen, verkleinern und mit Quelle speichern
+async function storeWikimedia(cat, e, pos, img, old){
   const r = await retry(async () => {
     const r = await fetch(img.src);
     if(!r.ok) throw httpError(r);

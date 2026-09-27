@@ -75,6 +75,16 @@ async function commonsSearch(query, used){
   }
   return null;
 }
+// Ein bestimmtes Bild von Commons über seinen Dateinamen (für «Bild von dieser Quelle übernehmen» in der Verwaltung)
+async function commonsFileImage(file, width = 1600){
+  const u = API_C + "?action=query&format=json&origin=*&prop=imageinfo&iiprop=url&iiurlwidth=" + width
+    + "&titles=" + encodeURIComponent("File:" + file);
+  const d = await getJSON(u);
+  const p = Object.values((d.query && d.query.pages) || {})[0];
+  const ii = p && p.imageinfo && p.imageinfo[0];
+  if(!ii) throw new Error("Diese Datei gibt es auf Commons nicht");
+  return { src:ii.thumburl || ii.url, page:ii.descriptionurl, file:p.title.replace(/^File:/, "") };
+}
 async function commonsImage(query, used, base){
   const words = query.split(" ");
   const tries = [query];
