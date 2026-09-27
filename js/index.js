@@ -408,7 +408,7 @@ function buildCredits(){
 
 /* ------------------------------------------------------------------
    PDF DRUCKEN: eine Kategorie, 8 Einträge pro A4-Seite (2 × 4), Hauptbild mit dem Text darüber,
-   am Schluss der Bildnachweis (CC-Lizenzen verlangen ihn auch gedruckt). Das PDF erstellt der
+   darunter klein die Bildquelle (CC-Lizenzen verlangen sie auch gedruckt). Das PDF erstellt der
    Browser über den Druckdialog («Als PDF speichern»); das Layout steht in css/index.css (@media print).
 ------------------------------------------------------------------- */
 const PER_PAGE = 8;
@@ -448,21 +448,18 @@ async function printCategory(cat){
         <strong>${esc(it.n)}</strong>${it.s ? ` <span class="${cat.latin ? "latin" : ""}">${esc(it.s)}</span>` : ""}
         <p>${esc(it.t)}</p>
         ${it.f.length ? `<p>${it.f.map(f => `<b>${esc(f.k)}:</b> ${esc(f.v)}`).join(" · ")}</p>` : ""}
+        <small class="print-src"></small>
       </figcaption>
     </figure>`).join("")}</div>`).join("");
 
-  // Alle Hauptbilder laden; fehlt eines, bleibt die Fläche leer
-  const imgs = printBox.querySelectorAll(".print-cell img");
-  const shown = await Promise.all(cat.items.map((it, i) => loadPrintImage(imgs[i], cat, it).catch(() => null)));
-  const credits = cat.items.map((it, i) => {
-    const d = shown[i];
-    const src = !d ? "kein Bild" : safeUrl(d.page) ? `${esc(d.file || "Wikimedia Commons")}, ${esc(d.page)}${d.edited ? " (zugeschnitten)" : ""}` : "eigenes Foto";
-    return `<li><b>${esc(it.n)}:</b> ${src}</li>`;
-  }).join("");
-  printBox.insertAdjacentHTML("beforeend", `<div class="print-credits">
-    <h2>Natur und Schweiz · ${esc(cat.name)} · Bildnachweis</h2>
-    <p>Bilder von Wikimedia Commons unter der Lizenz, die auf der jeweiligen Quellseite angegeben ist (meist Creative Commons oder gemeinfrei).</p>
-    <ul>${credits}</ul></div>`);
+  // Alle Hauptbilder laden; fehlt eines, bleibt die Fläche leer.
+  // Unter dem Text steht klein die Quelle (CC-Lizenzen verlangen sie auch gedruckt): Commons-Seite mit Urheber und Lizenz.
+  const cells = printBox.querySelectorAll(".print-cell");
+  await Promise.all(cat.items.map((it, i) => loadPrintImage(cells[i].querySelector("img"), cat, it).then(d => {
+    cells[i].querySelector(".print-src").textContent = safeUrl(d.page)
+      ? "Bild: " + decodeURI(d.page).replace(/^https?:\/\//, "") + (d.edited ? " (zugeschnitten)" : "")
+      : "Bild: eigenes Foto";
+  }).catch(() => {})));
 
   pdfMsg.textContent = "";
   btn.disabled = false;

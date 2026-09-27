@@ -18,7 +18,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Lightbox:** Ein Klick zeigt Bilder und Text bildschirmfüllend. Bilder lassen sich zoomen
   (Mausrad, Doppelklick, zwei Finger, Tasten `+` `-` `0`), vergrössert verschieben und auf dem Handy wischen.
 - **Menü:**
-  - *PDF drucken:* eine Kategorie als PDF speichern oder drucken (A4, 8 Einträge pro Seite, Bildnachweis am Schluss).
+  - *PDF drucken:* eine Kategorie als PDF speichern oder drucken (A4, 8 Einträge pro Seite, Bildquelle klein im jeweiligen Bild).
   - *Einstellungen:* alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
@@ -104,6 +104,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bild von Commons übernehmen:** Adresse eines Commons-Bildes einfügen, die Verwaltung lädt es herunter und trägt die Quelle ein.
   Anlass war die Prüfung der offenen Bildkorrekturen (Rhone, Inn, Ringelnatter, Toggenburger Ziege), für die passende Bilder
   gezielt ausgesucht wurden.
+- **PDF:** Die Bildquelle steht neu klein unter dem Text im jeweiligen Bild statt auf einer eigenen Seite am Schluss.
 
 ---
 
