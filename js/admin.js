@@ -41,6 +41,16 @@ async function act(fn, okText){
   }
 }
 
+// Versionen: Website aus js/version.js, Datenbank aus app_meta (015); 0 = Tabelle fehlt (älter als 015)
+const VERSION = window.SFF_VERSION || { app:"?", datum:"", schema:0 };
+let dbSchema = null;
+async function loadSchemaVersion(){
+  const { data, error } = await sb.from("app_meta").select("schema_version").maybeSingle();
+  dbSchema = error ? 0 : (data?.schema_version ?? 0);
+  $("version").textContent = `Website ${VERSION.app} · Datenbank ${dbSchema || "14 oder älter"}`;
+}
+const schemaMissing = () => dbSchema !== null && dbSchema < VERSION.schema;
+
 async function reload(){
   cats = await must(sb.from("categories")
     .select("*, entries!entries_category_id_fkey(*, images(*))")
@@ -656,7 +666,7 @@ async function selectAll(table){
 }
 async function downloadBackup(){
   const [categories, entries, images] = await Promise.all(["categories", "entries", "images"].map(selectAll));
-  const data = { erstellt:new Date().toISOString(), projekt:CFG.url, bucket:CFG.bucket, categories, entries, images };
+  const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket, categories, entries, images };
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
   a.download = `natur-und-schweiz-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
@@ -1315,6 +1325,9 @@ function render(){
   const missing = todo.reduce((s, t) => s + openSlots(t.e).length, 0);
   const empty = cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + (e.empty_slots || []).length, 0), 0);
   main.innerHTML = `<h2>Übersicht</h2>
+    ${schemaMissing() ? `<p class="warn"><b>Datenbank-Update fehlt:</b> Die Datenbank ist auf Version ${dbSchema || "14 oder älter"},
+      diese Website braucht Version ${VERSION.schema}. Im Supabase-Dashboard unter «SQL Editor» die fehlenden Dateien
+      bis <code>supabase/${String(VERSION.schema).padStart(3, "0")}_…</code> der Reihe nach ausführen.</p>` : ""}
     <p>${cats.length} Kategorien, ${total} Einträge.</p>
     <p class="hint">Links eine Kategorie wählen oder eine neue anlegen.</p>
     <h3>Eigene Bilder</h3>
@@ -1337,7 +1350,11 @@ function render(){
     <h3>Sicherung</h3>
     <p class="hint">Lädt alle Kategorien, Einträge und Bildangaben als Datei herunter (JSON). Die Bild- und Tondateien selbst
       liegen im Supabase-Speicher, ihre Quellen auf Wikimedia Commons. Am besten regelmässig und vor grossen Änderungen sichern.</p>
-    <p><button type="button" class="ghost" id="backupBtn">Sicherung herunterladen</button></p>`;
+    <p><button type="button" class="ghost" id="backupBtn">Sicherung herunterladen</button></p>
+    <h3>Version</h3>
+    <p class="hint">Website ${esc(VERSION.app)} vom ${new Date(VERSION.datum + "T00:00").toLocaleDateString("de-CH", { day:"numeric", month:"long", year:"numeric" })}
+      · Datenbank ${dbSchema === 0 ? "14 oder älter" : dbSchema ?? "?"}
+      (benötigt ${VERSION.schema}) · Verlauf der Versionen: GitHub → Tags</p>`;
   showBulk();
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
   setupBatch();
@@ -1450,7 +1467,7 @@ async function start(session){
     return;
   }
   try{
-    await reload();
+    await Promise.all([reload(), loadSchemaVersion()]);
     $("appView").hidden = false;
     render();
   }catch(e){ msg("Daten konnten nicht geladen werden: " + e.message, true); }

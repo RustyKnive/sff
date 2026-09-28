@@ -6,7 +6,7 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 
 ## Ordnerstruktur
 
-- `index.html` Anzeige, `admin.html` Verwaltung, `config.js` Verbindung zu Supabase
+- `index.html` Anzeige, `admin.html` Verwaltung, `config.js` Verbindung zu Supabase, `js/version.js` Versionsnummern (siehe «Versionierung»)
 - `js/index.js`, `js/admin.js` Skripte der Seiten; `js/wikimedia.js` Bild- und Tonsuche (von beiden genutzt); `js/lib/` supabase-js und qrcode-generator (fest eingebundene Versionen, nur Verwaltung)
 - `.github/workflows/` Wachhalten der Datenbank (siehe unten)
 - `css/basis.css` gemeinsame Farben und Grundlagen, `css/index.css`, `css/admin.css` pro Seite
@@ -24,7 +24,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 - `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»), `thumb_x`/`thumb_y`/`thumb_zoom` (Ausschnitt der Vorschau, siehe Verwaltung), `edited` (zugeschnitten). Position 1 ist das Hauptbild.
 - `admins`: `user_id`. Nur wer hier eingetragen ist, darf schreiben (`is_admin()`). Alle dürfen lesen.
 - `visible` (bei `categories` und `entries`): Ausgeblendete Zeilen filtert die RLS-Regel «lesen» (`visible or is_admin()`) heraus. `index.html` filtert deshalb nicht selbst. Die Kontrollkästchen stehen im Admin in beiden Listen und in den Formularen.
-- Änderungen am Schema kommen als nummerierte Datei in `supabase/` (z. B. `002_sichtbar.sql`) und werden zusätzlich in `schema.sql` nachgeführt.
+- Änderungen am Schema kommen als nummerierte Datei in `supabase/` (z. B. `002_sichtbar.sql`) und werden zusätzlich in `schema.sql` nachgeführt. Jede neue Datei setzt am Schluss `update public.app_meta set schema_version = <Nummer>, updated_at = now();` (siehe «Versionierung»).
 - Neue Uploads aus dem Admin bekommen immer einen neuen Pfad (`<kat>/<entry-id>-<pos>-<zeit>.jpg`), damit kein Cache das alte Bild zeigt. Die alte Datei wird gelöscht.
 
 ## Bilder laden
@@ -102,7 +102,7 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
 Die Anzeige lässt sich installieren (Startbildschirm) und funktioniert ohne Internet. Die Datenquelle deshalb nur über `loadCats()` ansprechen.
 - `sw.js` (Service Worker): Seite und `loadCats()`-Antwort «Netz zuerst» (nach 4 s oder ohne Netz der gespeicherte Stand), Storage-Bilder «Speicher zuerst» im Cache `sff-bilder`. Wikimedia-Fallback wird nicht gespeichert.
 - Anfragen mit `Authorization` (Verwaltung, supabase-js) und `admin.html` laufen nie über den Speicher, damit keine Admin-Daten im Cache landen.
-- Neue Datei für die Anzeige (JS, CSS, Symbol): in `FILES` in `sw.js` eintragen und `APP` (z. B. `sff-app-v2`) erhöhen.
+- Neue Datei für die Anzeige (JS, CSS, Symbol): in `FILES` in `sw.js` eintragen. Der Cache-Name `APP` ergibt sich aus der Website-Version (`sff-app-<version>`, `importScripts("js/version.js")`); mit jeder neuen Version entsteht ein neuer Speicher, alte werden beim Aktivieren gelöscht. Registriert wird mit `updateViaCache:"none"`, damit der Browser auch `js/version.js` ohne Cache auf Änderungen prüft.
 - GitHub Pages erlaubt dem Browser 10 Minuten Zwischenspeicher (`max-age=600`). Darum holt `sw.js` Seite und App-Dateien mit `cache:"no-cache"` (Seitenaufrufe über eine neue `Request` aus der Adresse, weil sich `navigate`-Anfragen nicht mit Optionen kopieren lassen). So sind neue Versionen nach dem Deploy sofort da.
 - Headless Chrome auf diesem Rechner installiert keine Service Worker (auch die alte `sw.js` nicht, vermutlich Richtlinien des verwalteten Chrome): Service-Worker-Verhalten darum im normalen Browser prüfen (Entwicklertools → Application → Service Workers).
 - Nach einem Push baut GitHub Pages die Seite neu (Aktion «pages build and deployment», meist 1–2 Minuten). Hängt der Build in «queued», stösst ein neuer Push einen frischen an. Stand prüfen: `https://api.github.com/repos/RustyKnive/sff/actions/runs?per_page=1`.
@@ -140,6 +140,13 @@ Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt da
 - Kein eingebetteter Code: kein `<script>` mit Inhalt, kein `<style>`, keine `style="…"`- oder `on…="…"`-Attribute. Die Content-Security-Policy (`<meta>` in beiden HTML-Dateien) erlaubt nur eigene Dateien und blockiert alles andere. Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen. Wikimedia liefert Bilder von `upload.wikimedia.org` und `thumb.wikimedia.org`; beide stehen in der CSP.
 - supabase-js liegt als Datei in `js/lib/` (Version im Dateinamen). Zum Aktualisieren die neue `dist/umd/supabase.min.js` von jsDelivr herunterladen und den Pfad in `admin.html` anpassen.
 - Links aus Daten (z. B. «Quelle») nur mit `http(s)://` verwenden; die Datenbank prüft das zusätzlich.
+
+## Versionierung (seit 2.0.0)
+
+- **Website:** `js/version.js` → `SFF_VERSION = { app, datum, schema }`, geladen von `index.html`, `admin.html` und `sw.js`. `app` nach dem Muster Hauptversion.Funktion.Korrektur: neue Möglichkeit → 2.**1**.0, Korrektur/Kosmetik/Text → 2.0.**1**, grosser Umbau oder inkompatibel → **3**.0.0. **Bei jeder Veröffentlichung (Push) `app` und `datum` nachführen**, im selben Commit wie `docs/WERDEGANG.md` (Tabelle «Versionen»).
+- **Datenbank:** Tabelle `app_meta` (eine Zeile, `schema_version`, 015) = Nummer der zuletzt eingespielten SQL-Datei. Neue SQL-Datei → dort `schema_version` setzen und in `js/version.js` `schema` auf dieselbe Nummer, wenn die Website die Änderung braucht. SQL immer **vor** dem Push ausführen lassen.
+- **Prüfung:** Die Anzeige holt `app_meta` (`loadSchemaVersion()`, fehlt die Tabelle = 404 = «14 oder älter»). Schlägt das Laden fehl und ist die Datenbank zu alt, sagt die Startseite, welche SQL-Dateien fehlen (`schemaHint()`), statt nur «nicht geladen». Einstellungen → «Version» (`showVersion()`) zeigt Website und Datenbank. Die Verwaltung zeigt beides im Kopf (`#version`) und in der Übersicht, bei zu alter Datenbank eine Warnung; die Sicherung enthält beide Versionen.
+- **Git-Tags:** Nach dem Push ein annotierter Tag `vX.Y.Z` mit kurzer Beschreibung (Auszug aus dem Werdegang), z. B. `git tag -a v2.1.0 -m "…"` und `git push origin v2.1.0`. `gh` ist nicht installiert; Releases bei Bedarf auf GitHub aus dem Tag erstellen. `v1.0.0` = erste Version (Einzeldatei, 23.9.2026), `v2.0.0` = Einführung der Versionierung.
 
 ## Prüfen
 

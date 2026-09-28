@@ -157,6 +157,22 @@ create policy "bilder_admin_select" on storage.objects
   for select to authenticated using (bucket_id = 'bilder' and public.is_admin());
 
 -- ------------------------------------------------------------------
+-- Versionierung (015): Schema-Version der Datenbank = Nummer der letzten SQL-Datei.
+-- Jede neue SQL-Datei setzt am Schluss: update public.app_meta set schema_version = <Nummer>, updated_at = now();
+-- ------------------------------------------------------------------
+create table if not exists public.app_meta (
+  id int primary key default 1 check (id = 1),
+  schema_version int not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.app_meta enable row level security;
+drop policy if exists "lesen" on public.app_meta;
+create policy "lesen" on public.app_meta for select to anon, authenticated using (true);
+grant select on public.app_meta to anon, authenticated;
+insert into public.app_meta (id, schema_version) values (1, 15)
+  on conflict (id) do update set schema_version = excluded.schema_version, updated_at = now();
+
+-- ------------------------------------------------------------------
 -- Danach: dein Konto zum Admin machen (E-Mail anpassen)
 --   1. Authentication → Users → «Add user» (E-Mail + Passwort, «Auto Confirm»)
 --   2. insert into public.admins (user_id)

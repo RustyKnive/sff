@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 28. September 2026 · 20 Kategorien mit je 16 sichtbaren Einträgen (320) · rund 1270 eigene Bilder ·
+**Stand:** 28. September 2026 · Version 2.0.0 (Datenbank 15) · 20 Kategorien mit je 16 sichtbaren Einträgen (320) · rund 1270 eigene Bilder ·
 36 Verwechslungspaare · Tierstimmen für 28 Arten
 
 ---
@@ -66,6 +66,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   Die Seiten laden nur eigene Dateien und die erlaubten Quellen.
 - **Wachhalten:** Ein kostenloses Supabase-Projekt schläft nach etwa einer Woche ohne Zugriff ein. Eine automatische
   Aufgabe auf GitHub (GitHub Actions) fragt die Datenbank darum jeden Morgen einmal ab.
+- **Versionen:** Website und Datenbank tragen Versionsnummern (siehe «Versionen» unten); passt die Datenbank nicht zur Website,
+  meldet die Seite, welches Update fehlt.
 
 ---
 
@@ -202,6 +204,22 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   ansprang. Jetzt geht nur das Quiz selbst in den Vollbildmodus.
 - **Quiz mit allen Bildern:** Pro Eintrag wechseln im Quiz die Bilder alle 2 Sekunden, ohne Text und Beschriftung.
   So hat die Klasse mehr Hinweise (Blätter, Früchte, Rinde …), ohne dass der Name verraten wird.
+- **Versionierung (Version 2.0.0):** Website und Datenbank haben jetzt Versionsnummern. Die Website zählt nach dem Muster
+  Hauptversion.Funktion.Korrektur (2.1.0 = neue Möglichkeit, 2.0.1 = Korrektur), die Datenbank nach der Nummer der zuletzt
+  eingespielten Änderung (15). Beide Nummern stehen unter Einstellungen → «Version» und in der Verwaltung. Fehlt nach einem
+  Update der Website eine Datenbank-Änderung, sagt die Seite genau, welche, statt einfach keine Inhalte zu zeigen.
+  Jede Version ist auf GitHub als «Tag» abgelegt und lässt sich jederzeit wiederherstellen.
+
+---
+
+## Versionen
+
+| Version | Datum | Inhalt |
+|---|---|---|
+| 1.0.0 | 23.9.2026 | erste Version: eine einzige HTML-Datei, 9 Kategorien mit je 9 Einträgen |
+| 2.0.0 | 28.9.2026 | Stand nach Datenbank, Verwaltung, Offline-App, LernApp mit Lernsessions, Unterrichtsmaterial, Verwechslungsgefahr, Tierstimmen und Anleitung; Einführung der Versionierung (Datenbank-Version 15) |
+
+Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
 ---
 
@@ -221,6 +239,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | Wachhalten über GitHub Actions statt bezahltem Supabase-Plan | kostenlos; die Abfrage liest nur öffentliche Daten mit dem öffentlichen Schlüssel |
 | Sicherung als Datei aus der Verwaltung | die kostenlose Supabase-Stufe hat keine automatischen Sicherungen zum Herunterladen |
 | Tierstimmen als MP3 im eigenen Speicher | spielt in allen Browsern, unabhängig von Wikimedia; nicht im Offline-Speicher, weil Browser Töne stückweise laden |
+| Versionsnummern für Website und Datenbank, Prüfung beim Start | eine neue Website mit veralteter Datenbank ist der gefährlichste Fehler; so wird er sofort und verständlich gemeldet |
 | QR-Codes nur in der Verwaltung | die Anzeige bleibt ohne Bibliothek; gedruckt wird ohnehin von der Lehrperson |
 | «Jetzt zu sehen» aus den Steckbriefen gelesen | keine neue Pflegearbeit; wer den Steckbrief pflegt, pflegt die Monatsliste mit |
 
@@ -238,6 +257,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | `012_16_eintraege.sql` | 16 Einträge pro Kategorie, neue Kategorie Naturwunder, Hunde ohne lateinische Untertitel |
 | `013_leere_plaetze.sql` | bewusst leere Bildplätze, die nicht automatisch gefüllt werden |
 | `014_verwechslung_tierstimmen.sql` | Verwechslungsgefahr (36 Paare) und Tierstimmen; der Speicher nimmt neu auch MP3 an |
+| `015_versionierung.sql` | Die Datenbank kennt ihre Version (Tabelle `app_meta`), damit Website und Datenbank zusammenpassen |
 
 ## Offen und geplant
 

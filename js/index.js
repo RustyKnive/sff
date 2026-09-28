@@ -38,6 +38,31 @@ async function loadCats(){
 }
 
 /* ------------------------------------------------------------------
+   VERSIONEN: Website-Version und benötigte Datenbank-Version stehen in js/version.js,
+   die Datenbank meldet ihre Version in der Tabelle app_meta (015).
+------------------------------------------------------------------- */
+const VERSION = window.SFF_VERSION || { app:"?", datum:"", schema:0 };
+let dbSchema = null;   // Version der Datenbank; null = unbekannt (z. B. ohne Internet)
+async function loadSchemaVersion(){
+  const r = await fetch(CFG.url + "/rest/v1/app_meta?select=schema_version", { headers:{ apikey:CFG.key } });
+  if(r.status === 404) return 0;   // Tabelle fehlt: Datenbank älter als 015
+  if(!r.ok) throw new Error("HTTP " + r.status);
+  return (await r.json())[0]?.schema_version || 0;
+}
+const schemaCheck = loadSchemaVersion().then(v => { dbSchema = v; showVersion(); }).catch(() => {});
+const schemaMissing = () => dbSchema !== null && dbSchema < VERSION.schema;
+const schemaHint = () => `Die Datenbank ist auf Version ${dbSchema || "14 oder älter"}, diese Website braucht Version ${VERSION.schema}. `
+  + `Im Supabase-Dashboard (SQL Editor) die fehlenden Dateien bis supabase/${String(VERSION.schema).padStart(3, "0")}_… ausführen.`;
+// Anzeige unter Einstellungen → Version
+function showVersion(){
+  const el = document.getElementById("versionInfo");
+  if(!el) return;
+  const datum = VERSION.datum ? new Date(VERSION.datum + "T00:00").toLocaleDateString("de-CH", { day:"numeric", month:"long", year:"numeric" }) : "";
+  el.textContent = `Website ${VERSION.app}${datum ? " vom " + datum : ""} · Datenbank ${dbSchema === 0 ? "14 oder älter" : dbSchema ?? "nicht erreichbar"}`
+    + (schemaMissing() ? ` (benötigt ${VERSION.schema}, Update fehlt)` : "");
+}
+
+/* ------------------------------------------------------------------
    BILDER (eigene aus Supabase, sonst live von Wikimedia; Suche in js/wikimedia.js)
 ------------------------------------------------------------------- */
 const ARROW_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>';
@@ -1131,6 +1156,7 @@ function render(){
     if(id === "pdf") fillPdfSelect();
     if(id === "lernapp") renderLern();
     if(id === "quiz") fillQuizSelect();
+    if(id === "einstellungen") showVersion();
     lastCat = null;
     return;
   }
@@ -1376,7 +1402,8 @@ document.getElementById("dailyNext")?.addEventListener("click", () => {
 ------------------------------------------------------------------- */
 const IMAGE_CACHE = "sff-bilder";   // gleicher Name wie in sw.js
 const OFFLINE_OK = "serviceWorker" in navigator && "caches" in window;
-if(OFFLINE_OK) navigator.serviceWorker.register("sw.js").catch(() => {});
+// updateViaCache "none": auch js/version.js (per importScripts im Service Worker) ohne Browser-Cache prüfen
+if(OFFLINE_OK) navigator.serviceWorker.register("sw.js", { updateViaCache:"none" }).catch(() => {});
 
 // Nur die eigenen Bilder; Tierstimmen lädt der Browser immer aus dem Netz (sw.js)
 const allImageUrls = () => CATS.flatMap(c => c.items.flatMap(it => it.img.filter(Boolean).map(i => i.src)));
@@ -1494,6 +1521,8 @@ loadCats().then(cats => {
   setupOffline().catch(() => {
     document.getElementById("offlineMsg").textContent = "Der Offline-Speicher ist in diesem Browser nicht verfügbar (z. B. im privaten Fenster).";
   });
-}).catch(e => {
-  introEl.textContent = "Die Inhalte konnten nicht geladen werden (" + e.message + "). Bitte Internetverbindung prüfen und die Seite neu laden.";
+}).catch(async e => {
+  await schemaCheck;   // fehlt ein Datenbank-Update, das klar sagen statt nur «nicht geladen»
+  introEl.textContent = schemaMissing() ? "Die Inhalte konnten nicht geladen werden. " + schemaHint()
+    : "Die Inhalte konnten nicht geladen werden (" + e.message + "). Bitte Internetverbindung prüfen und die Seite neu laden.";
 });

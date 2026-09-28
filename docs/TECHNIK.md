@@ -4,7 +4,7 @@ Diese Datei beschreibt, **wie** die Website gebaut ist und **warum** so: Archite
 Offline-Betrieb, die wichtigsten Algorithmen, Tests und die Probleme, die unterwegs auftraten. Was die Seite kann und
 wie sie entstanden ist, steht in `WERDEGANG.md`; die Arbeitsregeln für die Entwicklung in `CLAUDE.md`.
 
-**Stand:** 28. September 2026 · rund 5500 Zeilen HTML, CSS, JavaScript und SQL · 70 Versionen (Commits)
+**Stand:** 28. September 2026 · Version 2.0.0, Datenbank 15 · rund 5600 Zeilen HTML, CSS, JavaScript und SQL · über 70 Commits
 
 ---
 
@@ -211,6 +211,27 @@ zudem immer ein Mensch zwischen Vorschlag und Veröffentlichung.
   Bildangaben als JSON (blockweise wegen der 1000-Zeilen-Grenze). Die Bilddateien selbst sind nicht dabei; sie lassen sich
   über die gespeicherten Quellen wieder von Commons holen.
 
+### Versionierung
+
+Website und Datenbank werden getrennt versioniert, weil sie getrennt ausgeliefert werden: Die Website über einen Push
+auf GitHub, die Datenbank über SQL-Dateien, die im Supabase-Dashboard von Hand ausgeführt werden. Genau an dieser Naht
+lag das grösste Betriebsrisiko: Eine neue Website, die neue Spalten abfragt, lädt mit der alten Datenbank gar nichts.
+
+- **Website:** `js/version.js` enthält `app` (nach dem Muster Hauptversion.Funktion.Korrektur, «Semantic Versioning»),
+  das Datum und die Datenbank-Version, die diese Website mindestens braucht. Die Datei wird von beiden Seiten und vom
+  Service Worker geladen; der Offline-Speicher heisst nach der Version (`sff-app-2.0.0`), sodass jede neue Version einen
+  frischen Speicher bekommt und alte gelöscht werden. Registriert wird der Service Worker mit `updateViaCache:"none"`,
+  damit der Browser auch die importierte Versionsdatei ohne Zwischenspeicher auf Änderungen prüft.
+- **Datenbank:** Die Tabelle `app_meta` hat genau eine Zeile mit `schema_version` = Nummer der zuletzt eingespielten
+  SQL-Datei (seit `015_versionierung.sql`). Jede weitere Datei setzt diese Nummer am Schluss.
+- **Prüfung beim Start:** Die Anzeige fragt `app_meta` parallel zu den Inhalten ab. Fehlt die Tabelle (HTTP 404), gilt
+  die Datenbank als «14 oder älter». Scheitert das Laden der Inhalte und ist die Datenbank zu alt, meldet die Startseite
+  genau, welche SQL-Dateien fehlen. Die Verwaltung zeigt beide Nummern und warnt in der Übersicht. Ohne Internet bleibt
+  die Prüfung stumm; dann kommen die gespeicherten Inhalte.
+- **Nachvollziehbarkeit:** Jede Version ist ein annotierter Git-Tag (`v1.0.0` = die ursprüngliche Einzeldatei,
+  `v2.0.0` = Einführung der Versionierung). Die Tabelle «Versionen» im Werdegang fasst jede Veröffentlichung in einer
+  Zeile zusammen; die Sicherung der Verwaltung enthält beide Versionsnummern.
+
 ## 8 Qualitätssicherung
 
 Ohne Build gibt es auch keine Testumgebung von der Stange. Getestet wird mit **Prüfseiten in einem unsichtbaren Chrome**
@@ -237,6 +258,7 @@ Erfahrungen damit:
 | Beim Beamer-Quiz lagen Auswahl und Text über dem Bild | die ganze Seite wurde in den Vollbildmodus geschaltet und liegt dann im Browser über dem Dialog | nur den Quiz-Dialog in den Vollbildmodus schalten |
 | Merksatz brach mitten im Satz ab | Punkt nach Zahl oder Abkürzung | Lookbehind im Satzende-Ausdruck |
 | Tagesauswahl wirkte regelmässig | schwacher Hash | fmix32 und Kategorien-Rotation |
+| Neue Website lädt nichts, wenn eine SQL-Datei vergessen ging | Website und Datenbank werden getrennt ausgeliefert | Versionsnummern für beide, Prüfung beim Start mit klarer Meldung |
 | Datenbank würde in den Ferien pausieren | Gratis-Stufe | täglicher Abruf über GitHub Actions |
 | 20 von 140 übernommenen Bildern zeigten falsche Motive | Suchtreffer auf Commons sind unzuverlässig | Durchsicht und Korrektur per Liste («Eintrag \| Nummer \| Adresse») |
 
