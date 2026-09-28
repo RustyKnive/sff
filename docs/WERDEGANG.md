@@ -5,7 +5,7 @@ je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
 **Stand:** 28. September 2026 · 20 Kategorien mit je 16 sichtbaren Einträgen (320) · rund 1270 eigene Bilder ·
-36 Verwechslungspaare · Tierstimmen für 28 Arten vorbereitet
+36 Verwechslungspaare · Tierstimmen für 28 Arten
 
 ---
 
@@ -221,6 +221,5 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 
 ## Offen und geplant
 
-- Tierstimmen einspielen: Die Liste `docs/tierstimmen-liste.txt` (28 Arten) in der Verwaltung unter «Bilder aus Liste» einfügen.
 - Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).
