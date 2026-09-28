@@ -37,6 +37,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
   - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
+    Mehrere **Lernsessions** nebeneinander, jede mit eigenen Kategorien, eigener Farbe und eigenem Fortschritt; umschalten über die farbige Leiste, löschen unter «Lernsessions verwalten».
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -187,6 +188,10 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 - **Marke toj-apps:** Titel und Copyright lauten neu «Natur und Schweiz by toj-apps» bzw. «© 2026 toj-apps».
 - **Fehler behoben:** Bei Einträgen mit Tierstimme oder Verwechslungsgefahr zeigte die Grossansicht nur den Text, und die Bilder liessen
   sich nicht anwählen (der Browser sprang zum Knopf bzw. Link auf der Textseite). Jetzt öffnet sie wie gewohnt beim Bild.
+- **Mehrere Lernsessions:** Die LernApp kann mehrere Lernsessions gleichzeitig offen haben, z. B. «Bäume» und «Vögel, Amphibien».
+  Jede hat eigene Kategorien, eine eigene Farbe (8 zur Auswahl) und einen eigenen Fortschritt. Eine farbige Leiste über der Abfrage
+  schaltet um und zeigt, wie viele Begriffe pro Session heute offen sind; der Hinweis auf der Startseite zählt alle zusammen.
+  Unter «Lernsessions verwalten» lassen sich Sessions öffnen und löschen. Der bisherige Lernstand wurde zur ersten Session.
 
 ---
 

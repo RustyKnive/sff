@@ -595,7 +595,8 @@ document.getElementById("pdfBtn").addEventListener("click", () => {
    LERNAPP: Bild zeigen, Namen eintippen, nach dem Leitner-System wiederholen.
    Fach 1–5; richtig = ein Fach weiter, falsch = zurück in Fach 1. Ein Fach wird erst nach
    LEITNER_TAGE wieder abgefragt, so kommen gut gekonnte Begriffe immer seltener dran.
-   Auswahl und Fortschritt liegen im Browser (localStorage, pro Gerät). Neue Auswahl = neuer Anfang.
+   Auswahl und Fortschritt liegen im Browser (localStorage, pro Gerät).
+   Mehrere Lernsessions: jede mit eigenen Kategorien, eigener Farbe und eigenem Fortschritt; die Lernserie gilt fürs Gerät.
    Neue Begriffe warten in «Fach 0» und kommen dosiert dazu (NEU_PRO_TAG); abgefragt wird in Runden (RUNDE).
 ------------------------------------------------------------------- */
 const LERN_KEY = "sff-lernen";
@@ -603,8 +604,13 @@ const LEITNER_TAGE = [0, 1, 3, 7, 30];   // Fach 1 sofort, Fach 2 nach 1 Tag …
 const NEU_PRO_TAG = 10;   // so viele neue Begriffe kommen pro Tag ins Fach 1
 const RUNDE = 15;         // Fragen pro Runde
 const DAY = 86400000;
+// Farben der Lernsessions (Klassen .sc0 … .sc7, Werte als Variablen in css/index.css)
+const LERN_FARBEN = ["Grün", "Blau", "Orange", "Violett", "Rot", "Türkis", "Gelb", "Rosa"];
 const lernEl = document.getElementById("lern");
-let lern = lernLoad();   // { cats:[ids], cards:{ entryId:{ box, due } }, newDay, newCount } oder null; box 0 = neu
+const lernValid = s => s && Array.isArray(s.cats) && s.cats.length && s.cards && typeof s.cards === "object";
+// Speicher: { sessions:[{ id, color, cats:[ids], cards:{ entryId:{ box, due } }, newDay, newCount }], active:id, streak }
+const lernStore = lernLoad();
+let lern = lernStore.sessions.find(s => s.id === lernStore.active) || lernStore.sessions[0] || null;   // aktive Session; box 0 = neu
 let lernCur = null;      // aktuelle Frage { cat, item }
 let lernPractice = false;   // freies Üben, wenn für heute alles wiederholt ist (zählt nicht)
 let lernRound = null;    // laufende Runde { size, n, right, helped } (nur für diese Sitzung)
@@ -612,11 +618,46 @@ let lernRound = null;    // laufende Runde { size, n, right, helped } (nur für 
 function lernLoad(){
   try{
     const s = JSON.parse(localStorage.getItem(LERN_KEY));
-    if(s && Array.isArray(s.cats) && s.cats.length && s.cards && typeof s.cards === "object") return s;
+    if(s && Array.isArray(s.sessions)) return { sessions:s.sessions.filter(lernValid), active:s.active, streak:s.streak };
+    // Bisheriges Format (eine einzige Auswahl) wird zur ersten Session
+    if(lernValid(s)){
+      const { streak, ...session } = s;
+      return { sessions:[{ ...session, id:"s1", color:0 }], active:"s1", streak };
+    }
   }catch(e){}
-  return null;
+  return { sessions:[], active:null, streak:null };
 }
-function lernSave(){ try{ localStorage.setItem(LERN_KEY, JSON.stringify(lern)); }catch(e){} }
+function lernSave(){
+  lernStore.active = lern ? lern.id : null;
+  try{ localStorage.setItem(LERN_KEY, JSON.stringify(lernStore)); }catch(e){}
+}
+// Name einer Session aus ihren Kategorien, z. B. «Bäume, Pilze» oder «Bäume, Pilze, Vögel +2»
+function lernName(s){
+  const names = s.cats.map(id => CATS.find(c => c.id === id)?.name).filter(Boolean);
+  return names.length > 3 ? names.slice(0, 3).join(", ") + " +" + (names.length - 3) : names.join(", ") || "(Kategorien entfernt)";
+}
+// Was eine Session heute anbietet, ohne etwas zu verändern: fällige und neue Begriffe (neue höchstens so viele, wie heute noch dazukommen)
+function lernToday(s){
+  const now = Date.now(), today = startOfToday();
+  let due = 0, neu = 0, total = 0, richtig = 0;
+  for(const id of s.cats){
+    for(const it of CATS.find(c => c.id === id)?.items || []){
+      const c = s.cards[it.id];
+      total++;
+      if(!c || c.box === 0) neu++;
+      else{ if(c.due <= now) due++; if(c.box >= 2) richtig++; }
+    }
+  }
+  neu = Math.min(neu, s.newDay === today ? Math.max(0, NEU_PRO_TAG - (s.newCount || 0)) : NEU_PRO_TAG);
+  return { due, neu, open:due + neu, total, richtig };
+}
+function lernSwitch(s){
+  lern = s;
+  lernPractice = false;
+  lernCur = null;
+  lernRound = null;
+  lernSave();
+}
 const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
 // Karten mit den aktuellen Einträgen abgleichen: neue warten als «neu» (Fach 0), verschwundene fallen weg
@@ -644,37 +685,32 @@ function lernIntroduce(items, extra = 0){
 
 // Lernserie: Tage in Folge mit mindestens einer gewerteten Antwort ({ last:Tag, count })
 function lernStreak(){
-  const s = lern && lern.streak;
+  const s = lernStore.streak;
   if(!s) return 0;
   return Math.round((startOfToday() - s.last) / DAY) <= 1 ? s.count : 0;   // gestern oder heute gelernt: Serie läuft
 }
 function lernMarkDay(){
-  const today = startOfToday(), s = lern.streak;
+  const today = startOfToday(), s = lernStore.streak;
   if(s && s.last === today) return;
-  lern.streak = { last:today, count:s && Math.round((today - s.last) / DAY) === 1 ? s.count + 1 : 1 };
+  lernStore.streak = { last:today, count:s && Math.round((today - s.last) / DAY) === 1 ? s.count + 1 : 1 };
 }
 
-// Hinweis auf der Übersicht: was heute ansteht, ohne etwas zu verändern (keine Zuteilung neuer Begriffe)
+// Hinweis auf der Übersicht: was heute ansteht (alle Sessions), ohne etwas zu verändern
 function showLernBanner(){
   const el = document.getElementById("lernBanner");
   if(!el) return;
   el.hidden = true;
-  if(!lern) return;
-  const now = Date.now(), today = startOfToday();
-  let due = 0, neu = 0;
-  for(const id of lern.cats){
-    for(const it of CATS.find(c => c.id === id)?.items || []){
-      const c = lern.cards[it.id];
-      if(!c || c.box === 0) neu++; else if(c.due <= now) due++;
-    }
-  }
-  neu = Math.min(neu, lern.newDay === today ? Math.max(0, NEU_PRO_TAG - (lern.newCount || 0)) : NEU_PRO_TAG);
+  if(!lernStore.sessions.length) return;
+  const per = lernStore.sessions.map(s => ({ s, t:lernToday(s) }));
+  const due = per.reduce((n, p) => n + p.t.due, 0), neu = per.reduce((n, p) => n + p.t.neu, 0);
   const streak = lernStreak(), total = due + neu;
   const serie = streak >= 2 ? `Deine Serie: ${streak} Tage in Folge.` : "";
   if(total){
     const parts = [due && `${due} fällig`, neu && `${neu} ${neu === 1 ? "neuer" : "neue"}`].filter(Boolean).join(", ");
+    const chips = per.length > 1 ? `<span class="lern-banner-chips">${per.filter(p => p.t.open).map(p =>
+      `<span class="lern-dot sc${p.s.color % LERN_FARBEN.length}"></span>${esc(lernName(p.s))}: ${p.t.open}`).join(" &nbsp; ")}</span>` : "";
     el.innerHTML = `<b>Heute ${total === 1 ? "wartet 1 Begriff" : `warten ${total} Begriffe`} auf dich</b> (${parts}).
-      ${serie} <span class="lern-banner-go">Jetzt lernen →</span>`;
+      ${serie} <span class="lern-banner-go">Jetzt lernen →</span>${chips}`;
   }else if(streak){
     el.innerHTML = `<b>Für heute ist alles wiederholt.</b> ${serie || "Gut gemacht!"} <span class="lern-banner-go">Zur LernApp →</span>`;
   }else return;
@@ -779,48 +815,111 @@ function lernCardHtml({ cat, item }){
 }
 
 function renderLern(){
-  if(lern && lernSync().length) renderLernQuiz(); else renderLernSetup();
+  if(lern && lernSync().length) renderLernQuiz();
+  else if(lernStore.sessions.length) renderLernSessions();
+  else renderLernSetup();
 }
 
-function renderLernSetup(){
-  const sel = new Set(lern ? lern.cats : []);
-  // Bisheriger Fortschritt der gewählten Kategorien (geht verloren, wenn die Auswahl geändert wird)
-  const prog = new Map(lern ? lernCatStats(lernSync()).map(r => [r.cat.id, r]) : []);
+// Leiste über der Abfrage: alle Sessions als farbige Knöpfe (mit offenen Begriffen), dazu «+ Neue Lernsession»
+function lernBarHtml(){
+  return `<div class="lern-sessions" role="tablist" aria-label="Lernsessions">${lernStore.sessions.map(s => {
+    const t = lernToday(s);
+    return `<button type="button" role="tab" class="lern-session sc${s.color % LERN_FARBEN.length}${s === lern ? " active" : ""}"
+      aria-selected="${s === lern}" data-id="${esc(s.id)}" title="${esc(lernName(s))} · ${t.richtig}/${t.total} richtig">
+      <span class="lern-dot"></span>${esc(lernName(s))}${t.open ? ` <small>${t.open}</small>` : ""}</button>`;
+  }).join("")}
+    <button type="button" class="lern-session add" id="lernNew">+ Neue Lernsession</button></div>`;
+}
+function lernBarEvents(){
+  lernEl.querySelector(".lern-sessions").addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if(!b) return;
+    if(b.id === "lernNew"){ renderLernSetup(); return; }
+    const s = lernStore.sessions.find(x => x.id === b.dataset.id);
+    if(s && s !== lern){ lernSwitch(s); renderLernQuiz(); }
+  });
+}
+
+// Alle Lernsessions: öffnen oder löschen
+function renderLernSessions(){
   lernEl.innerHTML = `
-    <h2>Kategorien wählen</h2>
+    <h2>Deine Lernsessions</h2>
+    <p>Jede Lernsession hat eigene Kategorien, eine eigene Farbe und einen eigenen Fortschritt.
+      Gespeichert wird auf diesem Gerät.</p>
+    <div class="lern-list">${lernStore.sessions.map(s => {
+      const t = lernToday(s);
+      return `<div class="lern-item sc${s.color % LERN_FARBEN.length}">
+        <span class="lern-dot"></span>
+        <div><b>${esc(lernName(s))}</b><br><small>${t.total} Einträge · ${t.richtig} richtig beantwortet ·
+          ${t.open ? `heute ${t.open} offen` : "heute erledigt"}</small></div>
+        <button type="button" data-open="${esc(s.id)}">Lernen</button>
+        <button type="button" class="ghost" data-del="${esc(s.id)}">Löschen</button>
+      </div>`;
+    }).join("") || `<p class="lern-hint">Noch keine Lernsession.</p>`}</div>
+    <div class="offline">
+      <button id="lernNew">+ Neue Lernsession</button>
+      ${lern ? `<button class="ghost" id="lernBack">Zurück zum Lernen</button>` : ""}
+    </div>`;
+  document.getElementById("lernNew").addEventListener("click", renderLernSetup);
+  document.getElementById("lernBack")?.addEventListener("click", renderLernQuiz);
+  lernEl.querySelector(".lern-list").addEventListener("click", e => {
+    const open = e.target.closest("[data-open]"), del = e.target.closest("[data-del]");
+    if(open){ lernSwitch(lernStore.sessions.find(s => s.id === open.dataset.open)); renderLernQuiz(); }
+    if(del){
+      const s = lernStore.sessions.find(x => x.id === del.dataset.del);
+      if(!s || !confirm(`Lernsession «${lernName(s)}» mit ihrem ganzen Fortschritt löschen?`)) return;
+      lernStore.sessions.splice(lernStore.sessions.indexOf(s), 1);
+      if(s === lern) lernSwitch(lernStore.sessions[0] || null); else lernSave();
+      renderLernSessions();
+    }
+  });
+}
+
+// Neue Lernsession: Kategorien und Farbe wählen
+function renderLernSetup(){
+  const used = new Set(lernStore.sessions.map(s => s.color % LERN_FARBEN.length));
+  const free = LERN_FARBEN.findIndex((f, i) => !used.has(i));
+  const color = free >= 0 ? free : lernStore.sessions.length % LERN_FARBEN.length;
+  lernEl.innerHTML = `
+    <h2>Neue Lernsession</h2>
     <p>Wähle eine oder mehrere Kategorien. Die LernApp zeigt ein Bild, und du tippst den Namen ein.
       Nach dem Leitner-System kommen Begriffe, die du gut kannst, immer seltener dran, schwierige öfter.
-      So bleiben sie dauerhaft im Gedächtnis. Dein Fortschritt wird auf diesem Gerät gespeichert.</p>
-    <div class="lern-cats">${CATS.map(c => `<label><input type="checkbox" value="${esc(c.id)}" ${sel.has(c.id) ? "checked" : ""}>
-      ${esc(c.name)} <small>(${c.items.length})${prog.has(c.id) ? ` · ${prog.get(c.id).richtig}/${prog.get(c.id).total} richtig` : ""}</small></label>`).join("")}</div>
+      So bleiben sie dauerhaft im Gedächtnis. Du kannst mehrere Lernsessions nebeneinander haben, jede mit eigenem
+      Fortschritt. Gespeichert wird auf diesem Gerät.</p>
+    <div class="lern-cats">${CATS.map(c => `<label><input type="checkbox" value="${esc(c.id)}">
+      ${esc(c.name)} <small>(${c.items.length})</small></label>`).join("")}</div>
     <p id="lernSum" class="lern-sum"></p>
+    <fieldset class="lern-colors"><legend>Farbe</legend>${LERN_FARBEN.map((f, i) => `
+      <label class="sc${i}" title="${f}"><input type="radio" name="lernColor" value="${i}" ${i === color ? "checked" : ""}>
+        <span class="lern-dot"></span><span class="sr">${f}</span></label>`).join("")}</fieldset>
     <div class="offline">
-      <button id="lernStart">Lernen starten</button>
-      ${lern ? `<button class="ghost" id="lernBack">Zurück, nichts ändern</button>` : ""}
-    </div>
-    ${lern ? `<p class="lern-hint">Änderst du die Auswahl, beginnt das Lernen von vorn.</p>` : ""}`;
+      <button id="lernStart">Lernsession starten</button>
+      ${lernStore.sessions.length ? `<button class="ghost" id="lernBack">Abbrechen</button>` : ""}
+    </div>`;
   const boxes = [...lernEl.querySelectorAll(".lern-cats input")];
   const chosen = () => boxes.filter(b => b.checked).map(b => b.value);
+  const sameAs = ids => lernStore.sessions.find(s => s.cats.length === ids.length && ids.every(id => s.cats.includes(id)));
   const sum = () => {
     const ids = chosen();
     const n = CATS.filter(c => ids.includes(c.id)).reduce((s, c) => s + c.items.length, 0);
-    document.getElementById("lernSum").textContent = ids.length
-      ? `${ids.length} ${ids.length === 1 ? "Kategorie" : "Kategorien"} mit ${n} Einträgen gewählt.` : "Noch keine Kategorie gewählt.";
+    const twin = ids.length && sameAs(ids);
+    document.getElementById("lernSum").textContent = !ids.length ? "Noch keine Kategorie gewählt."
+      : `${ids.length} ${ids.length === 1 ? "Kategorie" : "Kategorien"} mit ${n} Einträgen gewählt.`
+        + (twin ? " Diese Auswahl gibt es schon als Lernsession; sie wird geöffnet." : "");
     document.getElementById("lernStart").disabled = !ids.length;
   };
   lernEl.querySelector(".lern-cats").addEventListener("change", sum);
   sum();
-  document.getElementById("lernBack")?.addEventListener("click", renderLernQuiz);
+  document.getElementById("lernBack")?.addEventListener("click", () => lern ? renderLernQuiz() : renderLernSessions());
   document.getElementById("lernStart").addEventListener("click", () => {
     const ids = chosen();
-    const same = lern && ids.length === lern.cats.length && ids.every(id => lern.cats.includes(id));
-    if(!same){
-      if(lern && !confirm("Die Auswahl hat sich geändert. Das Lernen beginnt dann von vorn, der bisherige Fortschritt wird gelöscht. Weiter?")) return;
-      lern = { cats:ids, cards:{} };
+    let s = sameAs(ids);
+    if(!s){
+      const nr = Math.max(0, ...lernStore.sessions.map(x => parseInt(String(x.id).slice(1), 10) || 0)) + 1;
+      s = { id:"s" + nr, color:+lernEl.querySelector("[name=lernColor]:checked").value, cats:ids, cards:{} };
+      lernStore.sessions.push(s);
     }
-    lernPractice = false;
-    lernCur = null;
-    lernRound = null;
+    lernSwitch(s);
     lernSync();
     lernSave();
     renderLernQuiz();
@@ -850,6 +949,7 @@ function renderLernQuiz(){
   if(!lernCur && !(roundDone && s.due)) lernRound = null;   // Tagesende: nächstes Mal beginnt eine neue Runde
 
   lernEl.innerHTML = `
+    ${lernBarHtml()}
     <div class="lern-stats">
       <div><b>${s.total}</b> Einträge zu lernen</div>
       <div><b>${s.richtig}</b> richtig beantwortet</div>
@@ -900,14 +1000,15 @@ function renderLernQuiz(){
         </div>
         <p class="lern-hint">Freies Üben zählt nicht fürs Lernsystem.</p>
       </div>`}
-    <p><button class="ghost" id="lernCats">Kategorien ändern</button></p>`;
+    <p><button class="ghost" id="lernCats">Lernsessions verwalten</button></p>`;
+  lernBarEvents();
 
   // Balken über CSSOM (die Content-Security-Policy verbietet style-Attribute)
   lernEl.querySelector(".lern-bar i").style.width = (s.total ? 100 * s.richtig / s.total : 0) + "%";
   const max = Math.max(1, ...s.boxes);
   lernEl.querySelectorAll(".lern-box i").forEach((el, i) => { el.style.height = (100 * s.boxes[i] / max) + "%"; });
   lernEl.querySelectorAll(".lern-mini i").forEach((el, i) => { el.style.width = (100 * catStats[i].richtig / catStats[i].total) + "%"; });
-  document.getElementById("lernCats").addEventListener("click", renderLernSetup);
+  document.getElementById("lernCats").addEventListener("click", renderLernSessions);
   document.getElementById("lernPracticeBtn")?.addEventListener("click", () => { lernPractice = true; renderLernQuiz(); });
   document.getElementById("lernNextRound")?.addEventListener("click", () => { lernRound = null; renderLernQuiz(); });
   document.getElementById("lernStop")?.addEventListener("click", () => { lernRound = null; location.hash = "#/"; });
