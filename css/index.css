@@ -205,6 +205,58 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lern-done{padding:16px 18px;border-radius:var(--radius);background:var(--card);margin-bottom:12px}
 .lern-done h3{margin-top:0}
 
+/* Suche in der Kopfzeile */
+.search{display:block;width:100%;max-width:520px;margin:12px 0 0;padding:10px 16px;border:1.5px solid var(--accent-soft);
+  border-radius:99px;background:var(--card);color:var(--ink);font:inherit}
+.search:focus{outline:none;border-color:var(--accent)}
+
+/* Entdeckung des Tages (Übersicht) */
+.daily{display:flex;gap:14px;align-items:center;margin:12px 0 0;padding:10px;max-width:760px;border-radius:12px;
+  background:var(--card);box-shadow:var(--shadow);color:var(--ink);text-decoration:none}
+.daily img{flex:0 0 96px;width:96px;height:72px;object-fit:cover;border-radius:8px;opacity:0;transition:opacity .4s}
+.daily img.loaded{opacity:1}
+.daily small{display:block;color:var(--muted)}
+.daily i{color:var(--muted)}
+.daily i.plain{font-style:normal}
+
+/* Zwischentitel im Raster (Jetzt zu sehen) und hervorgehobene Karte (Direktlink) */
+.grid-head{grid-column:1/-1;margin:10px 0 -8px;font-size:1.15rem;color:var(--accent)}
+.card.focus{box-shadow:0 0 0 4px var(--accent),var(--shadow)}
+
+/* Textseite: Tierstimme und Verwechslungsgefahr */
+.text .sound{display:flex;align-items:center;gap:10px;margin:.6rem 0}
+.text .sound-btn{padding:6px 14px;border:none;border-radius:99px;background:var(--accent);color:var(--card);font:inherit;font-weight:600;cursor:pointer}
+.text .sound a{color:var(--muted);font-size:.8rem}
+.text .confuse{margin-top:.7rem;padding:8px 10px;border-radius:8px;background:var(--accent-soft);font-size:.85rem}
+.text .confuse p{margin:.3rem 0 0;font-size:inherit}
+.text .confuse a{color:var(--accent);font-weight:600}
+
+/* Kurze Meldung und Teilen-Knopf der Lightbox */
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:20;max-width:calc(100vw - 32px);padding:10px 18px;
+  border-radius:99px;background:var(--ink);color:var(--bg);font-size:.9rem;word-break:break-all}
+.lb-share{position:absolute;top:12px;right:64px;z-index:3;width:44px;height:44px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.88);color:#1f2a1f;cursor:pointer;display:grid;place-items:center}
+.lb-share svg{width:20px;height:20px}
+
+/* Quiz für den Beamer */
+dialog.beamer{padding:0;margin:0;border:none;width:100vw;height:100vh;height:100dvh;max-width:100vw;max-height:100dvh;
+  background:#000;color:#fff;overflow:hidden;outline:none}
+dialog.beamer::backdrop{background:#000}
+.bm-img{position:absolute;inset:0 0 84px 0}
+.bm-img img{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s}
+.bm-img img.loaded{opacity:1}
+.bm-img .status{color:#ccc}
+.bm-bar{position:absolute;left:0;right:0;bottom:0;height:84px;display:flex;align-items:center;gap:18px;padding:0 20px;background:#111}
+.bm-count{font-size:1.1rem;color:#bbb;white-space:nowrap}
+.bm-solution{flex:1;font-size:1.6rem;line-height:1.2;overflow:hidden}
+.bm-solution span{color:#bbb}
+.bm-solution .latin{font-style:italic}
+.bm-solution small{display:block;font-size:.95rem;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bm-buttons{margin-left:auto;display:flex;gap:8px}
+.beamer button{padding:10px 20px;border:none;border-radius:99px;background:#8fcf94;color:#111;font:inherit;font-weight:700;cursor:pointer}
+.beamer button.ghost{background:transparent;color:#fff;box-shadow:inset 0 0 0 1.5px #fff}
+.bm-end{position:absolute;inset:0;display:grid;place-content:center;text-align:center;font-size:1.4rem}
+
 /* Druck (PDF): nur der Druckbereich, A4 mit 5 mm Rand, 8 Einträge pro Seite (2 × 4) mit 2 mm weissem Abstand.
    Weiss und Schwarz sind hier fest, weil Papier immer weiss ist (auch im Dunkelmodus). */
 #print{display:none}
@@ -225,4 +277,23 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
   .print-cell p{margin:.6mm 0 0}
   .print-page:last-child{break-after:auto}
   .print-src{display:block;margin-top:.4mm;font-size:4pt;color:#333;word-break:break-all}
+  /* Arbeitsblatt: Nummer und Linie statt Text, am Schluss das Lösungsblatt */
+  .print-cell figcaption.ws{display:flex;flex-wrap:wrap;align-items:flex-end;gap:2mm;padding:2mm 3mm 1.5mm;background:#fff}
+  .ws .nr{font-size:11pt;font-weight:700}
+  .ws .line{flex:1;border-bottom:.3mm solid #000;height:6mm}
+  .ws .print-src{flex-basis:100%}
+  .print-solution{break-before:page;font-size:10pt}
+  .print-solution h2{font-size:13pt;margin:0 0 4mm}
+  .print-solution ol{margin:0;padding-left:8mm;columns:2;column-gap:10mm}
+  .print-solution li{margin-bottom:1.5mm;break-inside:avoid}
+  .print-solution .latin{font-style:italic}
+  /* Memory: 4 × 5 Karten mit gestrichelten Schnittlinien */
+  .print-page.mem{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,1fr);gap:0}
+  .mem-card{position:relative;margin:0;overflow:hidden;border:.2mm dashed #999;break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+  .mem-card img{display:block;width:100%;height:100%;object-fit:cover;object-position:var(--fx,50%) var(--fy,50%)}
+  .mem-card .print-src{position:absolute;left:0;right:0;bottom:0;margin:0;padding:.5mm 1mm;background:rgba(255,255,255,.75);font-size:3.5pt}
+  .mem-name{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2mm;padding:3mm;text-align:center}
+  .mem-name b{font-size:12pt}
+  .mem-name span{font-size:8pt;color:#333}
+  .mem-name .latin{font-style:italic}
 }

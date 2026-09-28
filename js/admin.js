@@ -190,7 +190,8 @@ function renderCategory(cat){
         <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < n - 1 ? "" : "disabled"}>↓</button>
       </li>`).join("")}
     </ul>
-    <button class="ghost" id="newEntry">+ Neuer Eintrag</button>`}`;
+    <p class="actions"><button class="ghost" id="newEntry">+ Neuer Eintrag</button>
+      <button class="ghost" id="qrAll" title="QR-Codes mit Direktlink zu jedem sichtbaren Eintrag, 12 pro A4-Seite">QR-Codes drucken</button></p>`}`;
 
   const form = $("catForm");
   const F = form.elements;
@@ -241,6 +242,7 @@ function renderCategory(cat){
     if(box) setVisible("entries", box.dataset.vis, box.checked);
   });
   $("newEntry").addEventListener("click", () => { location.hash = "#/e/neu/" + c.id; });
+  $("qrAll").addEventListener("click", () => printQr(c, c.entries.filter(e => e.visible)));
 }
 
 /* ------------------------------------------------------------------
@@ -613,12 +615,96 @@ async function deleteCategory(cat){
 }
 
 /* ------------------------------------------------------------------
+   DIREKTLINKS UND QR-CODES
+   Adresse eines Eintrags in der Anzeige: <Seite>#/<kategorie>/<name als Slug>, gleich gebildet wie
+   slugify() in js/index.js. QR-Codes mit qrcode-generator (js/lib), gedruckt über #adminPrint.
+------------------------------------------------------------------- */
+const linkSlug = s => s.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue")
+  .replace(new RegExp(String.fromCharCode(223), "g"), "ss").normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const siteUrl = () => new URL("./", location.href).href;
+const entryUrl = (cat, e) => siteUrl() + "#/" + cat.id + "/" + linkSlug(e.name);
+function qrSvg(text){
+  const q = qrcode(0, "M");
+  q.addData(text);
+  q.make();
+  return q.createSvgTag({ cellSize:4, margin:0, scalable:true });
+}
+// QR-Codes drucken (12 pro A4-Seite): für Schilder im Schulgarten oder auf einer Exkursion
+function printQr(cat, entries){
+  const box = $("adminPrint");
+  box.innerHTML = `<div class="qr-sheet">${entries.map(e => {
+    const url = entryUrl(cat, e);
+    return `<div class="qr-card">${qrSvg(url)}<b>${esc(e.name)}</b><small>${esc(cat.name)} · Natur und Schweiz</small>
+      <small class="qr-url">${esc(url)}</small></div>`;
+  }).join("")}</div>`;
+  window.addEventListener("afterprint", () => box.replaceChildren(), { once:true });
+  window.print();
+}
+
+/* ------------------------------------------------------------------
+   SICHERUNG: alle Kategorien, Einträge und Bildangaben als JSON-Datei herunterladen.
+   Die Bild- und Tondateien selbst liegen im Supabase-Speicher (und ihre Quellen auf Commons).
+------------------------------------------------------------------- */
+async function selectAll(table){
+  const rows = [];
+  for(let from = 0; ; from += 1000){   // Supabase liefert höchstens 1000 Zeilen pro Anfrage
+    const part = await must(sb.from(table).select("*").range(from, from + 999));
+    rows.push(...part);
+    if(part.length < 1000) return rows;
+  }
+}
+async function downloadBackup(){
+  const [categories, entries, images] = await Promise.all(["categories", "entries", "images"].map(selectAll));
+  const data = { erstellt:new Date().toISOString(), projekt:CFG.url, bucket:CFG.bucket, categories, entries, images };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
+  a.download = `natur-und-schweiz-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  return { categories:categories.length, entries:entries.length, images:images.length };
+}
+
+/* ------------------------------------------------------------------
+   TIERSTIMMEN: MP3 von Commons (commonsAudio in js/wikimedia.js) in den eigenen Speicher übernehmen.
+   Pfad <kat>/<entry-id>-ton-<zeit>.mp3, Angaben in entries.sound_path / sound_page / sound_file.
+------------------------------------------------------------------- */
+const MAX_SOUND = 5 * 1024 * 1024;   // Grenze des Buckets
+async function storeSound(cat, entry, info){
+  const r = await retry(async () => {
+    const r = await fetch(info.src);
+    if(!r.ok) throw httpError(r);
+    return r;
+  }, 2);
+  const blob = await r.blob();
+  if(blob.size > MAX_SOUND) throw new Error(`Aufnahme zu gross (${(blob.size / 1048576).toFixed(1)} MB, höchstens 5 MB). Eine kürzere wählen.`);
+  const path = `${cat.id}/${entry.id}-ton-${Date.now()}.mp3`;
+  await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"audio/mpeg" }));
+  await must(sb.from("entries").update({ sound_path:path, sound_page:sourceUrl(info.page), sound_file:info.file }).eq("id", entry.id));
+  if(entry.sound_path) await sb.storage.from(CFG.bucket).remove([entry.sound_path]);
+}
+async function removeSound(entry){
+  await must(sb.from("entries").update({ sound_path:null, sound_page:null, sound_file:null }).eq("id", entry.id));
+  if(entry.sound_path) await must(sb.storage.from(CFG.bucket).remove([entry.sound_path]));
+}
+
+/* ------------------------------------------------------------------
    EINTRAG BEARBEITEN
 ------------------------------------------------------------------- */
 function factRow(k = "", v = ""){
   return `<div class="fact">
     <input type="text" placeholder="z. B. Höhe" value="${esc(k)}" data-k>
     <input type="text" placeholder="z. B. bis 50 m" value="${esc(v)}" data-v>
+    <button type="button" class="icon" data-delfact title="Zeile entfernen">✕</button></div>`;
+}
+
+// Zeile «Nicht verwechseln mit»: Name und Unterschied (gleicher Aufbau wie eine Steckbrief-Zeile)
+function confRow(name = "", diff = ""){
+  return `<div class="fact">
+    <input type="text" placeholder="z. B. Weisstanne" value="${esc(name)}" data-k>
+    <input type="text" placeholder="Woran man die beiden unterscheidet" value="${esc(diff)}" data-v>
     <button type="button" class="icon" data-delfact title="Zeile entfernen">✕</button></div>`;
 }
 
@@ -669,6 +755,22 @@ function renderEntry(cat, entry){
       <div class="facts" id="facts">${e.facts.map(f => factRow(f.k, f.v)).join("")}</div>
       <button type="button" class="ghost" id="addFact">+ Zeile</button>
 
+      <h3>Verwechslungsgefahr</h3>
+      <div class="facts" id="confusions">${(e.confusions || []).map(c => confRow(c.name, c.diff)).join("")}</div>
+      <button type="button" class="ghost" id="addConf">+ Verwechslung</button>
+      <p class="hint">Name des ähnlichen Eintrags (gibt es ihn, wird er verlinkt) und woran man die beiden unterscheidet.
+        Gilt nur für diesen Eintrag; beim anderen bei Bedarf ebenfalls eintragen.</p>
+
+      ${isNew ? "" : `<h3>Tierstimme</h3>
+      ${e.sound_path ? `<audio controls preload="none" src="${esc(publicUrl(e.sound_path))}"></audio>
+        <p class="hint">Quelle: ${e.sound_page ? `<a href="${esc(e.sound_page)}" target="_blank" rel="noopener">${esc(e.sound_file || e.sound_page)}</a>` : "eigene Aufnahme"}</p>`
+        : `<p class="hint">Keine Tierstimme hinterlegt.</p>`}
+      <label>Commons-Audiodatei (…/wiki/File:…ogg oder …mp3) <input type="url" name="soundPage" value="${esc(e.sound_page)}"></label>
+      <div class="slot-actions">
+        <button type="button" class="ghost" id="soundFetch">Ton von dieser Quelle übernehmen</button>
+        ${e.sound_path ? `<button type="button" class="danger" id="soundDel">Ton entfernen</button>` : ""}
+      </div>`}
+
       <h3>Bilder</h3>
       <label class="inline"><input type="checkbox" name="ownLabels" ${e.labels ? "checked" : ""}> Eigene Bildbeschriftungen statt «${esc(cat.labels.join(", "))}»</label>
       <div class="row" id="labelRow" ${e.labels ? "" : "hidden"}>
@@ -684,6 +786,13 @@ function renderEntry(cat, entry){
         <input type="text" name="wp" value="${esc(e.wp)}"></label>
       <div class="row">${terms.map((t, i) => `<label>Suchbegriff Bild ${i + 2} <input type="text" name="q${i}" value="${esc(t)}"></label>`).join("")}</div>
 
+      ${isNew ? "" : `<h3>Direktlink und QR-Code</h3>
+      <div class="qr-box">${qrSvg(entryUrl(cat, e))}
+        <p><a href="${esc(entryUrl(cat, e))}" target="_blank" rel="noopener">${esc(entryUrl(cat, e))}</a><br>
+          <button type="button" class="ghost small" id="qrOne">QR-Code drucken</button>
+          ${e.visible ? "" : `<br><span class="hint">Der Eintrag ist ausgeblendet: Der Link funktioniert erst, wenn er sichtbar ist.</span>`}</p>
+      </div>`}
+
       <div class="actions">
         <button>${isNew ? "Anlegen" : "Speichern"}</button>
         ${isNew ? `<button type="button" class="ghost" id="cancelEntry">Abbrechen</button>`
@@ -697,7 +806,25 @@ function renderEntry(cat, entry){
   $("addFact").addEventListener("click", () => facts.insertAdjacentHTML("beforeend", factRow()));
   facts.addEventListener("click", ev => { if(ev.target.closest("[data-delfact]")) ev.target.closest(".fact").remove(); });
   F.ownLabels.addEventListener("change", () => { $("labelRow").hidden = !F.ownLabels.checked; });
+  const confusions = $("confusions");
+  $("addConf").addEventListener("click", () => confusions.insertAdjacentHTML("beforeend", confRow()));
+  confusions.addEventListener("click", ev => { if(ev.target.closest("[data-delfact]")) ev.target.closest(".fact").remove(); });
   if(isNew) setupAiEntry(form, cat);
+  $("qrOne")?.addEventListener("click", () => printQr(cat, [e]));
+  // Tierstimme von Commons übernehmen bzw. entfernen
+  $("soundFetch")?.addEventListener("click", async ev => {
+    const name = commonsFile(F.soundPage.value.trim());
+    if(!name){ F.soundPage.focus(); msg("Zuerst die Adresse der Commons-Audiodatei einfügen (…/wiki/File:…).", true); return; }
+    ev.target.disabled = true;
+    msg("Ton wird von Commons übernommen …");
+    await act(async () => storeSound(cat, e, await commonsAudio(name)), "Tierstimme gespeichert.").catch(() => {});
+    render();
+  });
+  $("soundDel")?.addEventListener("click", async () => {
+    if(!confirm("Tierstimme entfernen?")) return;
+    await act(() => removeSound(e), "Tierstimme entfernt.").catch(() => {});
+    render();
+  });
 
   form.addEventListener("submit", async ev => {
     ev.preventDefault();
@@ -708,6 +835,9 @@ function renderEntry(cat, entry){
       facts:[...facts.querySelectorAll(".fact")]
         .map(f => ({ k:f.querySelector("[data-k]").value.trim(), v:f.querySelector("[data-v]").value.trim() }))
         .filter(f => f.k || f.v),
+      confusions:[...confusions.querySelectorAll(".fact")]
+        .map(f => ({ name:f.querySelector("[data-k]").value.trim(), diff:f.querySelector("[data-v]").value.trim() }))
+        .filter(c => c.name && c.diff),
       search_terms:[0,1,2].map(i => F["q" + i].value.trim()).filter(Boolean),
       wp:F.wp.value.trim() || null,
       labels:F.ownLabels.checked ? [0,1,2,3].map(i => F["label" + i].value.trim()) : null
@@ -1197,15 +1327,28 @@ function render(){
       (im Eintrag mit «Wieder füllen lassen» änderbar).</p>` : ""}
     ${bulkResult && !bulk ? `<p class="hint">${esc(bulkResult)}</p>` : ""}
     <h3>Bilder aus Liste übernehmen</h3>
-    <p class="hint">Mehrere Bilder auf einmal von Commons übernehmen oder entfernen. Eine Zeile pro Bild:
-      <code>Eintrag | Bildnummer | Commons-Adresse</code> oder <code>Eintrag | Bildnummer | entfernen</code>
+    <p class="hint">Mehrere Bilder oder Tierstimmen auf einmal von Commons übernehmen oder entfernen. Eine Zeile pro Bild:
+      <code>Eintrag | Bildnummer | Commons-Adresse</code> oder <code>Eintrag | Bildnummer | entfernen</code>;
+      für eine Tierstimme <code>Eintrag | ton | Commons-Adresse</code> bzw. <code>… | ton | entfernen</code>
       (statt «|» geht auch ein Tabulator oder «;»).</p>
     <textarea id="batchList" placeholder="Steinmarder | 2 | https://commons.wikimedia.org/wiki/File:…"></textarea>
     <p><button type="button" class="ghost" id="batchCheck">Liste prüfen</button></p>
-    <div id="batchResult"></div>`;
+    <div id="batchResult"></div>
+    <h3>Sicherung</h3>
+    <p class="hint">Lädt alle Kategorien, Einträge und Bildangaben als Datei herunter (JSON). Die Bild- und Tondateien selbst
+      liegen im Supabase-Speicher, ihre Quellen auf Wikimedia Commons. Am besten regelmässig und vor grossen Änderungen sichern.</p>
+    <p><button type="button" class="ghost" id="backupBtn">Sicherung herunterladen</button></p>`;
   showBulk();
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
   setupBatch();
+  $("backupBtn").addEventListener("click", async ev => {
+    ev.target.disabled = true;
+    try{
+      const n = await downloadBackup();
+      msg(`Sicherung erstellt: ${n.categories} Kategorien, ${n.entries} Einträge, ${n.images} Bilder.`);
+    }catch(err){ msg("Sicherung fehlgeschlagen: " + err.message, true); }
+    ev.target.disabled = false;
+  });
 }
 
 /* ------------------------------------------------------------------
@@ -1214,17 +1357,19 @@ function render(){
 ------------------------------------------------------------------- */
 function parseBatch(text){
   return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map((line, i) => {
-    const m = line.match(/^(.+?)\s*[|;\t]\s*(\d+)\s*[|;\t]\s*(.+)$/);
-    const r = { nr:i + 1, name:m ? m[1].trim() : line, pos:m ? +m[2] : 0, what:m ? m[3].trim() : "" };
-    if(!m) return { ...r, err:"Form: Eintrag | Bildnummer | Adresse oder «entfernen»" };
+    const m = line.match(/^(.+?)\s*[|;\t]\s*(\d+|ton)\s*[|;\t]\s*(.+)$/i);
+    const sound = !!m && /^ton$/i.test(m[2]);
+    const r = { nr:i + 1, name:m ? m[1].trim() : line, pos:m && !sound ? +m[2] : 0, sound, what:m ? m[3].trim() : "" };
+    if(!m) return { ...r, err:"Form: Eintrag | Bildnummer oder «ton» | Adresse oder «entfernen»" };
     const hits = cats.flatMap(c => c.entries.filter(e => e.name.toLowerCase() === r.name.toLowerCase()).map(e => ({ cat:c, entry:e })));
     if(!hits.length) return { ...r, err:"Eintrag nicht gefunden" };
     if(hits.length > 1) return { ...r, err:"Name kommt in mehreren Kategorien vor" };
     r.entry = hits[0].entry;
-    if(r.pos < 1 || r.pos > 4) return { ...r, err:"Bildnummer muss 1–4 sein" };
+    if(!r.sound && (r.pos < 1 || r.pos > 4)) return { ...r, err:"Bildnummer muss 1–4 sein" };
     if(/^entfernen$/i.test(r.what)){
       r.remove = true;
-      if(!r.entry.images.some(im => im.position === r.pos)) r.err = "An diesem Platz ist kein Bild";
+      if(r.sound && !r.entry.sound_path) r.err = "Keine Tierstimme vorhanden";
+      if(!r.sound && !r.entry.images.some(im => im.position === r.pos)) r.err = "An diesem Platz ist kein Bild";
     }else{
       r.file = commonsFile(r.what);
       if(!r.file) r.err = "Keine Commons-Adresse (…/wiki/File:…)";
@@ -1245,7 +1390,7 @@ function setupBatch(){
     const good = rows.filter(r => !r.err).length;
     out.innerHTML = rows.length ? `<table class="batch">
       <tr><th>#</th><th>Eintrag</th><th>Bild</th><th>Aktion</th><th>Stand</th></tr>
-      ${rows.map(r => `<tr id="batch${r.nr}"><td>${r.nr}</td><td>${esc(r.entry?.name || r.name)}</td><td>${r.pos || ""}</td>
+      ${rows.map(r => `<tr id="batch${r.nr}"><td>${r.nr}</td><td>${esc(r.entry?.name || r.name)}</td><td>${r.sound ? "Ton" : r.pos || ""}</td>
         <td>${r.remove ? "entfernen" : esc(r.file || r.what)}</td>
         <td class="stand ${r.err ? "bad" : ""}">${esc(r.err || "bereit")}</td></tr>`).join("")}</table>
       <p>${good ? `<button type="button" id="batchRun">${good} ${good === 1 ? "Zeile" : "Zeilen"} ausführen</button>` : ""}
@@ -1263,7 +1408,11 @@ function setupBatch(){
           const found = findEntry(r.entry.id);
           if(!found) throw new Error("Eintrag nicht mehr vorhanden");
           const old = found.entry.images.find(im => im.position === r.pos);
-          if(r.remove){
+          if(r.sound){
+            if(!r.remove) await storeSound(found.cat, found.entry, await commonsAudio(r.file));
+            else if(found.entry.sound_path) await removeSound(found.entry);
+            else throw new Error("keine Tierstimme vorhanden");
+          }else if(r.remove){
             if(!old) throw new Error("kein Bild an diesem Platz");
             await removeImage(found.entry, old);
           }else{

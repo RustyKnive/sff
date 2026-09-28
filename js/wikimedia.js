@@ -85,6 +85,18 @@ async function commonsFileImage(file, width = 1600){
   if(!ii) throw new Error("Diese Datei gibt es auf Commons nicht");
   return { src:ii.thumburl || ii.url, page:ii.descriptionurl, file:p.title.replace(/^File:/, "") };
 }
+// Eine Tonaufnahme von Commons als MP3 (Commons wandelt OGG-Aufnahmen selbst in MP3 um; MP3 spielt jeder Browser)
+async function commonsAudio(file){
+  const u = API_C + "?action=query&format=json&origin=*&prop=videoinfo&viprop=url|mime|size|derivatives"
+    + "&titles=" + encodeURIComponent("File:" + file);
+  const d = await getJSON(u);
+  const p = Object.values((d.query && d.query.pages) || {})[0];
+  const vi = p && p.videoinfo && p.videoinfo[0];
+  if(!vi) throw new Error("Diese Datei gibt es auf Commons nicht");
+  const mp3 = vi.mime === "audio/mpeg" ? vi.url : ((vi.derivatives || []).find(x => /audio\/mpeg/.test(x.type)) || {}).src;
+  if(!mp3) throw new Error("Zu dieser Datei gibt es keine MP3-Fassung");
+  return { src:mp3, page:vi.descriptionurl, file:p.title.replace(/^File:/, ""), duration:vi.duration };
+}
 async function commonsImage(query, used, base){
   const words = query.split(" ");
   const tries = [query];

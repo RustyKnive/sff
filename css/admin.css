@@ -113,3 +113,26 @@ dialog.editor::backdrop{background:rgba(0,0,0,.6)}
 .crop-box [data-h=se]{right:-9px;bottom:-9px;cursor:nwse-resize}
 .crop-bar{display:flex;flex-wrap:wrap;align-items:end;gap:6px 16px}
 .crop-bar label{margin:0}
+
+/* Direktlink und QR-Code im Eintrag, Tierstimme */
+.qr-box{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.qr-box svg{width:120px;height:120px;flex:0 0 120px;background:#fff;padding:6px;border-radius:6px}
+.qr-box p{margin:0;font-size:.85rem;word-break:break-all}
+.qr-box a{color:var(--accent)}
+audio{display:block;width:100%;max-width:420px;margin:4px 0}
+
+/* Druck der QR-Codes: nur #adminPrint, 3 × 4 Karten pro A4-Seite (Weiss und Schwarz fest, Papier ist weiss) */
+#adminPrint{display:none}
+@media print{
+  @page{size:A4;margin:8mm}
+  body{background:#fff}
+  body > :not(#adminPrint){display:none!important}
+  #adminPrint{display:block;color:#000;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .qr-sheet{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm}
+  .qr-card{display:flex;flex-direction:column;align-items:center;gap:1.5mm;padding:4mm;border:.2mm dashed #999;text-align:center;
+    break-inside:avoid;height:62mm}
+  .qr-card svg{width:38mm;height:38mm}
+  .qr-card b{font-size:11pt}
+  .qr-card small{font-size:7pt;color:#333}
+  .qr-card .qr-url{font-size:5pt;word-break:break-all}
+}

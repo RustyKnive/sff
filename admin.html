@@ -6,8 +6,8 @@
 <meta name="robots" content="noindex">
 <!-- Erlaubte Quellen: nur eigene Dateien (kein eingebetteter Code) und das eigene Supabase-Projekt.
      data: für den QR-Code der Zwei-Faktor-Einrichtung, blob: für die Bildvorschau beim Verkleinern,
-     Wikipedia/Wikimedia für die Übernahme von Bildern. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://pkiaxvsgplohhvewbgmw.supabase.co; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co wss://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org https://upload.wikimedia.org https://thumb.wikimedia.org; base-uri 'none'; form-action 'none'">
+     Wikipedia/Wikimedia für die Übernahme von Bildern und Tierstimmen, media-src für das Anhören der Tierstimmen. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob: https://pkiaxvsgplohhvewbgmw.supabase.co; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co wss://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org https://upload.wikimedia.org https://thumb.wikimedia.org; media-src https://pkiaxvsgplohhvewbgmw.supabase.co; base-uri 'none'; form-action 'none'">
 <title>Verwaltung – Natur und Schweiz</title>
 <link rel="icon" href="icons/steinbock.svg" type="image/svg+xml">
 <link rel="stylesheet" href="css/basis.css">
@@ -15,6 +15,8 @@
 <script src="config.js"></script>
 <!-- supabase-js liegt im Repo (js/lib). Aktualisieren: neue Datei von jsDelivr herunterladen und den Dateinamen hier anpassen. -->
 <script src="js/lib/supabase-2.117.1.min.js" defer></script>
+<!-- QR-Codes (Direktlinks auf Einträge): qrcode-generator von Kazuhiko Arase, MIT-Lizenz -->
+<script src="js/lib/qrcode-1.4.4.js" defer></script>
 <script src="js/wikimedia.js" defer></script>
 <script src="js/admin.js" defer></script>
 </head>
@@ -62,6 +64,9 @@
 
 <!-- Bild zuschneiden / Ausschnitt der Vorschau (Inhalt aus js/admin.js) -->
 <dialog id="editor" class="editor"></dialog>
+
+<!-- Druckbereich für QR-Codes (nur beim Drucken sichtbar, css/admin.css) -->
+<div id="adminPrint"></div>
 
 <div id="msg" hidden></div>
 

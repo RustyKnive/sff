@@ -7,7 +7,8 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 ## Ordnerstruktur
 
 - `index.html` Anzeige, `admin.html` Verwaltung, `config.js` Verbindung zu Supabase
-- `js/index.js`, `js/admin.js` Skripte der Seiten; `js/wikimedia.js` Bildsuche (von beiden genutzt); `js/lib/` supabase-js (fest eingebundene Version)
+- `js/index.js`, `js/admin.js` Skripte der Seiten; `js/wikimedia.js` Bild- und Tonsuche (von beiden genutzt); `js/lib/` supabase-js und qrcode-generator (fest eingebundene Versionen, nur Verwaltung)
+- `.github/workflows/` Wachhalten der Datenbank (siehe unten)
 - `css/basis.css` gemeinsame Farben und Grundlagen, `css/index.css`, `css/admin.css` pro Seite
 - `sw.js`, `manifest.webmanifest`, `icons/` Offline-App (siehe unten)
 - `supabase/` Datenbankschema und nummerierte Änderungen
@@ -18,7 +19,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 ## Datenmodell (supabase/schema.sql)
 
 - `categories`: `id` (Slug, gleichzeitig die Adresse `#/<id>`), `name`, `description`, `latin` (true → Untertitel kursiv als lateinischer Name), `labels` (4 Bildbeschriftungen), `cover_entry_id` (Eintrag für die Übersichtskachel), `sort`.
-- `entries`: `category_id`, `name`, `subtitle`, `description`, `facts` (jsonb-Array `[{k, v}]`, damit die Reihenfolge erhalten bleibt), `search_terms` (Suchbegriffe für Bilder 2–4), `wp` (englischer Wikipedia-Titel für das Hauptbild), `labels` (optional eigene 4 Beschriftungen), `empty_slots` (bewusst leere Bildplätze 1–4, 013), `sort`.
+- `entries`: `category_id`, `name`, `subtitle`, `description`, `facts` (jsonb-Array `[{k, v}]`, damit die Reihenfolge erhalten bleibt), `search_terms` (Suchbegriffe für Bilder 2–4), `wp` (englischer Wikipedia-Titel für das Hauptbild), `labels` (optional eigene 4 Beschriftungen), `empty_slots` (bewusst leere Bildplätze 1–4, 013), `confusions` und `sound_*` (Verwechslungsgefahr und Tierstimme, 014), `sort`.
 - `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»), `thumb_x`/`thumb_y`/`thumb_zoom` (Ausschnitt der Vorschau, siehe Verwaltung), `edited` (zugeschnitten). Position 1 ist das Hauptbild.
 - `admins`: `user_id`. Nur wer hier eingetragen ist, darf schreiben (`is_admin()`). Alle dürfen lesen.
 - `visible` (bei `categories` und `entries`): Ausgeblendete Zeilen filtert die RLS-Regel «lesen» (`visible or is_admin()`) heraus. `index.html` filtert deshalb nicht selbst. Die Kontrollkästchen stehen im Admin in beiden Listen und in den Formularen.
@@ -47,7 +48,31 @@ Knopf oben rechts, klappt eine Liste auf (schliesst mit Klick daneben oder Esc):
 - «Einstellungen» (`#/einstellungen`): «Als App installieren» (Anleitung für iPhone/iPad, Android, Computer; Knopf «Jetzt installieren» nur, wenn der Browser `beforeinstallprompt` meldet, also Chrome, Edge, Android; Hinweis, wenn die Seite schon als App läuft) und Bilder für offline herunterladen.
 - «Admin» (`#/admin`): Seite mit kurzem Hinweis und Knopf «Verwaltung öffnen», der `admin.html` in einem neuen Tab öffnet.
 - «Copyright» (`#/copyright`): Urheberrecht und Bildnachweis (alle eigenen Bilder mit Link auf `source_page`).
-Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und in `PAGES` in `js/index.js`. Ihre Adressen gehen vor Kategorien mit gleicher `id`; solche Slugs (`lernapp`, `pdf`, `einstellungen`, `admin`, `copyright`) darum nicht vergeben.
+- «Jetzt zu sehen» (`#/jetzt`, `renderSeason()`): liest aus den Steckbrief-Zeilen, deren Schlüssel in `SEASON_KEYS` steht (`Blütezeit`, `Flugzeit`, `Zeit`, `Laichzeit`, `Aktiv`), die Monate (`seasonMonths()`, Monatsnamen `MONATE`, Bereiche «Juni–September» auch über den Jahreswechsel) und zeigt die Einträge des laufenden Monats nach Kategorie.
+- «Quiz für die Klasse» (`#/quiz`): Kategorie (oder alle gemischt) und Anzahl wählen, `<dialog class="beamer">` im Vollbild. Leertaste/Enter/Pfeil rechts = Lösung, dann nächstes Bild; Pfeil links zurück (`showQuizItem`, `quizSolution`, `quizGo`). Tasten nur, wenn kein Knopf den Fokus hat.
+- «PDF drucken» hat drei Arten (`#pdfMode`, `printCategory(cat, mode)`): `text` Steckbriefe (wie oben), `blatt` Arbeitsblatt (Bilder gemischt mit Nummer und Schreiblinie, danach Lösungsblatt `.print-solution`), `memory` (`MEMORY_PER_PAGE` = 20; je 16 Bild- und Namenskarten mit gestrichelter Schnittlinie).
+Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und in `PAGES` in `js/index.js`. Ihre Adressen gehen vor Kategorien mit gleicher `id`; solche Slugs (`lernapp`, `jetzt`, `quiz`, `pdf`, `einstellungen`, `admin`, `copyright`) darum nicht vergeben.
+
+## Suche, Direktlinks, Entdeckung des Tages (index.html)
+
+- Suchfeld `#search` im Kopf: `runSearch()` vergleicht mit `lernNorm()` Name, Untertitel und Kategorie, höchstens `SEARCH_MAX` = 30 Karten, 200 ms Verzögerung, Esc leert. Jede Adressänderung leert das Feld.
+- Direktlink `#/<kat>/<slug>` (`slugify()`: Kleinbuchstaben, Akzente weg, ä→a, Leerzeichen→«-»; `entryLink()`, `entryUrl()`). Die Kategorie wird gezeigt, die Karte bekommt `.focus`, wird eingeblendet und in der Lightbox geöffnet. Die Verwaltung baut dieselben Links (`linkSlug`, `entryUrl` in `js/admin.js`); beide Funktionen gleich halten.
+- Lightbox-Knopf «Teilen» (`.lb-share`): `navigator.share`, sonst Zwischenablage mit `toast()`.
+- Schliessen der Lightbox: × und Esc laufen über `closeLightboxByUser()` (geht per `history.back()` aus dem eigenen Verlaufseintrag); `popstate` schliesst. Der `close`-Handler selbst ruft kein `back()` mehr auf und bricht ab, wenn die Lightbox schon wieder offen ist (das `close`-Event kommt verzögert; sonst würde ein Link aus der Verwechslungsgefahr die neue Lightbox gleich wieder schliessen oder leeren).
+- «Entdeckung des Tages» (`#daily`, `showDaily()`): Eintrag aus einem Hash des Datums, für alle Geräte am selben Tag gleich. Nur auf der Übersicht, wie `#lernBanner` (`resetView()` blendet beide aus).
+
+## Verwechslungsgefahr und Tierstimmen (014)
+
+- `entries.confusions` (jsonb `[{name, diff}]`): Name eines anderen Eintrags (beliebige Kategorie) und der Unterschied. Die Textseite zeigt «Nicht verwechseln mit …»; `findByName()` macht aus dem Namen einen Direktlink, fehlt der Eintrag (z. B. Bärlauch), bleibt es Text. Pflege im Eintrag der Verwaltung (Abschnitt «Verwechslungsgefahr», `confRow()`); 014 legt 36 Paare in beide Richtungen an.
+- `entries.sound_path`, `sound_page` (nur `http(s)://`), `sound_file`: Tierstimme im Bucket `bilder` unter `<kat>/<entry-id>-ton-<zeit>.mp3` (Bucket erlaubt seit 014 `image/jpeg` und `audio/mpeg`). Übernahme nur von Commons: `commonsAudio()` in `js/wikimedia.js` nimmt die MP3-Fassung, die Commons aus OGG/WAV/FLAC erzeugt (`derivatives`), höchstens 5 MB (`MAX_SOUND`). `storeSound()`/`removeSound()` in `js/admin.js`; in der Liste «Bilder aus Liste» als `Eintrag | ton | Commons-Adresse` bzw. `… | ton | entfernen`. Die Anzeige spielt mit `new Audio()` (ein Knopf `data-sound`, erneuter Klick stoppt), CSP `media-src` erlaubt das Supabase-Projekt. Der Bildnachweis führt die Aufnahmen als «Stimme».
+- `sw.js` speichert `.mp3` nicht (Browser laden Audio mit Range-Anfragen, die der Cache nicht bedienen kann); `allImageUrls()` nimmt nur Bilder.
+- Vorschlagsliste der Tierstimmen: `docs/tierstimmen-liste.txt`.
+
+## QR-Codes, Sicherung, Wachhalten
+
+- QR-Codes nur in der Verwaltung: `js/lib/qrcode-1.4.4.js` (qrcode-generator, Kazuhiko Arase, MIT), `qrSvg()` erzeugt SVG. Im Eintrag Direktlink mit QR-Code und «QR-Code drucken»; in der Kategorie «QR-Codes drucken» (sichtbare Einträge). `printQr()` füllt `#adminPrint`; Druck-CSS in `css/admin.css` (3 × 4 Karten pro A4).
+- «Sicherung herunterladen» (Übersicht der Verwaltung, `downloadBackup()`): `categories`, `entries`, `images` als JSON (`natur-und-schweiz-sicherung-JJJJ-MM-TT.json`). `selectAll()` holt in Blöcken zu 1000 Zeilen (Grenze von PostgREST). Die Bilddateien selbst sind nicht dabei.
+- `.github/workflows/supabase-wachhalten.yml`: täglich 05:17 UTC (und von Hand startbar) eine REST-Abfrage auf `categories` mit dem öffentlichen Schlüssel, damit das kostenlose Projekt nicht pausiert. GitHub schaltet geplante Abläufe nach 60 Tagen ohne Commit ab; dann in Actions wieder einschalten. Im Workflow nie den Service-Key verwenden.
 
 ## Verwaltung (admin.html)
 
@@ -106,7 +131,8 @@ Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt da
 - Texte sachlich und für Sek I verständlich: 3–4 Sätze Beschreibung, 3–4 Steckbrief-Zeilen.
 - **Jede Kategorie hat genau 16 sichtbare Einträge** (2 volle A4-Seiten im PDF, doppelseitig ohne leeres Feld). Fehlt einer: typischen Schweizer Vertreter ergänzen. Sind es mehr: die weniger typischen ausblenden (`visible = false`), nie löschen. Die Zahl der Kategorien ist frei. Richtwert 3 Suchbegriffe pro Eintrag, passend zu den Bildbeschriftungen 2–4.
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
-- Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js nur im Admin.
+- Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js und qrcode-generator nur im Admin.
+- Druck- und Beamer-Ansichten (Arbeitsblatt, Memory, QR-Karten, Quiz) verwenden bewusst feste Farben (Papier weiss, Beamer dunkel) statt der Variablen.
 - In `config.js` nur den öffentlichen Schlüssel eintragen, nie den Service-Key.
 - Kein eingebetteter Code: kein `<script>` mit Inhalt, kein `<style>`, keine `style="…"`- oder `on…="…"`-Attribute. Die Content-Security-Policy (`<meta>` in beiden HTML-Dateien) erlaubt nur eigene Dateien und blockiert alles andere. Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen. Wikimedia liefert Bilder von `upload.wikimedia.org` und `thumb.wikimedia.org`; beide stehen in der CSP.
 - supabase-js liegt als Datei in `js/lib/` (Version im Dateinamen). Zum Aktualisieren die neue `dist/umd/supabase.min.js` von jsDelivr herunterladen und den Pfad in `admin.html` anpassen.

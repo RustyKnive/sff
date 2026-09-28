@@ -1,0 +1,21 @@
+# Supabase wach halten: Gratis-Projekte werden nach längerer Zeit ohne Zugriffe pausiert, dann liefert die
+# Seite keine Inhalte mehr. Diese Aktion ruft die Datenbank jeden Tag einmal ab (nur lesen, öffentlicher Schlüssel
+# wie in config.js). Läuft auf GitHub, nichts muss eingeschaltet bleiben.
+# Hinweis: GitHub stoppt zeitgesteuerte Aktionen, wenn im Repository 60 Tage lang nichts passiert. Dann im
+# Reiter «Actions» die Aktion wieder aktivieren (oder einfach einmal etwas ändern und pushen).
+name: Supabase wach halten
+
+on:
+  schedule:
+    - cron: "17 5 * * *"   # täglich um 05:17 UTC
+  workflow_dispatch:        # von Hand starten: Reiter «Actions» → «Supabase wach halten» → «Run workflow»
+
+jobs:
+  abfrage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kategorien abfragen
+        run: |
+          curl --fail --silent --show-error --max-time 60 \
+            "https://pkiaxvsgplohhvewbgmw.supabase.co/rest/v1/categories?select=id&limit=1" \
+            -H "apikey: sb_publishable_Y6EeljX6EM1Jb46u3OSz6g_61RO2_wO"

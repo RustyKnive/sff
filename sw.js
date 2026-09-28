@@ -6,7 +6,7 @@
      So landen keine Admin-Daten (z. B. ausgeblendete Einträge) im Zwischenspeicher.
    - Wikipedia/Wikimedia (Bild-Fallback) wird nicht gespeichert. */
 
-const APP = "sff-app-v4";      // Version erhöhen, wenn sich die Liste FILES ändert
+const APP = "sff-app-v5";      // Version erhöhen, wenn sich die Liste FILES ändert
 const DATA = "sff-daten";
 const IMAGES = "sff-bilder";   // wird auch von js/index.js gefüllt (Knopf «Für offline speichern»)
 const FILES = [
@@ -49,7 +49,8 @@ self.addEventListener("fetch", e => {
 
   if(url.hostname.endsWith(".supabase.co") && !req.headers.has("authorization")){
     if(url.pathname.startsWith("/rest/v1/")) e.respondWith(networkFirst(e, DATA, req));
-    else if(url.pathname.startsWith("/storage/v1/object/public/")) e.respondWith(cacheFirst(IMAGES, req.url));
+    // Tierstimmen (MP3) nicht: Audio wird stückweise (Range) geladen, das kann ein Speicher-Treffer nicht bedienen
+    else if(url.pathname.startsWith("/storage/v1/object/public/") && !url.pathname.endsWith(".mp3")) e.respondWith(cacheFirst(IMAGES, req.url));
   }
 });
 

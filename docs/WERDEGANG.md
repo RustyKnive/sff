@@ -4,7 +4,8 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 27. September 2026 · 20 Kategorien mit je 16 sichtbaren Einträgen (320) · Bilder der 35 neuen Einträge folgen
+**Stand:** 28. September 2026 · 20 Kategorien mit je 16 sichtbaren Einträgen (320) · rund 1270 eigene Bilder ·
+36 Verwechslungspaare · Tierstimmen für 28 Arten vorbereitet
 
 ---
 
@@ -12,13 +13,26 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 
 ### Anzeige (index.html)
 
-- **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge).
+- **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge) und der **Entdeckung des Tages**
+  (jeden Tag ein anderer Eintrag, für alle gleich).
+- **Suche** über alle Kategorien: deutscher Name, lateinischer Name oder Kategorie, ohne Rücksicht auf Umlaute und Grossschreibung.
 - **Kategorie** mit einer Karte pro Eintrag: durch die Bilder und den Steckbrief blättern (Pfeile, Punkte, Tastatur).
   Es werden nur die vorhandenen Bilder gezeigt.
+- **Direktlink auf jeden Eintrag** (z. B. `#/voegel/amsel`): öffnet die Kategorie, hebt die Karte hervor und zeigt sie gross.
+  In der Grossansicht teilt der Knopf «Teilen» diesen Link (auf dem Handy über das Teilen-Menü, sonst in die Zwischenablage).
+- **Verwechslungsgefahr:** Auf der Textseite steht bei ähnlichen Arten «Nicht verwechseln mit …» mit dem Unterschied
+  und einem Link zum anderen Eintrag (z. B. Fichte und Weisstanne, Reh und Rothirsch, Bärlauch und Herbstzeitlose).
+- **Tierstimmen:** Bei Tieren mit typischem Ruf spielt ein Knopf auf der Textseite die Aufnahme ab (mit Quellenangabe).
 - **Lightbox:** Ein Klick zeigt Bilder und Text bildschirmfüllend. Bilder lassen sich zoomen
   (Mausrad, Doppelklick, zwei Finger, Tasten `+` `-` `0`), vergrössert verschieben und auf dem Handy wischen.
 - **Menü:**
-  - *PDF drucken:* eine Kategorie als PDF speichern oder drucken (A4, 8 Einträge pro Seite, Bildquelle klein im jeweiligen Bild).
+  - *Jetzt zu sehen:* was laut Steckbrief in diesem Monat blüht, fliegt, wächst oder laicht, nach Kategorien geordnet.
+  - *Quiz für die Klasse:* Bilder einer Kategorie bildschirmfüllend für den Beamer; Leertaste zeigt die Lösung,
+    die nächste Leertaste das nächste Bild.
+  - *PDF drucken:* eine Kategorie als PDF speichern oder drucken, wahlweise
+    als **Steckbriefe** (A4, 8 Einträge pro Seite, Bildquelle klein im jeweiligen Bild),
+    als **Arbeitsblatt** (Bilder mit Nummer und Schreiblinie, Lösungsblatt am Schluss) oder
+    als **Memory** zum Ausschneiden (eine Seite Bildkarten, eine Seite Namenskarten).
   - *Einstellungen:* Anleitung, wie man die Seite als App installiert (mit Knopf, wo der Browser das anbietet), und alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
@@ -37,6 +51,11 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   - *Neue Kategorie:* Claude prüft die Idee und schreibt alle Einträge; Vorschlag durchsehen, abwählen, korrigieren oder abbrechen.
   - *Neuer Eintrag* über einen Namen oder ein Foto: Claude bestimmt die Art bzw. schreibt den Eintrag,
     das Formular lässt sich vor dem Übernehmen ändern. Ein eigenes Foto wird Bild 1.
+- **Verwechslungsgefahr** pro Eintrag pflegen (Name des anderen Eintrags und Unterschied).
+- **Tierstimme** pro Eintrag von Commons übernehmen (Adresse der Tondatei einfügen) oder entfernen, auch über die Liste.
+- **QR-Codes:** Jeder Eintrag zeigt seinen Direktlink mit QR-Code; pro Kategorie lassen sich alle QR-Codes als
+  Karten (12 pro A4-Seite) drucken, etwa für einen Lehrpfad oder Posten im Schulzimmer.
+- **Sicherung:** Ein Knopf lädt alle Kategorien, Einträge und Bildangaben als Datei herunter.
 
 ### Technik in Kürze
 
@@ -44,6 +63,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - Daten und Bilder in **Supabase** (Postgres-Datenbank und Speicher); gehostet auf GitHub Pages.
 - Schreiben dürfen nur Admins mit zweitem Faktor (Row Level Security). Strenge Content-Security-Policy:
   Die Seiten laden nur eigene Dateien und die erlaubten Quellen.
+- **Wachhalten:** Ein kostenloses Supabase-Projekt schläft nach etwa einer Woche ohne Zugriff ein. Eine automatische
+  Aufgabe auf GitHub (GitHub Actions) fragt die Datenbank darum jeden Morgen einmal ab.
 
 ---
 
@@ -139,6 +160,29 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Neue Versionen sofort sichtbar:** Die Offline-App fragt Seite und Programmdateien jetzt immer beim Server nach,
   statt bis zu 10 Minuten eine ältere Kopie aus dem Browser zu zeigen.
 
+### 28. September – Für den Unterricht und für den Betrieb
+
+Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher macht. Umgesetzt wurde alles in einem Schritt:
+
+- **Suche** über alle Einträge direkt unter dem Titel.
+- **Direktlinks** auf einzelne Einträge und ein Knopf «Teilen» in der Grossansicht. Darauf bauen die **QR-Codes** der
+  Verwaltung auf: pro Eintrag einer, pro Kategorie ein Druckbogen mit 12 Karten pro Seite.
+- **Jetzt zu sehen:** Die Seite liest aus den Steckbriefen (Blütezeit, Flugzeit, Laichzeit, Aktivzeit …),
+  was im laufenden Monat draussen zu finden ist. Zeiträume über den Jahreswechsel («November–März») werden richtig erkannt.
+- **Entdeckung des Tages** auf der Startseite.
+- **Quiz für die Klasse:** Präsentationsmodus für den Beamer, bedienbar mit Leertaste, Pfeiltasten oder einem
+  Präsentations-Klicker, mit Zähler und Abschluss.
+- **Arbeitsblätter und Memory** zum Ausdrucken: Das Arbeitsblatt zeigt die Bilder gemischt mit Schreiblinie, das
+  Lösungsblatt folgt am Schluss. Das Memory hat 16 Bild- und 16 Namenskarten mit Schnittlinien.
+- **Verwechslungsgefahr:** 36 Paare ähnlicher Arten mit dem entscheidenden Unterschied, darunter die für die Sicherheit
+  wichtigen Giftpflanzen und Giftpilze (Herbstzeitlose, Weisser Germer, Satans-Röhrling, Pantherpilz).
+- **Tierstimmen:** Aufnahmen von Wikimedia Commons (meist von xeno-canto) für Vögel, Frösche, Kröten, Heuschrecken und
+  einige Säugetiere. Commons wandelt die Aufnahmen in MP3 um, das jeder Browser abspielt. Die Aufnahmen liegen wie die
+  Bilder im eigenen Speicher und stehen im Bildnachweis.
+- **Sicherung** der Datenbank als Datei aus der Verwaltung.
+- **Wachhalten der Datenbank:** Eine tägliche automatische Abfrage über GitHub Actions verhindert, dass das kostenlose
+  Supabase-Projekt wegen Untätigkeit pausiert wird (zum Beispiel in den Sommerferien).
+
 ---
 
 ## Bewusste Entscheide
@@ -154,6 +198,11 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 | Einträge nur einzeln verschieben | Mehrfach-Verschieben ist nicht gewünscht |
 | Genau 16 sichtbare Einträge pro Kategorie | 2 volle A4-Seiten im PDF, doppelseitig ohne leeres Feld; weitere werden ausgeblendet, nicht gelöscht |
 | Schweizer Rechtschreibung (immer «ss») | Zielpublikum Schweizer Schulen |
+| Wachhalten über GitHub Actions statt bezahltem Supabase-Plan | kostenlos; die Abfrage liest nur öffentliche Daten mit dem öffentlichen Schlüssel |
+| Sicherung als Datei aus der Verwaltung | die kostenlose Supabase-Stufe hat keine automatischen Sicherungen zum Herunterladen |
+| Tierstimmen als MP3 im eigenen Speicher | spielt in allen Browsern, unabhängig von Wikimedia; nicht im Offline-Speicher, weil Browser Töne stückweise laden |
+| QR-Codes nur in der Verwaltung | die Anzeige bleibt ohne Bibliothek; gedruckt wird ohnehin von der Lehrperson |
+| «Jetzt zu sehen» aus den Steckbriefen gelesen | keine neue Pflegearbeit; wer den Steckbrief pflegt, pflegt die Monatsliste mit |
 
 ## Änderungen an der Datenbank
 
@@ -168,8 +217,10 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 | `011_bild_bearbeitet.sql` | Kennzeichnung zugeschnittener Bilder |
 | `012_16_eintraege.sql` | 16 Einträge pro Kategorie, neue Kategorie Naturwunder, Hunde ohne lateinische Untertitel |
 | `013_leere_plaetze.sql` | bewusst leere Bildplätze, die nicht automatisch gefüllt werden |
+| `014_verwechslung_tierstimmen.sql` | Verwechslungsgefahr (36 Paare) und Tierstimmen; der Speicher nimmt neu auch MP3 an |
 
 ## Offen und geplant
 
-- Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder Auswahl aus mehreren Namen) sind offen.
+- Tierstimmen einspielen: Die Liste `docs/tierstimmen-liste.txt` (28 Arten) in der Verwaltung unter «Bilder aus Liste» einfügen.
+- Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).

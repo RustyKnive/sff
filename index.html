@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Erlaubte Quellen: nur eigene Dateien (kein eingebetteter Code), das Supabase-Projekt und Wikipedia/Wikimedia (Bild-Fallback) -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://pkiaxvsgplohhvewbgmw.supabase.co https://upload.wikimedia.org https://thumb.wikimedia.org; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://pkiaxvsgplohhvewbgmw.supabase.co https://upload.wikimedia.org https://thumb.wikimedia.org; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org; media-src https://pkiaxvsgplohhvewbgmw.supabase.co; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <title>Natur und Schweiz by toj</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2f6b3a">
@@ -23,6 +23,8 @@
     <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="menu" id="menu" hidden>
       <a class="menu-item" href="#/lernapp">LernApp</a>
+      <a class="menu-item" href="#/jetzt">Jetzt zu sehen</a>
+      <a class="menu-item" href="#/quiz">Quiz für die Klasse</a>
       <a class="menu-item" href="#/pdf">PDF drucken</a>
       <a class="menu-item" href="#/einstellungen">Einstellungen</a>
       <a class="menu-item" href="#/admin">Admin</a>
@@ -32,12 +34,15 @@
   <button class="back" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Übersicht</button>
   <h1 id="title">Natur und Schweiz by toj</h1>
   <p id="intro"></p>
+  <input type="search" id="search" class="search" placeholder="Suchen: Name oder lateinischer Name" aria-label="Suchen" autocomplete="off">
   <!-- Hinweis der LernApp auf der Übersicht (js/index.js showLernBanner) -->
   <a class="lern-banner" id="lernBanner" href="#/lernapp" hidden></a>
+  <!-- Entdeckung des Tages auf der Übersicht (js/index.js showDaily) -->
+  <a class="daily" id="daily" hidden></a>
 </header>
 <main id="grid"></main>
 
-<!-- Seiten aus dem Menü (Adresse #/lernapp, #/pdf, #/einstellungen, #/admin, #/copyright) -->
+<!-- Seiten aus dem Menü (Adresse #/lernapp, #/quiz, #/pdf, #/einstellungen, #/admin, #/copyright; #/jetzt nutzt das Raster) -->
 <section class="page" id="page-lernapp" hidden>
   <div id="lern"></div>
 </section>
@@ -48,12 +53,32 @@
   <p><a class="button" href="admin.html" target="_blank" rel="noopener">Verwaltung öffnen ↗</a></p>
   <p>Die Verwaltung öffnet sich in einem neuen Tab. Diese Seite bleibt offen.</p>
 </section>
+<section class="page" id="page-quiz" hidden>
+  <h2>Quiz für den Beamer</h2>
+  <p>Die Bilder erscheinen bildschirmfüllend, die Klasse rät, dann blendest du die Lösung ein.
+    Tasten: Leertaste oder Enter zeigt die Lösung bzw. das nächste Bild, Pfeil rechts springt weiter, Esc beendet.</p>
+  <div class="offline">
+    <select id="quizCat" aria-label="Kategorie"></select>
+    <select id="quizCount" aria-label="Anzahl Bilder">
+      <option value="10">10 Bilder</option>
+      <option value="16" selected>16 Bilder</option>
+      <option value="0">alle</option>
+    </select>
+    <button id="quizStart">Quiz starten</button>
+  </div>
+</section>
 <section class="page" id="page-pdf" hidden>
   <h2>Kategorie als PDF</h2>
-  <p>Pro Eintrag das Hauptbild mit Name, Beschreibung und Steckbrief, 8 Einträge pro A4-Seite, die Bildquelle klein im Bild.
+  <p>Drei Arten: <b>Übersicht</b> mit Hauptbild, Name, Beschreibung und Steckbrief (8 Einträge pro A4-Seite),
+    <b>Arbeitsblatt</b> nur mit Bildern und Linien zum Ausfüllen plus Lösungsblatt, <b>Memory</b> mit Bild- und Namenskarten zum Ausschneiden.
     Im Druckfenster als Ziel «Als PDF speichern» wählen, um die Datei zu speichern, oder direkt drucken.</p>
   <div class="offline">
     <select id="pdfCat" aria-label="Kategorie"></select>
+    <select id="pdfMode" aria-label="Art">
+      <option value="text">Übersicht mit Text</option>
+      <option value="blatt">Arbeitsblatt mit Lösungen</option>
+      <option value="memory">Memory-Karten</option>
+    </select>
     <button id="pdfBtn">PDF erstellen</button>
     <span id="pdfMsg"></span>
   </div>

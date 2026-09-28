@@ -61,6 +61,12 @@ create table if not exists public.entries (
   visible      boolean not null default true,          -- false = auf der Seite ausgeblendet
   -- bewusst leere Bildplätze, die «Fehlende Bilder übernehmen» nicht füllt (013_leere_plaetze.sql)
   empty_slots  smallint[] not null default '{}' constraint entries_empty_slots_1_4 check (empty_slots <@ array[1,2,3,4]::smallint[]),
+  -- «Nicht verwechseln mit …»: [{name, diff}] (014_verwechslung_tierstimmen.sql)
+  confusions   jsonb not null default '[]'::jsonb,
+  -- Tierstimme (MP3 im Bucket «bilder») mit Quelle wie bei den Bildern (014)
+  sound_path   text,
+  sound_page   text constraint entries_sound_page_http check (sound_page is null or sound_page ~* '^https?://'),
+  sound_file   text,
   sort         integer not null default 0,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -131,9 +137,9 @@ create policy "lesen" on public.entries for select to anon, authenticated using 
 -- ------------------------------------------------------------------
 -- Storage: öffentlicher Bucket «bilder», nur Admins laden hoch
 -- ------------------------------------------------------------------
--- Nur JPEG, höchstens 5 MB pro Datei (der Admin verkleinert auf 1600 px)
+-- Nur JPEG (Bilder) und MP3 (Tierstimmen, 014), höchstens 5 MB pro Datei (der Admin verkleinert Bilder auf 1600 px)
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('bilder', 'bilder', true, 5242880, array['image/jpeg'])
+values ('bilder', 'bilder', true, 5242880, array['image/jpeg', 'audio/mpeg'])
 on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 

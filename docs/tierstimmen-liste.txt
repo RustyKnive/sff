@@ -1,0 +1,28 @@
+Amsel | ton | https://commons.wikimedia.org/wiki/File:Turdus_merula_-_Common_Blackbird_XC310893.mp3
+Rotkehlchen | ton | https://commons.wikimedia.org/wiki/File:Erithacus_rubecula_-_European_Robin_XC507779.mp3
+Kohlmeise | ton | https://commons.wikimedia.org/wiki/File:Parus_major_-_Great_Tit_XC527981.mp3
+Haussperling | ton | https://commons.wikimedia.org/wiki/File:Passer_domesticus_-_House_Sparrow_XC108385.mp3
+Mauersegler | ton | https://commons.wikimedia.org/wiki/File:Apus_apus_-_Common_Swift_XC554033.mp3
+Buntspecht | ton | https://commons.wikimedia.org/wiki/File:Dendrocopos_major_-_Great_Spotted_Woodpecker_XC309807.mp3
+Schleiereule | ton | https://commons.wikimedia.org/wiki/File:Tyto_alba_-_Western_Barn_Owl_XC433736.mp3
+Mäusebussard | ton | https://commons.wikimedia.org/wiki/File:Buteo_buteo_-_Common_Buzzard_XC538678.mp3
+Steinadler | ton | https://commons.wikimedia.org/wiki/File:Golden_Eagle_(Aquila_chrysaetos)_(W1CDR0001387_BD6).ogg
+Alpendohle | ton | https://commons.wikimedia.org/wiki/File:Pyrrhocorax_graculus_-_Alpine_Chough_XC496675.mp3
+Alpenschneehuhn | ton | https://commons.wikimedia.org/wiki/File:Ptarmigan_(Lagopus_mutus)_(W1CDR0001418_BD38).ogg
+Tannenhäher | ton | https://commons.wikimedia.org/wiki/File:Nucifraga_caryocatactes_-_Spotted_Nutcracker_XC249299.mp3
+Graureiher | ton | https://commons.wikimedia.org/wiki/File:Ardea_cinerea_-_Grey_Heron_XC545059.mp3
+Weissstorch | ton | https://commons.wikimedia.org/wiki/File:Ciconia_ciconia_bill-clattering.ogg
+Haubentaucher | ton | https://commons.wikimedia.org/wiki/File:Great_Crested_Grebe_(Podiceps_cristatus)_(W1CDR0001488_BD4).ogg
+Laubfrosch | ton | https://commons.wikimedia.org/wiki/File:Laubfrosch_Balzruf.OGG
+Gelbbauchunke | ton | https://commons.wikimedia.org/wiki/File:Gelbbauchunke3.OGG
+Grasfrosch | ton | https://commons.wikimedia.org/wiki/File:Grasfrosch_Paarungsrufe.OGG
+Geburtshelferkröte | ton | https://commons.wikimedia.org/wiki/File:Geburtshelferkröte.OGG
+Kreuzkröte | ton | https://commons.wikimedia.org/wiki/File:Epidalea_calamita.ogg
+Erdkröte | ton | https://commons.wikimedia.org/wiki/File:Bufo_bufo_call1.ogg
+Kleiner Wasserfrosch | ton | https://commons.wikimedia.org/wiki/File:Tiigikonn_juuni_2026.ogg
+Feldgrille | ton | https://commons.wikimedia.org/wiki/File:Gryllus_campestris_-_sound.ogg
+Grünes Heupferd | ton | https://commons.wikimedia.org/wiki/File:Tettigonia_viridissima_singing_male_(Andreas_Plank_2011-07-24).ogg
+Rothirsch | ton | https://commons.wikimedia.org/wiki/File:Red_Deer_(Cervus_elaphus)_(W1CDR0001424_BD3).ogg
+Reh | ton | https://commons.wikimedia.org/wiki/File:Male_roe_deer_growl.ogg
+Murmeltier | ton | https://commons.wikimedia.org/wiki/File:2006,_Murmeldjur_BHW_2006.ogg
+Rotfuchs | ton | https://commons.wikimedia.org/wiki/File:Red_Fox_(Vulpes_vulpes)_(W1CDR0001529_BD12).ogg

@@ -9,10 +9,10 @@ let CATS = [];
    Eintrag: n Name, s Untertitel, t Beschreibung, f Steckbrief [{k,v}], q Suchbegriffe,
    wp Wikipedia-Titel, lb eigene Bildbeschriftungen, img[0..3] eigene Bilder (oder null)
    Bild: src, page, file, fx/fy/z Ausschnitt für die 4:3-Kacheln (null = Mitte, nicht vergrössert),
-   edited zugeschnitten (Hinweis im Bildnachweis) */
+   edited zugeschnitten (Hinweis im Bildnachweis); cf Verwechslungsgefahr [{name, diff}], snd Tierstimme {src, page, file} */
 async function loadCats(){
   const select = "id,name,description,latin,labels,cover_entry_id,"
-    + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,"
+    + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
     + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited))";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
     + "&order=sort.asc,name.asc&entries.order=sort.asc,name.asc";
@@ -26,7 +26,8 @@ async function loadCats(){
     cover:Math.max(0, c.entries.findIndex(e => e.id === c.cover_entry_id)),
     items:c.entries.map(e => ({
       id:e.id, n:e.name, s:e.subtitle, t:e.description, f:e.facts || [],
-      q:e.search_terms || [], wp:e.wp, lb:e.labels,
+      q:e.search_terms || [], wp:e.wp, lb:e.labels, cf:e.confusions || [],
+      snd:e.sound_path ? { src:publicUrl(e.sound_path), page:e.sound_page, file:e.sound_file } : null,
       img:[1,2,3,4].map(p => {
         const i = e.images.find(x => x.position === p);
         return i ? { src:publicUrl(i.storage_path), page:i.source_page, file:i.source_file,
@@ -44,6 +45,17 @@ const ARROW_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 // Nur http(s)-Adressen als Link verwenden (kein «javascript:» o. Ä.)
 const safeUrl = s => /^https?:\/\//i.test(s || "") ? s : null;
+
+// Direktlink auf einen Eintrag: #/<kategorie>/<name als Slug>, z. B. #/baeume/buche
+const slugify = s => s.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").replace(/ü/g, "ue")
+  .replace(new RegExp(String.fromCharCode(223), "g"), "ss").normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const entryLink = (cat, item) => "#/" + cat.id + "/" + slugify(item.n);
+const entryUrl = (cat, item) => location.href.split("#")[0] + entryLink(cat, item);
+function findByName(name){
+  for(const cat of CATS){ const item = cat.items.find(it => it.n === name); if(item) return { cat, item }; }
+  return null;
+}
 
 const imgQueue = limiter(4);   // gleichzeitige Bild-Downloads
 
@@ -147,6 +159,12 @@ function slidesHtml(cat, item, labels, big){
       <p class="sub${cat.latin ? " latin" : ""}">${esc(item.s)}</p>
       <p>${esc(item.t)}</p>
       <dl>${facts}</dl>
+      ${item.snd ? `<p class="sound"><button class="sound-btn" data-sound="${esc(item.snd.src)}">▶ Stimme anhören</button>
+        ${safeUrl(item.snd.page) ? `<a href="${esc(item.snd.page)}" target="_blank" rel="noopener">Quelle</a>` : ""}</p>` : ""}
+      ${item.cf.length ? `<div class="confuse"><b>Nicht verwechseln mit:</b>${item.cf.map(c => {
+        const hit = findByName(c.name);
+        return `<p>${hit ? `<a href="${entryLink(hit.cat, hit.item)}">${esc(c.name)}</a>` : `<b>${esc(c.name)}</b>`}: ${esc(c.diff)}</p>`;
+      }).join("")}</div>` : ""}
     </div></div>`;
 }
 function controlsHtml(item, labels){
@@ -217,6 +235,34 @@ function buildCard(cat, item){
   return card;
 }
 
+// Tierstimme abspielen bzw. anhalten (Knopf auf der Textseite von Karte und Lightbox)
+let soundPlayer = null, soundBtn = null;
+const soundReset = () => { if(soundBtn) soundBtn.textContent = "▶ Stimme anhören"; soundBtn = null; };
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-sound]");
+  if(!b) return;
+  e.stopPropagation();
+  const again = soundBtn === b;
+  if(soundPlayer){ soundPlayer.pause(); soundPlayer = null; }
+  soundReset();
+  if(again) return;   // zweiter Klick: anhalten
+  soundPlayer = new Audio(b.dataset.sound);
+  soundBtn = b;
+  b.textContent = "■ Anhalten";
+  soundPlayer.addEventListener("ended", soundReset);
+  soundPlayer.play().catch(() => { soundReset(); toast("Ton konnte nicht abgespielt werden."); });
+});
+
+// Kurze Meldung unten am Bildschirm
+function toast(text){
+  let t = document.getElementById("toast");
+  if(!t){ t = document.createElement("div"); t.id = "toast"; document.body.append(t); }
+  t.textContent = text;
+  t.hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { t.hidden = true; }, 2500);
+}
+
 // Lightbox: ein <dialog> für die ganze Seite. Schliessen mit ×, Esc oder «Zurück» (bleibt in der Kategorie).
 const lightbox = document.createElement("dialog");
 lightbox.className = "lightbox";
@@ -231,26 +277,42 @@ function openLightbox(cat, item, start){
       <div class="track">${slidesHtml(cat, item, labels, true)}</div>
       ${controlsHtml(item, labels)}
       <button class="lb-close" aria-label="Schliessen">×</button>
+      <button class="lb-share" aria-label="Link zu diesem Eintrag teilen" title="Link teilen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
     </div>`;
   const root = lightbox.querySelector(".lb");
   lbCarousel = carousel(root, () => lbZoom.reset());
   // Die Bilder sind meist schon geladen (Browser- und Offline-Speicher), sonst werden sie jetzt geholt
   root.querySelectorAll(".slide:not(.text)").forEach(s => fillSlide(s, cat, item, +s.dataset.k));
   lbCarousel.go(start);
-  root.querySelector(".lb-close").addEventListener("click", () => lightbox.close());
+  root.querySelector(".lb-close").addEventListener("click", closeLightboxByUser);
+  // Direktlink teilen (Handy: Teilen-Menü) oder in die Zwischenablage kopieren
+  root.querySelector(".lb-share").addEventListener("click", async () => {
+    const url = entryUrl(cat, item);
+    try{
+      if(navigator.share){ await navigator.share({ title:item.n, url }); return; }
+      await navigator.clipboard.writeText(url);
+      toast("Link kopiert: " + url);
+    }catch(e){ if(e.name !== "AbortError") toast(url); }
+  });
   document.body.classList.add("lb-open");
   lightbox.showModal();
   // Eigener Verlaufseintrag (gleiche Adresse): «Zurück» schliesst nur die Lightbox
   history.pushState({ lb:true }, "");
 }
 lightbox.addEventListener("close", () => {
+  if(lightbox.open) return;   // kommt verzögert: ist schon die nächste Lightbox offen, nichts wegräumen
   document.body.classList.remove("lb-open");
   lbZoom.reset();
   lightbox.replaceChildren();
   lbCarousel = null;
-  // Mit × oder Esc geschlossen: den Verlaufseintrag der Lightbox wieder entfernen
-  if(history.state && history.state.lb) history.back();
 });
+// Schliessen mit × oder Esc: einen Schritt im Verlauf zurück, das schliesst die Lightbox (popstate).
+// Nicht im «close»-Ereignis: das kommt verzögert und würde sonst eine inzwischen neu geöffnete Lightbox
+// (z. B. nach einem Link «Nicht verwechseln mit …») gleich wieder schliessen.
+function closeLightboxByUser(){
+  if(history.state && history.state.lb) history.back(); else lightbox.close();
+}
+lightbox.addEventListener("cancel", e => { e.preventDefault(); closeLightboxByUser(); });
 window.addEventListener("popstate", () => { if(lightbox.open) lightbox.close(); });
 lightbox.addEventListener("keydown", e => {
   if(!lbCarousel) return;
@@ -393,6 +455,7 @@ function buildOverview(){
 // Seiten aus dem Menü (stehen in index.html); gehen vor gleichnamigen Kategorien
 const PAGES = {
   lernapp:{ title:"LernApp", intro:"Namen zu Bildern lernen, mit dem Leitner-System." },
+  quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
   einstellungen:{ title:"Einstellungen", intro:"Einstellungen für dieses Gerät." },
   admin:{ title:"Admin", intro:"Zugang zur Verwaltung." },
@@ -411,7 +474,9 @@ function buildCredits(){
         return `<span><a href="${esc(i.page)}" target="_blank" rel="noopener" title="${esc(i.file || "")}">Bild ${k + 1}</a>`
           + `${i.edited ? " <small>(zugeschnitten)</small>" : ""}</span>`;
       }).join("");
-      return `<li>${esc(it.n)}${parts || " <small>(Bilder werden live von Wikimedia geladen)</small>"}</li>`;
+      const sound = !it.snd ? "" : safeUrl(it.snd.page)
+        ? `<span><a href="${esc(it.snd.page)}" target="_blank" rel="noopener" title="${esc(it.snd.file || "")}">Stimme</a></span>` : "<span>Stimme: eigene Aufnahme</span>";
+      return `<li>${esc(it.n)}${parts || " <small>(Bilder werden live von Wikimedia geladen)</small>"}${sound}</li>`;
     }).join("")}</ul>`).join("");
 }
 
@@ -446,44 +511,71 @@ function loadPrintImage(el, cat, item){
   return loc ? load(loc).catch(online) : online();
 }
 
-async function printCategory(cat){
+// Bildquelle für den Druck: Commons-Seite (mit Urheber und Lizenz) oder «eigenes Foto»
+const printSrc = d => safeUrl(d.page)
+  ? "Bild: " + decodeURI(d.page).replace(/^https?:\/\//, "") + (d.edited ? " (zugeschnitten)" : "") : "Bild: eigenes Foto";
+const chunk = (list, n) => { const out = []; for(let i = 0; i < list.length; i += n) out.push(list.slice(i, i + n)); return out; };
+const shuffled = list => { const a = list.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const MEMORY_PER_PAGE = 20;   // 4 × 5 Karten
+
+/* Drei Arten:
+   text   Übersicht: Hauptbild, darüber Name, Beschreibung, Steckbrief (8 pro Seite)
+   blatt  Arbeitsblatt: nur Bilder mit Nummer und Linie (zufällige Reihenfolge), am Schluss das Lösungsblatt
+   memory Memory: Bildkarten und Namenskarten zum Ausschneiden (je 20 pro Seite) */
+async function printCategory(cat, mode = "text"){
   const btn = document.getElementById("pdfBtn");
   btn.disabled = true;
   pdfMsg.textContent = "Bilder werden geladen …";
-  const pages = [];
-  for(let i = 0; i < cat.items.length; i += PER_PAGE) pages.push(cat.items.slice(i, i + PER_PAGE));
-  printBox.innerHTML = pages.map(p => `<div class="print-page">${p.map(it => `
-    <figure class="print-cell">
-      <img alt="">
-      <figcaption>
-        <strong>${esc(it.n)}</strong>${it.s ? ` <span class="${cat.latin ? "latin" : ""}">${esc(it.s)}</span>` : ""}
-        <p>${esc(it.t)}</p>
-        ${it.f.length ? `<p>${it.f.map(f => `<b>${esc(f.k)}:</b> ${esc(f.v)}`).join(" · ")}</p>` : ""}
-        <small class="print-src"></small>
-      </figcaption>
-    </figure>`).join("")}</div>`).join("");
+  const sub = it => it.s ? ` <span class="${cat.latin ? "latin" : ""}">${esc(it.s)}</span>` : "";
+  let items = cat.items, title = cat.name;
+  if(mode === "blatt"){
+    items = shuffled(cat.items);
+    title += " – Arbeitsblatt";
+    printBox.innerHTML = chunk(items, PER_PAGE).map((p, pi) => `<div class="print-page">${p.map((it, i) => `
+      <figure class="print-cell">
+        <img alt="">
+        <figcaption class="ws"><span class="nr">${pi * PER_PAGE + i + 1}</span><span class="line"></span><small class="print-src"></small></figcaption>
+      </figure>`).join("")}</div>`).join("")
+      + `<div class="print-solution"><h2>Lösungen · ${esc(cat.name)}</h2>
+        <ol>${items.map(it => `<li><b>${esc(it.n)}</b>${sub(it)}</li>`).join("")}</ol></div>`;
+  }else if(mode === "memory"){
+    title += " – Memory";
+    const imgCards = items.map(() => `<figure class="mem-card"><img alt=""><small class="print-src"></small></figure>`);
+    const nameCards = items.map(it => `<div class="mem-card mem-name"><b>${esc(it.n)}</b>${sub(it)}</div>`);
+    printBox.innerHTML = [imgCards, nameCards].map(cards =>
+      chunk(cards, MEMORY_PER_PAGE).map(p => `<div class="print-page mem">${p.join("")}</div>`).join("")).join("");
+  }else{
+    printBox.innerHTML = chunk(items, PER_PAGE).map(p => `<div class="print-page">${p.map(it => `
+      <figure class="print-cell">
+        <img alt="">
+        <figcaption>
+          <strong>${esc(it.n)}</strong>${sub(it)}
+          <p>${esc(it.t)}</p>
+          ${it.f.length ? `<p>${it.f.map(f => `<b>${esc(f.k)}:</b> ${esc(f.v)}`).join(" · ")}</p>` : ""}
+          <small class="print-src"></small>
+        </figcaption>
+      </figure>`).join("")}</div>`).join("");
+  }
 
-  // Alle Hauptbilder laden; fehlt eines, bleibt die Fläche leer.
-  // Unter dem Text steht klein die Quelle (CC-Lizenzen verlangen sie auch gedruckt): Commons-Seite mit Urheber und Lizenz.
-  const cells = printBox.querySelectorAll(".print-cell");
-  await Promise.all(cat.items.map((it, i) => loadPrintImage(cells[i].querySelector("img"), cat, it).then(d => {
-    cells[i].querySelector(".print-src").textContent = safeUrl(d.page)
-      ? "Bild: " + decodeURI(d.page).replace(/^https?:\/\//, "") + (d.edited ? " (zugeschnitten)" : "")
-      : "Bild: eigenes Foto";
+  // Alle Hauptbilder laden (Reihenfolge der <img> = Reihenfolge von items); fehlt eines, bleibt die Fläche leer.
+  // Die Quelle steht klein im Bild (CC-Lizenzen verlangen sie auch gedruckt).
+  const imgs = printBox.querySelectorAll("figure img");
+  await Promise.all(items.map((it, i) => loadPrintImage(imgs[i], cat, it).then(d => {
+    imgs[i].closest("figure").querySelector(".print-src").textContent = printSrc(d);
   }).catch(() => {})));
 
   pdfMsg.textContent = "";
   btn.disabled = false;
   // Der Titel wird im Druckdialog zum Dateinamen des PDFs
-  const title = document.title;
-  document.title = "Natur und Schweiz – " + cat.name;
-  window.addEventListener("afterprint", () => { document.title = title; printBox.replaceChildren(); }, { once:true });
+  const oldTitle = document.title;
+  document.title = "Natur und Schweiz – " + title;
+  window.addEventListener("afterprint", () => { document.title = oldTitle; printBox.replaceChildren(); }, { once:true });
   window.print();
 }
 
 document.getElementById("pdfBtn").addEventListener("click", () => {
   const cat = CATS.find(c => c.id === document.getElementById("pdfCat").value);
-  if(cat) printCategory(cat).catch(e => {
+  if(cat) printCategory(cat, document.getElementById("pdfMode").value).catch(e => {
     pdfMsg.textContent = "PDF konnte nicht erstellt werden (" + e.message + ").";
     document.getElementById("pdfBtn").disabled = false;
   });
@@ -652,7 +744,8 @@ function lernChoices({ cat, item }, items){
 }
 // Merksatz nach der Antwort: der erste Satz der Beschreibung
 function lernMerksatz(item){
-  const m = (item.t || "").match(/^.+?[.!?](?=\s+\p{Lu}|$)/u);
+  // Kein Satzende nach Zahlen («im 19. Jahrhundert») und Abkürzungen («St. Gallen», «z. B.»)
+  const m = (item.t || "").match(/^.+?(?<!\d|\b(?:ca|bzw|St|Nr|evtl|resp|etc|inkl|z|d|u|v|B|h|a))[.!?](?=\s+\p{Lu}|$)/u);
   return m ? m[0] : "";
 }
 
@@ -888,46 +981,224 @@ function renderLernQuiz(){
   input.focus();
 }
 
-function render(){
-  const id = location.hash.replace(/^#\/?/, "");
-  const page = PAGES[id];
-  const cat = page ? null : CATS.find(c => c.id === id);
+// Karten einer Kategorie (einmal gebaut, danach wiederverwendet: Kategorie, Suche, «Jetzt zu sehen»)
+function cardsOf(cat){
+  if(!catCards.has(cat.id)) catCards.set(cat.id, cat.items.map(it => buildCard(cat, it)));
+  return catCards.get(cat.id);
+}
+const cardOf = (cat, item) => cardsOf(cat)[cat.items.indexOf(item)];
+
+// Ansicht vorbereiten: Lightbox zu, Hinweise der Übersicht weg, Menüseiten ausblenden
+function resetView(pageId){
   if(lightbox.open) lightbox.close();
-  const lernBanner = document.getElementById("lernBanner");
-  if(lernBanner) lernBanner.hidden = true;   // nur auf der Übersicht
+  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily")]) if(el) el.hidden = true;
   grid.replaceChildren();
   window.scrollTo(0, 0);
-  for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== id;
-  grid.hidden = !!page;
+  for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== pageId;
+  grid.hidden = !!pageId;
+  searchEl.hidden = !!pageId;   // Suche nur auf Übersicht, Kategorien und «Jetzt zu sehen»
+}
+function setHead(title, intro, sub = true){
+  document.body.classList.toggle("in-sub", sub);
+  titleEl.textContent = title;
+  introEl.textContent = intro;
+  document.title = sub ? title + " – Natur und Schweiz by toj" : "Natur und Schweiz by toj";
+}
+
+function render(){
+  const id = location.hash.replace(/^#\/?/, "");
+  const [first, second] = id.split("/");
+  const page = PAGES[id];
+  const cat = page ? null : CATS.find(c => c.id === first);
+  resetView(page ? id : null);
   if(page){
-    document.body.classList.add("in-sub");
-    titleEl.textContent = page.title;
-    introEl.textContent = page.intro;
-    document.title = page.title + " – Natur und Schweiz by toj";
+    setHead(page.title, page.intro);
     if(id === "copyright"){ buildCredits(); refresh(); }
     if(id === "pdf") fillPdfSelect();
     if(id === "lernapp") renderLern();
+    if(id === "quiz") fillQuizSelect();
     lastCat = null;
     return;
   }
+  if(id === "jetzt"){ renderSeason(); lastCat = null; return; }
   lastCat = cat ? cat.id : null;
   if(!cat){
-    document.body.classList.remove("in-sub");
-    titleEl.textContent = "Natur und Schweiz by toj";
-    introEl.textContent = "Wähle eine Kategorie.";
-    document.title = "Natur und Schweiz by toj";
+    setHead("Natur und Schweiz by toj", "Wähle eine Kategorie.", false);
     if(!overviewCards) overviewCards = buildOverview();
     grid.append(...overviewCards);
     showLernBanner();
+    showDaily();
     return;
   }
-  document.body.classList.add("in-sub");
-  titleEl.textContent = cat.name;
-  introEl.textContent = "Mit der Maus auf ein Bild fahren und mit den Pfeilen durch die Bilder und den Steckbrief blättern. "
-    + "Ein Klick vergrössert; dort lässt sich mit Mausrad, Doppelklick oder zwei Fingern zoomen.";
-  document.title = cat.name + " – Natur und Schweiz by toj";
-  if(!catCards.has(cat.id)) catCards.set(cat.id, cat.items.map(it => buildCard(cat, it)));
-  grid.append(...catCards.get(cat.id));
+  setHead(cat.name, "Mit der Maus auf ein Bild fahren und mit den Pfeilen durch die Bilder und den Steckbrief blättern. "
+    + "Ein Klick vergrössert; dort lässt sich mit Mausrad, Doppelklick oder zwei Fingern zoomen.");
+  grid.append(...cardsOf(cat));
+  // Direktlink auf einen Eintrag (#/kategorie/eintrag): Karte zeigen und gross öffnen
+  const item = second && cat.items.find(it => slugify(it.n) === second);
+  if(item){
+    const card = cardOf(cat, item);
+    card.scrollIntoView({ block:"center" });
+    card.classList.add("focus");
+    setTimeout(() => card.classList.remove("focus"), 3000);
+    openLightbox(cat, item, 0);
+  }
+}
+
+/* ------------------------------------------------------------------
+   QUIZ FÜR DEN BEAMER (#/quiz): Bilder bildschirmfüllend in zufälliger Reihenfolge, die Lösung auf Tastendruck.
+   Leertaste/Enter: Lösung zeigen bzw. weiter; Pfeil rechts: weiter; Pfeil links: zurück; Esc: beenden.
+------------------------------------------------------------------- */
+const beamer = document.createElement("dialog");
+beamer.className = "beamer";
+beamer.tabIndex = -1;   // fokussierbar, damit kein Knopf die Leertaste abfängt
+document.body.append(beamer);
+let quiz = null;   // { list:[{cat,item}], i, shown }
+
+function fillQuizSelect(){
+  const sel = document.getElementById("quizCat");
+  const keep = lastQuizCat || sel.value;
+  sel.innerHTML = `<option value="*">Alle Kategorien gemischt</option>`
+    + CATS.map(c => `<option value="${esc(c.id)}">${esc(c.name)} (${c.items.length})</option>`).join("");
+  if([...sel.options].some(o => o.value === keep)) sel.value = keep;
+}
+let lastQuizCat = null;
+
+document.getElementById("quizStart").addEventListener("click", () => {
+  const id = document.getElementById("quizCat").value, count = +document.getElementById("quizCount").value;
+  lastQuizCat = id;
+  const pool = CATS.filter(c => id === "*" || c.id === id).flatMap(cat => cat.items.map(item => ({ cat, item })));
+  for(let i = pool.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  quiz = { list:count ? pool.slice(0, count) : pool, i:0, shown:false };
+  if(!quiz.list.length) return;
+  beamer.showModal();
+  document.documentElement.requestFullscreen?.().catch(() => {});
+  showQuizItem();
+});
+
+function showQuizItem(){
+  if(quiz.i >= quiz.list.length){
+    beamer.innerHTML = `<div class="bm-end"><h2>Geschafft!</h2><p>${quiz.list.length} Bilder.</p>
+      <p><button id="bmAgain">Nochmals</button> <button class="ghost" id="bmEnd">Beenden</button></p></div>`;
+    beamer.querySelector("#bmAgain").addEventListener("click", () => { quiz.i = 0; showQuizItem(); });
+    beamer.querySelector("#bmEnd").addEventListener("click", () => beamer.close());
+    return;
+  }
+  const { cat, item } = quiz.list[quiz.i];
+  quiz.shown = false;
+  beamer.innerHTML = `
+    <div class="bm-img"><img alt="Welcher Eintrag ist das?"><div class="status"><div class="spinner"></div></div></div>
+    <div class="bm-bar">
+      <span class="bm-count">${quiz.i + 1} / ${quiz.list.length}</span>
+      <div class="bm-solution" hidden><b>${esc(item.n)}</b>${item.s ? ` <span class="${cat.latin ? "latin" : ""}">${esc(item.s)}</span>` : ""}
+        <small>${esc(lernMerksatz(item))}</small></div>
+      <span class="bm-buttons">
+        <button id="bmShow">Lösung</button>
+        <button class="ghost" id="bmNext">Weiter →</button>
+        <button class="ghost" id="bmClose" aria-label="Quiz beenden">×</button>
+      </span>
+    </div>`;
+  const img = beamer.querySelector("img"), status = beamer.querySelector(".status");
+  const show = d => showImg(img, d).then(() => status.remove());
+  const loc = localImage(cat, item, shownSlots(item)[0]);
+  (loc ? show(loc).catch(() => resolveItem(cat, item)[0].then(show)) : resolveItem(cat, item)[0].then(show))
+    .catch(() => { status.textContent = "Bild nicht verfügbar"; });
+  beamer.querySelector("#bmShow").addEventListener("click", quizSolution);
+  beamer.querySelector("#bmNext").addEventListener("click", () => quizGo(1));
+  beamer.querySelector("#bmClose").addEventListener("click", () => beamer.close());
+  beamer.focus();   // kein Knopf vorausgewählt: die Leertaste steuert das Quiz
+}
+function quizSolution(){
+  quiz.shown = true;
+  beamer.querySelector(".bm-solution").hidden = false;
+  beamer.querySelector("#bmShow").hidden = true;
+}
+function quizGo(dir){ quiz.i = Math.max(0, quiz.i + dir); showQuizItem(); }
+// Tasten auf dem ganzen Dokument, solange das Quiz offen ist (ein ausgeblendeter Knopf gibt den Fokus ab).
+// Leertaste/Enter auf einem Knopf löst diesen Knopf aus und wird hier nicht nochmals behandelt.
+document.addEventListener("keydown", e => {
+  if(!beamer.open || !quiz || quiz.i >= quiz.list.length) return;
+  if((e.key === " " || e.key === "Enter") && !e.target.closest?.("button")){
+    e.preventDefault();
+    if(quiz.shown) quizGo(1); else quizSolution();
+  }
+  if(e.key === "ArrowRight"){ e.preventDefault(); quizGo(1); }
+  if(e.key === "ArrowLeft"){ e.preventDefault(); quizGo(-1); }
+});
+beamer.addEventListener("close", () => {
+  beamer.replaceChildren();
+  quiz = null;
+  if(document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+});
+
+/* ------------------------------------------------------------------
+   SUCHE (Kopfzeile): Name, lateinischer Name bzw. Untertitel und Kategorie, wie die LernApp ohne
+   Gross-/Kleinschreibung und mit ä = ae. Zeigt die Karten der Treffer; neue Adresse beendet die Suche.
+------------------------------------------------------------------- */
+const searchEl = document.getElementById("search");
+const SEARCH_MAX = 30;
+let searchTimer = null;
+function runSearch(){
+  const q = searchEl.value.trim();
+  if(q.length < 2){ render(); return; }
+  const n = lernNorm(q);
+  const hits = CATS.flatMap(cat => cat.items.filter(item =>
+    [item.n, item.s, cat.name].some(t => lernNorm(t || "").includes(n))).map(item => ({ cat, item })));
+  resetView(null);
+  setHead("Suche", hits.length ? `${hits.length} ${hits.length === 1 ? "Treffer" : "Treffer"} für «${q}»${hits.length > SEARCH_MAX ? `, die ersten ${SEARCH_MAX}` : ""}.`
+    : `Nichts gefunden für «${q}».`);
+  grid.append(...hits.slice(0, SEARCH_MAX).map(h => cardOf(h.cat, h.item)));
+}
+searchEl.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 200); });
+searchEl.addEventListener("keydown", e => { if(e.key === "Escape"){ searchEl.value = ""; render(); } });
+
+/* ------------------------------------------------------------------
+   JETZT ZU SEHEN (#/jetzt): Einträge, deren Blüte-, Flug-, Pilz- oder Laichzeit laut Steckbrief
+   den aktuellen Monat umfasst («Mai–August», «Juli», «November–März» über den Jahreswechsel).
+------------------------------------------------------------------- */
+const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+const SEASON_KEYS = /^(Blütezeit|Flugzeit|Zeit|Laichzeit|Aktiv)$/;
+function seasonMonths(item){
+  const f = item.f.find(x => SEASON_KEYS.test(x.k));
+  if(!f) return null;
+  const found = [...f.v.matchAll(new RegExp(MONATE.join("|"), "g"))].map(m => MONATE.indexOf(m[0]));
+  if(!found.length) return null;
+  if(found.length >= 2 && /–|-|bis/.test(f.v)){
+    const set = new Set();
+    for(let m = found[0]; ; m = (m + 1) % 12){ set.add(m); if(m === found[1]) break; }
+    return set;
+  }
+  return new Set(found);
+}
+function renderSeason(){
+  const month = new Date().getMonth();
+  const groups = CATS.map(cat => ({ cat, items:cat.items.filter(it => seasonMonths(it)?.has(month)) })).filter(g => g.items.length);
+  const n = groups.reduce((s, g) => s + g.items.length, 0);
+  setHead("Jetzt zu sehen", `Im ${MONATE[month]} blühen, fliegen, wachsen oder laichen diese ${n} Arten (gemäss Steckbrief).`);
+  for(const g of groups){
+    const head = document.createElement("h2");
+    head.className = "grid-head";
+    head.textContent = g.cat.name;
+    grid.append(head, ...g.items.map(it => cardOf(g.cat, it)));
+  }
+}
+
+/* ------------------------------------------------------------------
+   ENTDECKUNG DES TAGES (Übersicht): jeden Tag ein anderer Eintrag, für alle gleich
+------------------------------------------------------------------- */
+function showDaily(){
+  const el = document.getElementById("daily");
+  const all = CATS.flatMap(cat => cat.items.map(item => ({ cat, item })));
+  if(!el || !all.length) return;
+  const d = new Date();
+  const key = d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate();
+  const { cat, item } = all[(Math.imul(key, 2654435761) >>> 0) % all.length];
+  el.href = entryLink(cat, item);
+  el.innerHTML = `<img alt=""><span><small>Entdeckung des Tages · ${esc(cat.name)}</small>
+    <b>${esc(item.n)}</b>${item.s ? ` <i class="${cat.latin ? "" : "plain"}">${esc(item.s)}</i>` : ""}<br>${esc(lernMerksatz(item))}</span>`;
+  const img = el.querySelector("img");
+  const loc = localImage(cat, item, shownSlots(item)[0]);
+  (loc ? showImg(img, loc) : resolveItem(cat, item)[0].then(d => showImg(img, d))).catch(() => { img.remove(); });
+  el.hidden = false;
 }
 
 /* ------------------------------------------------------------------
@@ -939,6 +1210,7 @@ const IMAGE_CACHE = "sff-bilder";   // gleicher Name wie in sw.js
 const OFFLINE_OK = "serviceWorker" in navigator && "caches" in window;
 if(OFFLINE_OK) navigator.serviceWorker.register("sw.js").catch(() => {});
 
+// Nur die eigenen Bilder; Tierstimmen lädt der Browser immer aus dem Netz (sw.js)
 const allImageUrls = () => CATS.flatMap(c => c.items.flatMap(it => it.img.filter(Boolean).map(i => i.src)));
 
 /* App installieren (Einstellungen): Chrome, Edge und Android melden mit «beforeinstallprompt», dass sie die Seite
@@ -1043,12 +1315,13 @@ async function refresh(){
 }
 document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && lastData) refresh(); });
 
-document.getElementById("back").addEventListener("click", () => { location.hash = ""; });
+// «Übersicht»: auch eine laufende Suche beenden (die Adresse ändert sich dann nicht)
+document.getElementById("back").addEventListener("click", () => { searchEl.value = ""; if(location.hash.replace(/^#\/?/, "")) location.hash = ""; else render(); });
 introEl.textContent = "Inhalte werden geladen …";
 loadCats().then(cats => {
   CATS = cats;
   lastData = JSON.stringify(cats);
-  window.addEventListener("hashchange", render);
+  window.addEventListener("hashchange", () => { searchEl.value = ""; render(); });
   render();
   setupOffline().catch(() => {
     document.getElementById("offlineMsg").textContent = "Der Offline-Speicher ist in diesem Browser nicht verfügbar (z. B. im privaten Fenster).";
