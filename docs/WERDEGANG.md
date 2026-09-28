@@ -182,6 +182,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 - **Sicherung** der Datenbank als Datei aus der Verwaltung.
 - **Wachhalten der Datenbank:** Eine tägliche automatische Abfrage über GitHub Actions verhindert, dass das kostenlose
   Supabase-Projekt wegen Untätigkeit pausiert wird (zum Beispiel in den Sommerferien).
+- **Marke toj-apps:** Titel und Copyright lauten neu «Natur und Schweiz by toj-apps» bzw. «© 2026 toj-apps».
 
 ---
 

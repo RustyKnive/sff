@@ -1002,7 +1002,7 @@ function setHead(title, intro, sub = true){
   document.body.classList.toggle("in-sub", sub);
   titleEl.textContent = title;
   introEl.textContent = intro;
-  document.title = sub ? title + " – Natur und Schweiz by toj" : "Natur und Schweiz by toj";
+  document.title = sub ? title + " – Natur und Schweiz by toj-apps" : "Natur und Schweiz by toj-apps";
 }
 
 function render(){
@@ -1023,7 +1023,7 @@ function render(){
   if(id === "jetzt"){ renderSeason(); lastCat = null; return; }
   lastCat = cat ? cat.id : null;
   if(!cat){
-    setHead("Natur und Schweiz by toj", "Wähle eine Kategorie.", false);
+    setHead("Natur und Schweiz by toj-apps", "Wähle eine Kategorie.", false);
     if(!overviewCards) overviewCards = buildOverview();
     grid.append(...overviewCards);
     showLernBanner();
