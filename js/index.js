@@ -1191,7 +1191,7 @@ document.getElementById("quizStart").addEventListener("click", () => {
 });
 
 // Bilderwechsel im Quiz (Millisekunden)
-const QUIZ_TAKT = 1000;
+const QUIZ_TAKT = 2000;
 let quizTimer = null;
 function showQuizItem(){
   if(quiz.i >= quiz.list.length){
@@ -1218,7 +1218,7 @@ function showQuizItem(){
         <button class="ghost" id="bmClose" aria-label="Quiz beenden">×</button>
       </span>
     </div>`;
-  // Alle Bilder des Eintrags laden (ohne Textseite und ohne Beschriftung) und im Sekundentakt wechseln
+  // Alle Bilder des Eintrags laden (ohne Textseite und ohne Beschriftung) und im Takt QUIZ_TAKT wechseln
   const imgs = [...beamer.querySelectorAll(".bm-img img")], status = beamer.querySelector(".status");
   let ticked = false;
   const loads = slots.map((k, i) => {
