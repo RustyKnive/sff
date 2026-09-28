@@ -186,6 +186,7 @@ function carousel(root, onChange){
   let cur = 0;
   const go = n => {
     cur = (n + N) % N;
+    root.scrollLeft = 0;
     track.style.transform = `translateX(-${cur * 100}%)`;
     dots.forEach((d, k) => d.classList.toggle("active", k === cur));
     if(onChange) onChange(cur, cur === N - 1);
@@ -193,6 +194,15 @@ function carousel(root, onChange){
   root.querySelector(".prev").addEventListener("click", e => { e.stopPropagation(); go(cur - 1); });
   root.querySelector(".next").addEventListener("click", e => { e.stopPropagation(); go(cur + 1); });
   dots.forEach(d => d.addEventListener("click", e => { e.stopPropagation(); go(+d.dataset.i); }));
+  // Bekommt ein Knopf oder Link auf einer anderen Seite den Fokus (Tabulator), schiebt der Browser den Inhalt
+  // selbst dorthin. Stattdessen zu dieser Seite blättern und die Verschiebung des Browsers aufheben.
+  const slides = [...track.children];
+  track.addEventListener("focusin", e => {
+    const i = slides.indexOf(e.target.closest(".slide"));
+    if(i >= 0 && i !== cur) go(i);
+    requestAnimationFrame(() => { root.scrollLeft = 0; });
+  });
+  root.addEventListener("scroll", () => { if(root.scrollLeft || root.scrollTop) root.scrollLeft = root.scrollTop = 0; });
   return { go, get cur(){ return cur; } };
 }
 
@@ -276,7 +286,7 @@ function openLightbox(cat, item, start){
     <div class="lb">
       <div class="track">${slidesHtml(cat, item, labels, true)}</div>
       ${controlsHtml(item, labels)}
-      <button class="lb-close" aria-label="Schliessen">×</button>
+      <button class="lb-close" aria-label="Schliessen" autofocus>×</button>
       <button class="lb-share" aria-label="Link zu diesem Eintrag teilen" title="Link teilen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></button>
     </div>`;
   const root = lightbox.querySelector(".lb");

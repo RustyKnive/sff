@@ -39,6 +39,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurde
 
 Klick auf ein Bild oder den Text einer Karte (oder Enter) öffnet ein bildschirmfüllendes `<dialog>` mit denselben 5 Seiten, auf der gerade gezeigten Seite. Karte und Lightbox teilen `slidesHtml()`, `controlsHtml()` und `carousel()`; die Bilder lädt auch hier `fillSlide()`. Schliessen mit ×, Esc oder Browser-Zurück (ein eigener Verlaufseintrag per `history.pushState`, darum bleibt man in der Kategorie), blättern mit Pfeilen, Punkten, Pfeiltasten oder Wischen. Auf schmalen Bildschirmen stehen die Pfeile unten.
 Zoomen (`zoomable(root, { image, onSwipe })`, auch in der LernApp verwendet): Mausrad, Doppelklick bzw. doppelt tippen (2,5-fach ↔ normal), zwei Finger, Tasten `+`/`-`/`0`; höchstens 5-fach. Vergrössert verschiebt Ziehen das Bild (ohne leeren Rand), Wischen blättert nur ungezoomt. Das Bild bekommt `translate(...) scale(...)` mit `transform-origin:0 0`; Bildseiten haben `touch-action:none`, damit der Browser die Gesten nicht selbst übernimmt. Blättern und Schliessen setzen den Zoom zurück.
+Fokus: `showModal()` fokussiert das erste fokussierbare Element; darum hat `.lb-close` das Attribut `autofocus`. Sonst landet der Fokus auf «Stimme anhören» oder einem Verwechslungs-Link der Textseite, und der Browser schiebt `.lb` (overflow:hidden) per `scrollLeft` dorthin, sodass nur noch der Text sichtbar ist. `carousel()` blättert deshalb bei `focusin` zur Seite des fokussierten Elements und setzt `scrollLeft` immer auf 0 zurück.
 
 ## Menü (index.html)
 

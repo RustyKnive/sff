@@ -185,6 +185,8 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 - **Entdeckung des Tages mit «Noch eine»:** Die Tagesauswahl bleibt für alle gleich, wechselt aber die Kategorie von Tag zu Tag
   und wirkt zufälliger; der Knopf «Noch eine» zeigt beliebig viele weitere Einträge.
 - **Marke toj-apps:** Titel und Copyright lauten neu «Natur und Schweiz by toj-apps» bzw. «© 2026 toj-apps».
+- **Fehler behoben:** Bei Einträgen mit Tierstimme oder Verwechslungsgefahr zeigte die Grossansicht nur den Text, und die Bilder liessen
+  sich nicht anwählen (der Browser sprang zum Knopf bzw. Link auf der Textseite). Jetzt öffnet sie wie gewohnt beim Bild.
 
 ---
 
