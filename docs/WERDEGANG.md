@@ -192,6 +192,8 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   Jede hat eigene Kategorien, eine eigene Farbe (8 zur Auswahl) und einen eigenen Fortschritt. Eine farbige Leiste über der Abfrage
   schaltet um und zeigt, wie viele Begriffe pro Session heute offen sind; der Hinweis auf der Startseite zählt alle zusammen.
   Unter «Lernsessions verwalten» lassen sich Sessions öffnen und löschen. Der bisherige Lernstand wurde zur ersten Session.
+- **Darstellung:** Suchfeld, Lernhinweis und Entdeckung des Tages gehen über die ganze Breite der Einträge, der Titel der
+  Startseite bleibt auch auf dem Handy auf einer Zeile, und «Lernsessions verwalten» steht in der Leiste neben «+ Neue Lernsession».
 
 ---
 

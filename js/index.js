@@ -828,13 +828,15 @@ function lernBarHtml(){
       aria-selected="${s === lern}" data-id="${esc(s.id)}" title="${esc(lernName(s))} · ${t.richtig}/${t.total} richtig">
       <span class="lern-dot"></span>${esc(lernName(s))}${t.open ? ` <small>${t.open}</small>` : ""}</button>`;
   }).join("")}
-    <button type="button" class="lern-session add" id="lernNew">+ Neue Lernsession</button></div>`;
+    <button type="button" class="lern-session add" id="lernNew">+ Neue Lernsession</button>
+    <button type="button" class="lern-session add" id="lernManage">Lernsessions verwalten</button></div>`;
 }
 function lernBarEvents(){
   lernEl.querySelector(".lern-sessions").addEventListener("click", e => {
     const b = e.target.closest("button");
     if(!b) return;
     if(b.id === "lernNew"){ renderLernSetup(); return; }
+    if(b.id === "lernManage"){ renderLernSessions(); return; }
     const s = lernStore.sessions.find(x => x.id === b.dataset.id);
     if(s && s !== lern){ lernSwitch(s); renderLernQuiz(); }
   });
@@ -999,8 +1001,7 @@ function renderLernQuiz(){
           <button class="${s.neu ? "ghost" : ""}" id="lernPracticeBtn">Trotzdem weiterüben</button>
         </div>
         <p class="lern-hint">Freies Üben zählt nicht fürs Lernsystem.</p>
-      </div>`}
-    <p><button class="ghost" id="lernCats">Lernsessions verwalten</button></p>`;
+      </div>`}`;
   lernBarEvents();
 
   // Balken über CSSOM (die Content-Security-Policy verbietet style-Attribute)
@@ -1008,7 +1009,6 @@ function renderLernQuiz(){
   const max = Math.max(1, ...s.boxes);
   lernEl.querySelectorAll(".lern-box i").forEach((el, i) => { el.style.height = (100 * s.boxes[i] / max) + "%"; });
   lernEl.querySelectorAll(".lern-mini i").forEach((el, i) => { el.style.width = (100 * catStats[i].richtig / catStats[i].total) + "%"; });
-  document.getElementById("lernCats").addEventListener("click", renderLernSessions);
   document.getElementById("lernPracticeBtn")?.addEventListener("click", () => { lernPractice = true; renderLernQuiz(); });
   document.getElementById("lernNextRound")?.addEventListener("click", () => { lernRound = null; renderLernQuiz(); });
   document.getElementById("lernStop")?.addEventListener("click", () => { lernRound = null; location.hash = "#/"; });
