@@ -27,8 +27,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   (Mausrad, Doppelklick, zwei Finger, Tasten `+` `-` `0`), vergrössert verschieben und auf dem Handy wischen.
 - **Menü:**
   - *Jetzt zu sehen:* was laut Steckbrief in diesem Monat blüht, fliegt, wächst oder laicht, nach Kategorien geordnet.
-  - *Quiz für die Klasse:* Bilder einer Kategorie bildschirmfüllend für den Beamer; Leertaste zeigt die Lösung,
-    die nächste Leertaste das nächste Bild.
+  - *Quiz für die Klasse:* Bilder einer Kategorie bildschirmfüllend für den Beamer, pro Eintrag wechseln alle Bilder im Sekundentakt; Leertaste zeigt die Lösung,
+    die nächste Leertaste den nächsten Eintrag.
   - *PDF drucken:* eine Kategorie als PDF speichern oder drucken, wahlweise
     als **Steckbriefe** (A4, 8 Einträge pro Seite, Bildquelle klein im jeweiligen Bild),
     als **Arbeitsblatt** (Bilder mit Nummer und Schreiblinie, Lösungsblatt am Schluss) oder
@@ -200,6 +200,8 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   Tests und die Probleme unterwegs – für alle, die verstehen wollen, wie die Seite gebaut ist.
 - **Fehler behoben:** Beim Quiz für die Klasse blieben Auswahl und Text über dem Bild sichtbar, sobald der Vollbildmodus
   ansprang. Jetzt geht nur das Quiz selbst in den Vollbildmodus.
+- **Quiz mit allen Bildern:** Pro Eintrag wechseln im Quiz alle Bilder im Sekundentakt, ohne Text und Beschriftung.
+  So hat die Klasse mehr Hinweise (Blätter, Früchte, Rinde …), ohne dass der Name verraten wird.
 
 ---
 

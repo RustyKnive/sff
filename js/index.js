@@ -1190,8 +1190,12 @@ document.getElementById("quizStart").addEventListener("click", () => {
   showQuizItem();
 });
 
+// Bilderwechsel im Quiz (Millisekunden)
+const QUIZ_TAKT = 1000;
+let quizTimer = null;
 function showQuizItem(){
   if(quiz.i >= quiz.list.length){
+    clearInterval(quizTimer);
     beamer.innerHTML = `<div class="bm-end"><h2>Geschafft!</h2><p>${quiz.list.length} Bilder.</p>
       <p><button id="bmAgain">Nochmals</button> <button class="ghost" id="bmEnd">Beenden</button></p></div>`;
     beamer.querySelector("#bmAgain").addEventListener("click", () => { quiz.i = 0; showQuizItem(); });
@@ -1200,8 +1204,10 @@ function showQuizItem(){
   }
   const { cat, item } = quiz.list[quiz.i];
   quiz.shown = false;
+  const slots = shownSlots(item);
   beamer.innerHTML = `
-    <div class="bm-img"><img alt="Welcher Eintrag ist das?"><div class="status"><div class="spinner"></div></div></div>
+    <div class="bm-img">${slots.map(() => `<img alt="Welcher Eintrag ist das?">`).join("")}
+      <div class="status"><div class="spinner"></div></div></div>
     <div class="bm-bar">
       <span class="bm-count">${quiz.i + 1} / ${quiz.list.length}</span>
       <div class="bm-solution" hidden><b>${esc(item.n)}</b>${item.s ? ` <span class="${cat.latin ? "latin" : ""}">${esc(item.s)}</span>` : ""}
@@ -1212,11 +1218,32 @@ function showQuizItem(){
         <button class="ghost" id="bmClose" aria-label="Quiz beenden">×</button>
       </span>
     </div>`;
-  const img = beamer.querySelector("img"), status = beamer.querySelector(".status");
-  const show = d => showImg(img, d).then(() => status.remove());
-  const loc = localImage(cat, item, shownSlots(item)[0]);
-  (loc ? show(loc).catch(() => resolveItem(cat, item)[0].then(show)) : resolveItem(cat, item)[0].then(show))
-    .catch(() => { status.textContent = "Bild nicht verfügbar"; });
+  // Alle Bilder des Eintrags laden (ohne Textseite und ohne Beschriftung) und im Sekundentakt wechseln
+  const imgs = [...beamer.querySelectorAll(".bm-img img")], status = beamer.querySelector(".status");
+  let ticked = false;
+  const loads = slots.map((k, i) => {
+    const show = d => showImg(imgs[i], d);
+    const online = () => (resolveItem(cat, item)[k] || Promise.reject()).then(show);
+    const loc = localImage(cat, item, k);
+    return (loc ? show(loc).catch(online) : online()).then(() => {
+      // Beginnen mit dem ersten Bild, auch wenn ein anderes schneller geladen ist (solange noch nicht gewechselt wurde)
+      if(!ticked && (i === 0 || !beamer.querySelector(".bm-img img.active"))){
+        imgs.forEach(el => el.classList.remove("active"));
+        imgs[i].classList.add("active");
+      }
+      status.remove();
+    });
+  });
+  Promise.allSettled(loads).then(r => { if(r.every(x => x.status === "rejected")) status.textContent = "Bild nicht verfügbar"; });
+  clearInterval(quizTimer);
+  quizTimer = setInterval(() => {
+    const ready = imgs.filter(el => el.classList.contains("loaded"));
+    if(ready.length < 2) return;
+    ticked = true;
+    const cur = ready.findIndex(el => el.classList.contains("active"));
+    ready[cur]?.classList.remove("active");
+    ready[(cur + 1) % ready.length].classList.add("active");
+  }, QUIZ_TAKT);
   beamer.querySelector("#bmShow").addEventListener("click", quizSolution);
   beamer.querySelector("#bmNext").addEventListener("click", () => quizGo(1));
   beamer.querySelector("#bmClose").addEventListener("click", () => beamer.close());
@@ -1240,6 +1267,7 @@ document.addEventListener("keydown", e => {
   if(e.key === "ArrowLeft"){ e.preventDefault(); quizGo(-1); }
 });
 beamer.addEventListener("close", () => {
+  clearInterval(quizTimer);
   beamer.replaceChildren();
   quiz = null;
   if(document.fullscreenElement) document.exitFullscreen?.().catch(() => {});

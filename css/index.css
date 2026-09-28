@@ -253,8 +253,8 @@ dialog.beamer{padding:0;margin:0;border:none;width:100vw;height:100vh;height:100
   background:#000;color:#fff;overflow:hidden;outline:none}
 dialog.beamer::backdrop{background:#000}
 .bm-img{position:absolute;inset:0 0 84px 0}
-.bm-img img{width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s}
-.bm-img img.loaded{opacity:1}
+.bm-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;opacity:0;transition:opacity .3s}
+.bm-img img.loaded.active{opacity:1}
 .bm-img .status{color:#ccc}
 .bm-bar{position:absolute;left:0;right:0;bottom:0;height:84px;display:flex;align-items:center;gap:18px;padding:0 20px;background:#111}
 .bm-count{font-size:1.1rem;color:#bbb;white-space:nowrap}
