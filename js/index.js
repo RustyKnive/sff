@@ -467,7 +467,7 @@ const PAGES = {
   lernapp:{ title:"LernApp", intro:"Namen zu Bildern lernen, mit dem Leitner-System." },
   quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
-  einstellungen:{ title:"Einstellungen", intro:"Einstellungen für dieses Gerät." },
+  einstellungen:{ title:"Einstellungen", intro:"Anleitung zu allen Möglichkeiten der App und Einstellungen für dieses Gerät." },
   admin:{ title:"Admin", intro:"Zugang zur Verwaltung." },
   copyright:{ title:"Copyright", intro:"Urheberrecht und Bildnachweis." }
 };
@@ -1115,6 +1115,7 @@ function setHead(title, intro, sub = true){
   document.body.classList.toggle("in-sub", sub);
   titleEl.textContent = title;
   introEl.textContent = intro;
+  introEl.hidden = !intro;   // Startseite ohne Einleitung
   document.title = sub ? title + " – Natur und Schweiz by toj-apps" : "Natur und Schweiz by toj-apps";
 }
 
@@ -1136,7 +1137,7 @@ function render(){
   if(id === "jetzt"){ renderSeason(); lastCat = null; return; }
   lastCat = cat ? cat.id : null;
   if(!cat){
-    setHead("Natur und Schweiz by toj-apps", "Wähle eine Kategorie.", false);
+    setHead("Natur und Schweiz by toj-apps", "", false);
     if(!overviewCards) overviewCards = buildOverview();
     grid.append(...overviewCards);
     showLernBanner();

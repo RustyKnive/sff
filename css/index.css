@@ -12,6 +12,7 @@ header{position:relative;max-width:1200px;margin:0 auto;padding:28px 70px 8px 16
 header h1{margin:0;font-size:clamp(1.6rem,3vw,2.3rem);letter-spacing:-.01em}
 /* Startseite: Titel in einer Zeile, auch auf dem Handy (Breite ohne Rand und Menüknopf, Titel ≈ 14,2 em breit) */
 body:not(.in-sub) header h1{font-size:min(2.3rem, calc((100vw - 86px) / 15));white-space:nowrap}
+body:not(.in-sub) .search{margin-top:20px}
 
 /* Menü oben rechts */
 .menu-wrap{position:absolute;top:24px;right:16px;z-index:10}
@@ -339,3 +340,13 @@ dialog.beamer::backdrop{background:#000}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .lern-banner-chips{display:block;margin-top:4px;font-size:.85rem;color:var(--muted)}
 .lern-banner-chips .lern-dot{margin-right:5px}
+
+/* Anleitung (Einstellungen): aufklappbare Themen */
+.guide{display:grid;gap:8px;margin:8px 0 8px}
+.guide details{padding:0 16px;border-radius:12px;background:var(--card)}
+.guide summary{padding:12px 0;font-weight:600;cursor:pointer;color:var(--accent)}
+.guide details[open] summary{border-bottom:1px solid var(--accent-soft);margin-bottom:10px}
+.guide details[open]{padding-bottom:6px}
+.guide ul{margin:0 0 .8rem;padding-left:1.2rem}
+.guide li{margin-bottom:.3rem}
+kbd{padding:0 5px;border:1px solid var(--muted);border-radius:4px;font:inherit;font-size:.85em;background:var(--bg)}

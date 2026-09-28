@@ -33,7 +33,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
     als **Steckbriefe** (A4, 8 Einträge pro Seite, Bildquelle klein im jeweiligen Bild),
     als **Arbeitsblatt** (Bilder mit Nummer und Schreiblinie, Lösungsblatt am Schluss) oder
     als **Memory** zum Ausschneiden (eine Seite Bildkarten, eine Seite Namenskarten).
-  - *Einstellungen:* Anleitung, wie man die Seite als App installiert (mit Knopf, wo der Browser das anbietet), und alle Bilder für die Nutzung ohne Internet herunterladen.
+  - *Einstellungen:* Anleitung zu allen Möglichkeiten der App (aufklappbar nach Themen), Anleitung zum Installieren als App (mit Knopf, wo der Browser das anbietet) und alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
   - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
@@ -194,6 +194,10 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   Unter «Lernsessions verwalten» lassen sich Sessions öffnen und löschen. Der bisherige Lernstand wurde zur ersten Session.
 - **Darstellung:** Suchfeld, Lernhinweis und Entdeckung des Tages gehen über die ganze Breite der Einträge, der Titel der
   Startseite bleibt auch auf dem Handy auf einer Zeile, und «Lernsessions verwalten» steht in der Leiste neben «+ Neue Lernsession».
+- **Anleitung:** Unter Menü → «Einstellungen» steht eine Anleitung zu allen Möglichkeiten der App, nach Themen aufklappbar.
+  Dafür ist der Satz «Wähle eine Kategorie.» auf der Startseite weggefallen, die Übersicht erklärt sich selbst.
+- **Technische Dokumentation:** `docs/TECHNIK.md` beschreibt Aufbau, Sicherheit, Offline-Betrieb, die wichtigsten Lösungen,
+  Tests und die Probleme unterwegs – für alle, die verstehen wollen, wie die Seite gebaut ist.
 
 ---
 
