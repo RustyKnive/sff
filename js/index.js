@@ -828,8 +828,10 @@ function lernBarHtml(){
       aria-selected="${s === lern}" data-id="${esc(s.id)}" title="${esc(lernName(s))} · ${t.richtig}/${t.total} richtig">
       <span class="lern-dot"></span>${esc(lernName(s))}${t.open ? ` <small>${t.open}</small>` : ""}</button>`;
   }).join("")}
-    <button type="button" class="lern-session add" id="lernNew">+ Neue Lernsession</button>
-    <button type="button" class="lern-session add" id="lernManage">Lernsessions verwalten</button></div>`;
+    <span class="lern-tools">
+      <button type="button" class="lern-session add" id="lernNew" title="Neue Lernsession"><span>+ Neue<span class="wide"> Lernsession</span></span></button>
+      <button type="button" class="lern-session add" id="lernManage" title="Lernsessions verwalten"><span><span class="wide">Lernsessions v</span><span class="narrow">V</span>erwalten</span></button>
+    </span></div>`;
 }
 function lernBarEvents(){
   lernEl.querySelector(".lern-sessions").addEventListener("click", e => {
