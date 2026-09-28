@@ -14,7 +14,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 ### Anzeige (index.html)
 
 - **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge) und der **Entdeckung des Tages**
-  (jeden Tag ein anderer Eintrag, für alle gleich).
+  (jeden Tag ein anderer Eintrag aus wechselnden Kategorien, für alle gleich; «Noch eine» zeigt einen weiteren zufälligen Eintrag).
 - **Suche** über alle Kategorien: deutscher Name, lateinischer Name oder Kategorie, ohne Rücksicht auf Umlaute und Grossschreibung.
 - **Kategorie** mit einer Karte pro Eintrag: durch die Bilder und den Steckbrief blättern (Pfeile, Punkte, Tastatur).
   Es werden nur die vorhandenen Bilder gezeigt.
@@ -182,6 +182,8 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 - **Sicherung** der Datenbank als Datei aus der Verwaltung.
 - **Wachhalten der Datenbank:** Eine tägliche automatische Abfrage über GitHub Actions verhindert, dass das kostenlose
   Supabase-Projekt wegen Untätigkeit pausiert wird (zum Beispiel in den Sommerferien).
+- **Entdeckung des Tages mit «Noch eine»:** Die Tagesauswahl bleibt für alle gleich, wechselt aber die Kategorie von Tag zu Tag
+  und wirkt zufälliger; der Knopf «Noch eine» zeigt beliebig viele weitere Einträge.
 - **Marke toj-apps:** Titel und Copyright lauten neu «Natur und Schweiz by toj-apps» bzw. «© 2026 toj-apps».
 
 ---

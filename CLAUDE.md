@@ -59,7 +59,7 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
 - Direktlink `#/<kat>/<slug>` (`slugify()`: Kleinbuchstaben, Akzente weg, ä→a, Leerzeichen→«-»; `entryLink()`, `entryUrl()`). Die Kategorie wird gezeigt, die Karte bekommt `.focus`, wird eingeblendet und in der Lightbox geöffnet. Die Verwaltung baut dieselben Links (`linkSlug`, `entryUrl` in `js/admin.js`); beide Funktionen gleich halten.
 - Lightbox-Knopf «Teilen» (`.lb-share`): `navigator.share`, sonst Zwischenablage mit `toast()`.
 - Schliessen der Lightbox: × und Esc laufen über `closeLightboxByUser()` (geht per `history.back()` aus dem eigenen Verlaufseintrag); `popstate` schliesst. Der `close`-Handler selbst ruft kein `back()` mehr auf und bricht ab, wenn die Lightbox schon wieder offen ist (das `close`-Event kommt verzögert; sonst würde ein Link aus der Verwechslungsgefahr die neue Lightbox gleich wieder schliessen oder leeren).
-- «Entdeckung des Tages» (`#daily`, `showDaily()`): Eintrag aus einem Hash des Datums, für alle Geräte am selben Tag gleich. Nur auf der Übersicht, wie `#lernBanner` (`resetView()` blendet beide aus).
+- «Entdeckung des Tages» (`#daily` mit `#dailyLink` und Knopf `#dailyNext`, `showDaily()`): `dailyPick(tag)` wählt aus der Tageszahl (Tage seit 1970, Ortsdatum) mit `mix32()` (murmur3 fmix32) zuerst die Kategorie (ab `DAILY_START` springt sie jeden Tag 1 bis n−1 Plätze weiter, also nie dieselbe wie am Vortag), dann den Eintrag; für alle Geräte am selben Tag gleich. «Noch eine» setzt `dailyExtra` (zufälliger anderer Eintrag, gilt bis zum Neuladen, Beschriftung «Noch eine Entdeckung»). Nur auf der Übersicht, wie `#lernBanner` (`resetView()` blendet beide aus).
 
 ## Verwechslungsgefahr und Tierstimmen (014)
 

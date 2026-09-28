@@ -211,8 +211,12 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .search:focus{outline:none;border-color:var(--accent)}
 
 /* Entdeckung des Tages (Übersicht) */
-.daily{display:flex;gap:14px;align-items:center;margin:12px 0 0;padding:10px;max-width:760px;border-radius:12px;
-  background:var(--card);box-shadow:var(--shadow);color:var(--ink);text-decoration:none}
+.daily{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin:12px 0 0;padding:10px;max-width:760px;border-radius:12px;
+  background:var(--card);box-shadow:var(--shadow)}
+.daily-link{display:flex;gap:14px;align-items:center;flex:1 1 300px;min-width:0;color:var(--ink);text-decoration:none}
+.daily-next{flex:0 0 auto;margin-left:auto;padding:6px 14px;border:1.5px solid var(--accent);border-radius:99px;background:transparent;
+  color:var(--accent);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.daily-next:hover{background:var(--accent-soft)}
 .daily img{flex:0 0 96px;width:96px;height:72px;object-fit:cover;border-radius:8px;opacity:0;transition:opacity .4s}
 .daily img.loaded{opacity:1}
 .daily small{display:block;color:var(--muted)}

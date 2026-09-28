@@ -1185,21 +1185,46 @@ function renderSeason(){
 /* ------------------------------------------------------------------
    ENTDECKUNG DES TAGES (Übersicht): jeden Tag ein anderer Eintrag, für alle gleich
 ------------------------------------------------------------------- */
+// Durchmischen einer Zahl (murmur3 fmix32): aufeinanderfolgende Tage ergeben weit auseinanderliegende Werte
+function mix32(h){
+  h = Math.imul(h ^ (h >>> 16), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
+// Entdeckung eines Tages (Tag = Tage seit 1970, Ortszeit): Kategorie aus dem Tag, nie dieselbe wie am Vortag,
+// dann ein Eintrag daraus. Alle Geräte zeigen am selben Tag dasselbe.
+const DAILY_START = 20000;   // 04.10.2024: ab hier springt die Kategorie jeden Tag um 1 bis n−1 Plätze weiter
+function dailyPick(day){
+  const cats = CATS.filter(c => c.items.length);
+  let ci = 0;
+  if(cats.length > 1) for(let t = DAILY_START + 1; t <= day; t++) ci = (ci + 1 + mix32(t * 2 + 1) % (cats.length - 1)) % cats.length;
+  const cat = cats[ci];
+  return { cat, item:cat.items[mix32(day * 2) % cat.items.length] };
+}
+let dailyExtra = null;   // «Noch eine»: zufälliger anderer Eintrag, gilt bis zum Neuladen
 function showDaily(){
   const el = document.getElementById("daily");
-  const all = CATS.flatMap(cat => cat.items.map(item => ({ cat, item })));
-  if(!el || !all.length) return;
+  if(!el || !CATS.some(c => c.items.length)) return;
   const d = new Date();
-  const key = d.getFullYear() * 400 + d.getMonth() * 31 + d.getDate();
-  const { cat, item } = all[(Math.imul(key, 2654435761) >>> 0) % all.length];
-  el.href = entryLink(cat, item);
-  el.innerHTML = `<img alt=""><span><small>Entdeckung des Tages · ${esc(cat.name)}</small>
+  const today = dailyPick(Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5));
+  const { cat, item } = dailyExtra || today;
+  const link = document.getElementById("dailyLink");
+  link.href = entryLink(cat, item);
+  link.innerHTML = `<img alt=""><span><small>${dailyExtra ? "Noch eine Entdeckung" : "Entdeckung des Tages"} · ${esc(cat.name)}</small>
     <b>${esc(item.n)}</b>${item.s ? ` <i class="${cat.latin ? "" : "plain"}">${esc(item.s)}</i>` : ""}<br>${esc(lernMerksatz(item))}</span>`;
-  const img = el.querySelector("img");
+  const img = link.querySelector("img");
   const loc = localImage(cat, item, shownSlots(item)[0]);
   (loc ? showImg(img, loc) : resolveItem(cat, item)[0].then(d => showImg(img, d))).catch(() => { img.remove(); });
   el.hidden = false;
 }
+document.getElementById("dailyNext")?.addEventListener("click", () => {
+  const all = CATS.flatMap(cat => cat.items.map(item => ({ cat, item })));
+  const cur = document.getElementById("dailyLink").getAttribute("href");
+  const others = all.filter(x => entryLink(x.cat, x.item) !== cur);
+  if(!others.length) return;
+  dailyExtra = others[Math.floor(Math.random() * others.length)];
+  showDaily();
+});
 
 /* ------------------------------------------------------------------
    OFFLINE (Service Worker in sw.js)
