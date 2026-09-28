@@ -1185,7 +1185,8 @@ document.getElementById("quizStart").addEventListener("click", () => {
   quiz = { list:count ? pool.slice(0, count) : pool, i:0, shown:false };
   if(!quiz.list.length) return;
   beamer.showModal();
-  document.documentElement.requestFullscreen?.().catch(() => {});
+  // Nur das Quiz-Fenster in den Vollbildmodus: Die ganze Seite im Vollbild läge im Browser über dem Dialog
+  beamer.requestFullscreen?.().catch(() => {});
   showQuizItem();
 });
 

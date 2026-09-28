@@ -198,6 +198,8 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   Dafür ist der Satz «Wähle eine Kategorie.» auf der Startseite weggefallen, die Übersicht erklärt sich selbst.
 - **Technische Dokumentation:** `docs/TECHNIK.md` beschreibt Aufbau, Sicherheit, Offline-Betrieb, die wichtigsten Lösungen,
   Tests und die Probleme unterwegs – für alle, die verstehen wollen, wie die Seite gebaut ist.
+- **Fehler behoben:** Beim Quiz für die Klasse blieben Auswahl und Text über dem Bild sichtbar, sobald der Vollbildmodus
+  ansprang. Jetzt geht nur das Quiz selbst in den Vollbildmodus.
 
 ---
 

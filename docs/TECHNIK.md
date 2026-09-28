@@ -234,6 +234,7 @@ Erfahrungen damit:
 | «Zurück» verliess die Kategorie statt die Grossansicht zu schliessen | Dialog ohne eigenen Verlaufseintrag | `history.pushState` beim Öffnen, `popstate` schliesst |
 | Link in «Nicht verwechseln mit» schloss die neue Grossansicht gleich wieder | das `close`-Ereignis des alten Dialogs kommt verzögert | Handler bricht ab, wenn der Dialog schon wieder offen ist |
 | Grossansicht zeigte bei Einträgen mit Tierstimme nur den Text | `showModal()` fokussiert das erste Bedienelement (auf der Textseite), der Browser scrollt dorthin | Fokus auf «Schliessen» (`autofocus`), Karussell setzt `scrollLeft` zurück und blättert bei Fokus zur richtigen Seite |
+| Beim Beamer-Quiz lagen Auswahl und Text über dem Bild | die ganze Seite wurde in den Vollbildmodus geschaltet und liegt dann im Browser über dem Dialog | nur den Quiz-Dialog in den Vollbildmodus schalten |
 | Merksatz brach mitten im Satz ab | Punkt nach Zahl oder Abkürzung | Lookbehind im Satzende-Ausdruck |
 | Tagesauswahl wirkte regelmässig | schwacher Hash | fmix32 und Kategorien-Rotation |
 | Datenbank würde in den Ferien pausieren | Gratis-Stufe | täglicher Abruf über GitHub Actions |
