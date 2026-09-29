@@ -557,14 +557,16 @@ const PAGES = {
 };
 
 // Bildnachweis: alle eigenen Bilder mit Link zur Quellseite (Urheber und Lizenz).
-// Ohne Quelle gilt ein Bild als eigenes Foto; zugeschnittene Bilder bekommen einen Hinweis (CC-Lizenzen verlangen ihn).
+// Ohne Quelle gilt ein Bild als eigenes Foto, ausser «Dateiname» nennt die Herkunft (z. B. «KI-generiert mit ChatGPT (OpenAI)», 017);
+// zugeschnittene Bilder bekommen einen Hinweis (CC-Lizenzen verlangen ihn).
+const ownSource = i => (i.file || "").trim() || "eigenes Foto";
 function buildCredits(){
   document.getElementById("credits").innerHTML = CATS.map(cat => `
     <h3>${esc(cat.name)}</h3>
     <ul class="credits">${cat.items.map(it => {
       const parts = it.img.map((i, k) => {
         if(!i) return "";
-        if(!safeUrl(i.page)) return `<span>Bild ${k + 1}: eigenes Foto</span>`;
+        if(!safeUrl(i.page)) return `<span>Bild ${k + 1}: ${esc(ownSource(i))}</span>`;
         return `<span><a href="${esc(i.page)}" target="_blank" rel="noopener" title="${esc(i.file || "")}">Bild ${k + 1}</a>`
           + `${i.edited ? " <small>(zugeschnitten)</small>" : ""}</span>`;
       }).join("");
@@ -637,9 +639,9 @@ function loadPrintImage(el, cat, item){
   return loc ? load(loc).catch(online) : online();
 }
 
-// Bildquelle für den Druck: Commons-Seite (mit Urheber und Lizenz) oder «eigenes Foto»
+// Bildquelle für den Druck: Commons-Seite (mit Urheber und Lizenz), sonst Herkunft oder «eigenes Foto» (ownSource)
 const printSrc = d => safeUrl(d.page)
-  ? "Bild: " + decodeURI(d.page).replace(/^https?:\/\//, "") + (d.edited ? " (zugeschnitten)" : "") : "Bild: eigenes Foto";
+  ? "Bild: " + decodeURI(d.page).replace(/^https?:\/\//, "") + (d.edited ? " (zugeschnitten)" : "") : "Bild: " + ownSource(d);
 const chunk = (list, n) => { const out = []; for(let i = 0; i < list.length; i += n) out.push(list.slice(i, i + n)); return out; };
 const shuffled = list => { const a = list.slice(); for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const MEMORY_PER_PAGE = 20;   // 4 × 5 Karten

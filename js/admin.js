@@ -998,7 +998,10 @@ function slotHtml(e, p, label){
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
     <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
     <button type="button" class="ghost small" data-commons title="Commons-Adresse in «Quelle» einfügen, dann klicken: Bild wird heruntergeladen und gespeichert">Bild von dieser Quelle übernehmen</button>
-    ${img && !img.source_page ? `<p class="hint">Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto. Quelle nachtragen und «Speichern».</p>` : ""}
+    ${img && !img.source_page ? `<p class="hint">${img.source_file
+      ? `Ohne Quelle: Im Bildnachweis steht «${esc(img.source_file)}».`
+      : `Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto. Quelle nachtragen, oder bei einem KI-Bild unter «Dateiname»
+        z. B. «KI-generiert mit ChatGPT (OpenAI)» eintragen, dann «Speichern».`}</p>` : ""}
     ${img ? "" : `<p class="hint">Bild von Commons: Adresse in «Quelle» einfügen und übernehmen. Eigenes Foto: Datei wählen.</p>`}
     ${img?.edited ? `<p class="hint">Zugeschnitten (steht so im Bildnachweis).</p>` : ""}
     ${img ? `<div class="slot-actions">

@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 28. September 2026 · Version 2.0.0 (Datenbank 15) · 20 Kategorien mit je 16 sichtbaren Einträgen (320) · rund 1270 eigene Bilder ·
+**Stand:** 29. September 2026 · Version 2.4.0 (Datenbank 17) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 36 Verwechslungspaare · Tierstimmen für 28 Arten
 
 ---
@@ -37,7 +37,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
     Alle Einträge der Kategorie sind angewählt; einzelne lassen sich vor dem Drucken abwählen.
   - *Einstellungen:* Anleitung zu allen Möglichkeiten der App (aufklappbar nach Themen), Anleitung zum Installieren als App (mit Knopf, wo der Browser das anbietet) und alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
-  - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
+  - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto», «zugeschnitten» und «KI-generiert»).
   - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
     Mehrere **Lernsessions** nebeneinander, jede mit eigenen Kategorien, eigener Farbe und eigenem Fortschritt; umschalten über die farbige Leiste, löschen unter «Lernsessions verwalten».
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
@@ -242,6 +242,16 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 - **Aus der Meldung direkt zum Eintrag:** «Anderes Bild suchen» bei den gemeldeten Bildern wechselt zum Eintrag und öffnet
   die Auswahl für den gemeldeten Platz. Wird ein Vorschlag gewählt, ist die Meldung erledigt.
 
+### 29. September – KI-Bilder kennzeichnen (Version 2.4.0)
+
+- **Richtiger Bildnachweis:** Die 19 Infografiken der Kategorie Wetterphänomene wurden mit ChatGPT erstellt. Weil sie
+  keine Quelle hatten, standen sie im Bildnachweis und im Druck als «eigenes Foto». Neu gilt: Steht bei einem Bild ohne
+  Quelle etwas unter «Dateiname», erscheint genau das, hier «KI-generiert mit ChatGPT (OpenAI)». Die Seite «Copyright»
+  weist zusätzlich auf die KI-Infografiken hin.
+- **Warum nur ein Hinweis:** Rein maschinell erzeugte Bilder sind nach Schweizer Urheberrecht in der Regel nicht geschützt,
+  und OpenAI überlässt die Rechte der Person, die sie erzeugt. Ein Copyright-Vermerk ist darum nicht vorgeschrieben,
+  die Kennzeichnung sorgt aber für Transparenz.
+
 ---
 
 ## Versionen
@@ -253,6 +263,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 2.1.0 | 29.9.2026 | Unpassende Bilder melden: Knopf «Melden» in der Grossansicht, Liste «Gemeldete Bilder» in der Verwaltung (Datenbank-Version 16) |
 | 2.2.0 | 29.9.2026 | PDF: einzelne Einträge abwählen; keine feste Zahl von 16 Einträgen und keine Themenprüfung mehr beim Anlegen mit Claude |
 | 2.3.0 | 29.9.2026 | «Anderes Bild suchen» zeigt Vorschläge zur Auswahl unter den 4 Bildern des Eintrags, auch aus den gemeldeten Bildern |
+| 2.4.0 | 29.9.2026 | KI-generierte Bilder im Bildnachweis und im Druck gekennzeichnet (Datenbank-Version 17) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -295,6 +306,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `014_verwechslung_tierstimmen.sql` | Verwechslungsgefahr (36 Paare) und Tierstimmen; der Speicher nimmt neu auch MP3 an |
 | `015_versionierung.sql` | Die Datenbank kennt ihre Version (Tabelle `app_meta`), damit Website und Datenbank zusammenpassen |
 | `016_bildmeldungen.sql` | Meldungen zu unpassenden Bildern (Tabelle `image_reports`, Funktion zum Melden ohne Anmeldung) |
+| `017_ki_bilder.sql` | Kennzeichnung der 19 mit ChatGPT erzeugten Infografiken (Wetterphänomene) |
 
 ## Offen und geplant
 
