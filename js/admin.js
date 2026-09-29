@@ -56,8 +56,28 @@ async function reload(){
     .select("*, entries!entries_category_id_fkey(*, images(*))")
     .order("sort").order("name")
     .order("sort", { referencedTable:"entries" }).order("name", { referencedTable:"entries" }));
+  await loadReports();
   renderSidebar();
 }
+
+/* Gemeldete Bilder (016): Meldungen aus der Anzeige («Melden» in der Grossansicht).
+   Fehlt die Tabelle (Datenbank älter als 016), bleibt die Liste einfach leer. */
+let reports = [];
+async function loadReports(){
+  const { data, error } = await sb.from("image_reports").select("*").order("last_at", { ascending:false });
+  reports = error ? [] : data;
+}
+const slotReports = (e, p) => reports.filter(r => r.entry_id === e.id && r.position === p);
+// Meldung ist veraltet, wenn am Platz inzwischen ein anderes Bild steht
+const reportStale = (e, r) => (e.images.find(i => i.position === r.position)?.storage_path ?? null) !== r.storage_path;
+async function clearReports(entry, pos){
+  if(!reports.some(r => r.entry_id === entry.id && r.position === pos)) return;
+  await must(sb.from("image_reports").delete().eq("entry_id", entry.id).eq("position", pos));
+  reports = reports.filter(r => !(r.entry_id === entry.id && r.position === pos));
+}
+const reportText = r => `${r.times > 1 ? `${r.times}× gemeldet, zuletzt` : "Gemeldet"} am `
+  + new Date(r.last_at).toLocaleString("de-CH", { day:"numeric", month:"numeric", year:"numeric", hour:"2-digit", minute:"2-digit" })
+  + (r.reason ? ` · «${r.reason}»` : "");
 const findCat = id => cats.find(c => c.id === id);
 function findEntry(id){
   for(const c of cats){ const e = c.entries.find(x => x.id === id); if(e) return { cat:c, entry:e }; }
@@ -922,6 +942,10 @@ function renderEntry(cat, entry){
       await act(() => removeImage(e, img), "Bild entfernt.");
       render();
     });
+    slot.querySelectorAll("[data-reportdone]").forEach(b => b.addEventListener("click", async () => {
+      await act(() => clearReports(e, p), "Meldung erledigt.").catch(() => {});
+      render();
+    }));
     slot.querySelector("[data-slotempty]")?.addEventListener("click", async () => {
       await act(() => setEmptySlot(e, p, true), `Bildplatz ${p} bleibt leer.`).catch(() => {});
       render();
@@ -965,6 +989,8 @@ function slotHtml(e, p, label){
   const img = e.images.find(i => i.position === p);
   return `<div class="slot" data-pos="${p}">
     <strong>${p} · ${esc(label)}${p === 1 ? " (Hauptbild)" : ""}</strong>
+    ${slotReports(e, p).map(r => `<p class="report-note">⚑ ${esc(reportText(r))}${reportStale(e, r) ? " (betraf ein früheres Bild)" : ""}
+      <button type="button" class="ghost small" data-reportdone>Meldung erledigt</button></p>`).join("")}
     <div class="thumb">${img ? `<img src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy">` : isEmptySlot(e, p) ? "bewusst leer<br>(wird nicht automatisch gefüllt)" : "kein eigenes Bild"}</div>
     <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
     <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
@@ -1010,6 +1036,7 @@ async function removeImage(entry, img){
   await must(sb.from("images").delete().eq("entry_id", entry.id).eq("position", img.position));
   await must(sb.storage.from(CFG.bucket).remove([img.storage_path]));
   await setEmptySlot(entry, img.position, true);
+  await clearReports(entry, img.position);
 }
 
 // Bild speichern: Datei in den Bucket, Zeile in «images», altes Bild löschen.
@@ -1025,6 +1052,7 @@ async function storeImage(cat, entry, pos, blob, old, page, fileName, edited = f
   }));
   if(old && old.storage_path !== path) await sb.storage.from(CFG.bucket).remove([old.storage_path]);
   await setEmptySlot(entry, pos, false);
+  await clearReports(entry, pos);   // neues Bild: Meldungen zu diesem Platz sind erledigt
 }
 
 /* ------------------------------------------------------------------
@@ -1324,12 +1352,32 @@ function render(){
   const todo = cats.flatMap(c => c.entries.filter(e => openSlots(e).length).map(e => ({ cat:c, e })));
   const missing = todo.reduce((s, t) => s + openSlots(t.e).length, 0);
   const empty = cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + (e.empty_slots || []).length, 0), 0);
+  const reported = reports.map(r => {
+    const f = findEntry(r.entry_id);
+    return f && { r, cat:f.cat, e:f.entry, img:f.entry.images.find(i => i.position === r.position) };
+  }).filter(Boolean);
   main.innerHTML = `<h2>Übersicht</h2>
     ${schemaMissing() ? `<p class="warn"><b>Datenbank-Update fehlt:</b> Die Datenbank ist auf Version ${dbSchema || "14 oder älter"},
       diese Website braucht Version ${VERSION.schema}. Im Supabase-Dashboard unter «SQL Editor» die fehlenden Dateien
       bis <code>supabase/${String(VERSION.schema).padStart(3, "0")}_…</code> der Reihe nach ausführen.</p>` : ""}
     <p>${cats.length} Kategorien, ${total} Einträge.</p>
     <p class="hint">Links eine Kategorie wählen oder eine neue anlegen.</p>
+    <h3>Gemeldete Bilder${reported.length ? ` (${reported.length})` : ""}</h3>
+    ${reported.length ? `<p class="hint">Besucherinnen und Besucher können in der Grossansicht ein unpassendes Bild melden.
+      Ein neues Bild an diesem Platz oder «Bild entfernen» erledigt die Meldung automatisch.</p>
+      <div class="reports">${reported.map(({ r, cat, e, img }, i) => `<div class="report-row">
+        <div class="thumb">${img ? `<img data-ri="${i}" src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy">` : "kein eigenes Bild"}</div>
+        <div>
+          <b><a href="#/e/${esc(e.id)}">${esc(e.name)}</a></b> <small>(${esc(cat.name)})</small><br>
+          Bild ${r.position} · ${esc((e.labels || cat.labels)[r.position - 1])}${img ? "" : " (Online-Ersatz von Wikimedia)"}
+          ${reportStale(e, r) ? `<br><span class="hint">Inzwischen steht dort ein anderes Bild.</span>` : ""}
+          <p class="hint">${esc(reportText(r))}</p>
+          <div class="slot-actions">
+            ${img ? `<button type="button" class="ghost small" data-rother="${r.id}" title="Nächstes passendes Bild von Wikimedia Commons">Anderes Bild suchen</button>` : ""}
+            <button type="button" class="ghost small" data-rdone="${r.id}">Erledigt</button>
+          </div>
+        </div></div>`).join("")}</div>`
+    : `<p class="hint">Keine offenen Meldungen. Besucherinnen und Besucher können in der Grossansicht mit «Melden» auf ein unpassendes Bild hinweisen.</p>`}
     <h3>Eigene Bilder</h3>
     ${todo.length || bulk ? `
       <p>Bei ${todo.length} ${todo.length === 1 ? "Eintrag" : "Einträgen"} ${missing === 1 ? "fehlt 1 Bild" : `fehlen insgesamt ${missing} Bilder`}.</p>
@@ -1356,6 +1404,19 @@ function render(){
       · Datenbank ${dbSchema === 0 ? "14 oder älter" : dbSchema ?? "?"}
       (benötigt ${VERSION.schema}) · Verlauf der Versionen: GitHub → Tags</p>`;
   showBulk();
+  main.querySelectorAll("[data-ri]").forEach(el => applyFocus(el, reported[+el.dataset.ri].img));
+  main.querySelectorAll("[data-rdone]").forEach(b => b.addEventListener("click", async () => {
+    const { e, r } = reported.find(x => x.r.id === +b.dataset.rdone);
+    await act(() => clearReports(e, r.position), "Meldung erledigt.").catch(() => {});
+    render();
+  }));
+  main.querySelectorAll("[data-rother]").forEach(b => b.addEventListener("click", async () => {
+    const { cat, e, img } = reported.find(x => x.r.id === +b.dataset.rother);
+    b.disabled = true;
+    msg("Anderes Bild wird gesucht …");
+    await act(() => replaceFromWikimedia(cat, e, img.position, img), "Anderes Bild gespeichert, Meldung erledigt.").catch(() => {});
+    render();
+  }));
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
   setupBatch();
   $("backupBtn").addEventListener("click", async ev => {

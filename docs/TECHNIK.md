@@ -118,6 +118,11 @@ Creative-Commons-Lizenzen einen Hinweis auf Änderungen verlangen. Der Bildnachw
   Balken und Ausschnitte werden über das CSSOM (`el.style.width = …`) oder Klassen gesetzt, nie über Attribute.
 - **Eingaben:** Texte aus der Datenbank laufen durch `esc()`; Links aus Daten (Quelle) nur mit `http(s)://`, was die
   Datenbank zusätzlich mit einem `check` erzwingt. Der Speicher nimmt nur JPEG und MP3 bis 5 MB an.
+- **Bildmeldungen (016):** Die einzige Schreibmöglichkeit ohne Anmeldung ist die Funktion `report_image()`. Die Tabelle
+  `image_reports` selbst ist für den öffentlichen Schlüssel gesperrt (kein Lesen, kein Schreiben). Die Funktion prüft
+  Eintrag und Bildnummer, kürzt den Grund auf 200 Zeichen, fasst wiederholte Meldungen zu einer Zeile zusammen und nimmt
+  ab 500 offenen Meldungen nichts mehr an. So kann niemand die Datenbank vollschreiben oder fremde Meldungen lesen. Die
+  Verwaltung zeigt den Grund nur über `esc()`.
 - **Keine Admin-Daten im Offline-Speicher:** Anfragen mit `Authorization` und die Verwaltung selbst umgehen den Service Worker.
 - **Datenschutz:** keine Konten für Lernende, kein Tracking, keine Cookies. Der Lernstand liegt nur im `localStorage` des Geräts.
 

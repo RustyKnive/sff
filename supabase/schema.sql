@@ -169,8 +169,61 @@ alter table public.app_meta enable row level security;
 drop policy if exists "lesen" on public.app_meta;
 create policy "lesen" on public.app_meta for select to anon, authenticated using (true);
 grant select on public.app_meta to anon, authenticated;
-insert into public.app_meta (id, schema_version) values (1, 15)
+insert into public.app_meta (id, schema_version) values (1, 16)
   on conflict (id) do update set schema_version = excluded.schema_version, updated_at = now();
+
+-- ------------------------------------------------------------------
+-- Bildmeldungen (016): «Melden» in der Grossansicht, Liste «Gemeldete Bilder» in der Verwaltung.
+-- Schreiben nur über report_image() (auch ohne Anmeldung), lesen und löschen nur Admins.
+-- ------------------------------------------------------------------
+create table if not exists public.image_reports (
+  id           bigint generated always as identity primary key,
+  entry_id     uuid not null references public.entries (id) on delete cascade,
+  position     smallint not null check (position between 1 and 4),
+  storage_path text,                                                   -- gemeldetes Bild; null = Online-Ersatz
+  reason       text not null default '' check (char_length(reason) <= 300),
+  times        integer not null default 1,                            -- so oft gemeldet
+  created_at   timestamptz not null default now(),
+  last_at      timestamptz not null default now()
+);
+create index if not exists image_reports_entry_idx on public.image_reports (entry_id, position);
+alter table public.image_reports enable row level security;
+drop policy if exists "admin_lesen_loeschen" on public.image_reports;
+create policy "admin_lesen_loeschen" on public.image_reports
+  for all to authenticated using (public.is_admin()) with check (public.is_admin());
+revoke all on public.image_reports from anon;
+grant select, delete on public.image_reports to authenticated;
+-- Melden: prüft Eintrag und Bildnummer, höchstens 500 offene Meldungen; gleiche Datei am selben Platz zählt hoch
+create or replace function public.report_image(p_entry uuid, p_position integer, p_reason text default '')
+returns void language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_path   text;
+  v_reason text := left(btrim(coalesce(p_reason, '')), 200);
+begin
+  if p_position is null or p_position not between 1 and 4 then
+    raise exception 'Bildnummer muss 1–4 sein';
+  end if;
+  if not exists (select 1 from public.entries where id = p_entry and visible) then
+    raise exception 'Eintrag nicht gefunden';
+  end if;
+  if (select count(*) from public.image_reports) >= 500 then
+    raise exception 'Zu viele offene Meldungen';
+  end if;
+  select storage_path into v_path from public.images where entry_id = p_entry and position = p_position;
+  update public.image_reports
+     set times = times + 1, last_at = now(),
+         reason = case when v_reason = '' or strpos(reason, v_reason) > 0 then reason
+                       else left(concat_ws(' · ', nullif(reason, ''), v_reason), 300) end
+   where entry_id = p_entry and position = p_position and storage_path is not distinct from v_path;
+  if not found then
+    insert into public.image_reports (entry_id, position, storage_path, reason)
+    values (p_entry, p_position, v_path, v_reason);
+  end if;
+end;
+$$;
+revoke all on function public.report_image(uuid, integer, text) from public;
+grant execute on function public.report_image(uuid, integer, text) to anon, authenticated;
 
 -- ------------------------------------------------------------------
 -- Danach: dein Konto zum Admin machen (E-Mail anpassen)

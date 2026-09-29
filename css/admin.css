@@ -136,3 +136,14 @@ audio{display:block;width:100%;max-width:420px;margin:4px 0}
   .qr-card small{font-size:7pt;color:#333}
   .qr-card .qr-url{font-size:5pt;word-break:break-all}
 }
+
+/* Gemeldete Bilder (Übersicht und Bildplatz im Eintrag) */
+.reports{display:grid;gap:10px;margin-bottom:10px}
+.report-row{display:grid;grid-template-columns:160px 1fr;gap:12px;align-items:start;padding:10px;border:1px solid var(--line);
+  border-left:4px solid var(--warn);border-radius:10px;font-size:.9rem}
+.report-row .thumb{margin:0}
+.report-row .hint{margin:4px 0 8px}
+@media (max-width:520px){ .report-row{grid-template-columns:1fr} }
+.report-note{margin:0 0 8px;padding:6px 8px;border-radius:8px;border-left:4px solid var(--warn);background:var(--accent-soft);
+  font-size:.78rem;color:var(--warn)}
+.report-note button{display:block;margin:6px 0 0}

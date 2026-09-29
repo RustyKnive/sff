@@ -178,6 +178,7 @@ function slidesHtml(cat, item, labels, big){
       <div class="status"><div class="spinner"></div></div>
       <span class="tag">${esc(big ? item.n + " · " + labels[k] : labels[k])}</span>
       <a class="credit" target="_blank" rel="noopener" hidden>Quelle</a>
+      ${big ? `<button class="report" data-report="${k}" title="Passt das Bild nicht? Hier melden.">${reported.has(item.id + "-" + k) ? "✓ Gemeldet" : "⚑ Melden"}</button>` : ""}
     </div>`).join("") + `
     <div class="slide text"><div class="text-inner">
       <h2>${esc(item.n)}</h2>
@@ -291,7 +292,10 @@ document.addEventListener("click", e => {
 // Kurze Meldung unten am Bildschirm
 function toast(text){
   let t = document.getElementById("toast");
-  if(!t){ t = document.createElement("div"); t.id = "toast"; document.body.append(t); }
+  if(!t){ t = document.createElement("div"); t.id = "toast"; }
+  // Ins oberste offene Fenster (Lightbox, Meldung), sonst liegt es darunter und ist nicht zu sehen
+  const host = [...document.querySelectorAll("dialog[open]")].pop() || document.body;
+  if(t.parentNode !== host) host.append(t);
   t.textContent = text;
   t.hidden = false;
   clearTimeout(toast.timer);
@@ -329,6 +333,10 @@ function openLightbox(cat, item, start){
       toast("Link kopiert: " + url);
     }catch(e){ if(e.name !== "AbortError") toast(url); }
   });
+  root.querySelectorAll("[data-report]").forEach(b => b.addEventListener("click", ev => {
+    ev.stopPropagation();
+    openReport(item, +b.dataset.report, labels, b);
+  }));
   document.body.classList.add("lb-open");
   lightbox.showModal();
   // Eigener Verlaufseintrag (gleiche Adresse): «Zurück» schliesst nur die Lightbox
@@ -358,6 +366,57 @@ lightbox.addEventListener("keydown", e => {
   if(zoomKey){ lbZoom.zoomTo(lbZoom.scale * zoomKey, innerWidth / 2, innerHeight / 2); e.preventDefault(); }
   if(e.key === "0"){ lbZoom.reset(); e.preventDefault(); }
 });
+
+/* Unpassendes Bild melden (Knopf «Melden» auf jeder Bildseite der Lightbox): kleines Fenster mit dem Bild und
+   freiwilliger Begründung, gespeichert über die Datenbankfunktion report_image (016). Die Verwaltung zeigt die
+   Meldungen unter «Gemeldete Bilder». reported merkt sich bis zum Neuladen, was schon gemeldet ist. */
+const reported = new Set();
+const reportDlg = document.createElement("dialog");
+reportDlg.className = "report-dlg";
+reportDlg.setAttribute("aria-labelledby", "reportTitle");
+document.body.append(reportDlg);
+function openReport(item, k, labels, btn){
+  const key = item.id + "-" + k;
+  if(reported.has(key)){ toast("Dieses Bild ist schon gemeldet. Danke!"); return; }
+  const src = btn.closest(".slide").querySelector("img.loaded")?.src;
+  reportDlg.innerHTML = `
+    <h2 id="reportTitle">Bild melden</h2>
+    ${src ? `<img src="${esc(src)}" alt="">` : ""}
+    <p>Passt Bild ${k + 1} («${esc(labels[k])}») nicht zu <b>${esc(item.n)}</b>? Die Meldung geht ohne Namen an die Verwaltung.</p>
+    <label>Was stimmt nicht? (freiwillig)
+      <input type="text" maxlength="200" placeholder="z. B. zeigt eine andere Art"></label>
+    <div class="report-btns">
+      <button type="button" class="ghost" data-act="cancel">Abbrechen</button>
+      <button type="button" data-act="send">Melden</button>
+    </div>`;
+  const input = reportDlg.querySelector("input");
+  const send = async () => {
+    const b = reportDlg.querySelector("[data-act=send]");
+    b.disabled = true;
+    try{
+      const r = await fetch(CFG.url + "/rest/v1/rpc/report_image", {
+        method:"POST",
+        headers:{ apikey:CFG.key, "Content-Type":"application/json" },
+        body:JSON.stringify({ p_entry:item.id, p_position:k + 1, p_reason:input.value.trim() })
+      });
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      reported.add(key);
+      btn.textContent = "✓ Gemeldet";
+      reportDlg.close();
+      toast("Danke! Das Bild wurde gemeldet.");
+    }catch(e){
+      b.disabled = false;
+      toast(navigator.onLine ? "Melden hat nicht geklappt. Bitte später nochmals versuchen." : "Melden geht nur mit Internet.");
+    }
+  };
+  reportDlg.querySelector("[data-act=cancel]").addEventListener("click", () => reportDlg.close());
+  reportDlg.querySelector("[data-act=send]").addEventListener("click", send);
+  input.addEventListener("keydown", e => { if(e.key === "Enter"){ e.preventDefault(); send(); } });
+  reportDlg.showModal();
+  input.focus();
+}
+// Klick neben das Fenster schliesst es
+reportDlg.addEventListener("click", e => { if(e.target === reportDlg) reportDlg.close(); });
 
 /* Zoomen (Lightbox und LernApp): Mausrad, Doppelklick bzw. doppelt tippen, zwei Finger.
    Vergrössert lässt sich das Bild ziehen; Wischen blättert nur ungezoomt (onSwipe).

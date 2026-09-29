@@ -71,6 +71,13 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
 - `sw.js` speichert `.mp3` nicht (Browser laden Audio mit Range-Anfragen, die der Cache nicht bedienen kann); `allImageUrls()` nimmt nur Bilder.
 - Vorschlagsliste der Tierstimmen: `docs/tierstimmen-liste.txt`.
 
+## Bildmeldungen (016)
+
+- Anzeige: Jede Bildseite der Lightbox hat den Knopf `.report` («⚑ Melden», nur `slidesHtml(…, big)`, nicht auf Karten, in LernApp und Quiz). `openReport()` öffnet `<dialog class="report-dlg">` (liegt über der Lightbox) mit Bild und freiwilligem Grund (höchstens 200 Zeichen) und ruft per `fetch` `POST /rest/v1/rpc/report_image` mit `{p_entry, p_position (1–4), p_reason}` auf. `reported` (Set `<entry-id>-<k>`) merkt sich bis zum Neuladen, was gemeldet ist («✓ Gemeldet»). `toast()` hängt sich ans oberste offene `<dialog>`, sonst läge es unter dem Top Layer.
+- Datenbank: `image_reports` (`entry_id`, `position`, `storage_path` des gemeldeten Bildes, `null` = Online-Ersatz, `reason`, `times`, `created_at`, `last_at`). Schreiben nur über `report_image()` (security definer): prüft sichtbaren Eintrag und Bildnummer, höchstens 500 offene Meldungen, gleiche Datei am selben Platz zählt `times` hoch und hängt neue Gründe mit « · » an. Lesen und löschen nur Admins; `anon` hat keine Rechte an der Tabelle.
+- Verwaltung: `loadReports()` in `reload()` (fehlt die Tabelle, bleibt `reports` leer). Übersicht «Gemeldete Bilder» mit «Anderes Bild suchen» und «Erledigt», im Eintrag `.report-note` über dem Bildplatz mit «Meldung erledigt». `storeImage()` (auch Zuschneiden) und `removeImage()` löschen die Meldungen des Platzes (`clearReports()`). Steht am Platz inzwischen ein anderes Bild, zeigt `reportStale()` das an.
+- Keine Mail: bräuchte eine Edge Function mit Maildienst-Schlüssel; die Seite bleibt ohne Zusatzkosten und eigene Server.
+
 ## QR-Codes, Sicherung, Wachhalten
 
 - QR-Codes nur in der Verwaltung: `js/lib/qrcode-1.4.4.js` (qrcode-generator, Kazuhiko Arase, MIT), `qrSvg()` erzeugt SVG. Im Eintrag Direktlink mit QR-Code und «QR-Code drucken»; in der Kategorie «QR-Codes drucken» (sichtbare Einträge). `printQr()` füllt `#adminPrint`; Druck-CSS in `css/admin.css` (3 × 4 Karten pro A4).

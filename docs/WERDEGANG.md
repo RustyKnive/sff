@@ -25,6 +25,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Tierstimmen:** Bei Tieren mit typischem Ruf spielt ein Knopf auf der Textseite die Aufnahme ab (mit Quellenangabe).
 - **Lightbox:** Ein Klick zeigt Bilder und Text bildschirmfüllend. Bilder lassen sich zoomen
   (Mausrad, Doppelklick, zwei Finger, Tasten `+` `-` `0`), vergrössert verschieben und auf dem Handy wischen.
+  Passt ein Bild nicht, meldet der Knopf «Melden» es an die Verwaltung (freiwillig mit kurzer Begründung, ohne Namen).
 - **Menü:**
   - *Jetzt zu sehen:* was laut Steckbrief in diesem Monat blüht, fliegt, wächst oder laicht, nach Kategorien geordnet.
   - *Quiz für die Klasse:* Bilder einer Kategorie bildschirmfüllend für den Beamer, pro Eintrag wechseln die Bilder alle 2 Sekunden; Leertaste zeigt die Lösung,
@@ -56,6 +57,9 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Tierstimme** pro Eintrag von Commons übernehmen (Adresse der Tondatei einfügen) oder entfernen, auch über die Liste.
 - **QR-Codes:** Jeder Eintrag zeigt seinen Direktlink mit QR-Code; pro Kategorie lassen sich alle QR-Codes als
   Karten (12 pro A4-Seite) drucken, etwa für einen Lehrpfad oder Posten im Schulzimmer.
+- **Gemeldete Bilder:** Die Übersicht listet die Meldungen aus der Grossansicht mit Vorschau, Anzahl und Begründung;
+  «Anderes Bild suchen» ersetzt das Bild gleich dort, «Erledigt» schliesst die Meldung. Beim Bildplatz im Eintrag steht die Meldung ebenfalls.
+  Ein neues Bild oder «Bild entfernen» erledigt sie automatisch.
 - **Sicherung:** Ein Knopf lädt alle Kategorien, Einträge und Bildangaben als Datei herunter.
 
 ### Technik in Kürze
@@ -210,6 +214,15 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   Update der Website eine Datenbank-Änderung, sagt die Seite genau, welche, statt einfach keine Inhalte zu zeigen.
   Jede Version ist auf GitHub als «Tag» abgelegt und lässt sich jederzeit wiederherstellen.
 
+### 29. September – Unpassende Bilder melden (Version 2.1.0)
+
+- **Melden statt suchen:** Einige Bilder passen noch nicht. Damit Schülerinnen, Schüler und Lehrpersonen darauf hinweisen
+  können, hat jede Bildseite der Grossansicht den Knopf «Melden». Ein kleines Fenster zeigt das Bild, fragt freiwillig nach
+  dem Grund und schickt die Meldung ohne Namen ab.
+- **Liste in der Verwaltung:** Die Übersicht zeigt alle Meldungen mit Vorschau, Anzahl und Begründung. «Anderes Bild suchen»
+  ersetzt das Bild direkt, «Erledigt» schliesst die Meldung. Ursprünglich war eine Mail pro Meldung gewünscht; dafür bräuchte
+  es aber einen Maildienst mit eigenem Schlüssel. Die Liste kostet nichts und funktioniert auch auf Schul-iPads ohne Mail-App.
+
 ---
 
 ## Versionen
@@ -218,6 +231,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 |---|---|---|
 | 1.0.0 | 23.9.2026 | erste Version: eine einzige HTML-Datei, 9 Kategorien mit je 9 Einträgen |
 | 2.0.0 | 28.9.2026 | Stand nach Datenbank, Verwaltung, Offline-App, LernApp mit Lernsessions, Unterrichtsmaterial, Verwechslungsgefahr, Tierstimmen und Anleitung; Einführung der Versionierung (Datenbank-Version 15) |
+| 2.1.0 | 29.9.2026 | Unpassende Bilder melden: Knopf «Melden» in der Grossansicht, Liste «Gemeldete Bilder» in der Verwaltung (Datenbank-Version 16) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -242,6 +256,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | Versionsnummern für Website und Datenbank, Prüfung beim Start | eine neue Website mit veralteter Datenbank ist der gefährlichste Fehler; so wird er sofort und verständlich gemeldet |
 | QR-Codes nur in der Verwaltung | die Anzeige bleibt ohne Bibliothek; gedruckt wird ohnehin von der Lehrperson |
 | «Jetzt zu sehen» aus den Steckbriefen gelesen | keine neue Pflegearbeit; wer den Steckbrief pflegt, pflegt die Monatsliste mit |
+| Bildmeldungen in der Datenbank statt per Mail | eine Mail bräuchte einen eigenen Server bzw. Maildienst mit Schlüssel; so ist es kostenlos, funktioniert auch auf Schulgeräten ohne Mail-App, und die Meldungen stehen gleich neben den Werkzeugen zum Ersetzen |
 
 ## Änderungen an der Datenbank
 
@@ -258,6 +273,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `013_leere_plaetze.sql` | bewusst leere Bildplätze, die nicht automatisch gefüllt werden |
 | `014_verwechslung_tierstimmen.sql` | Verwechslungsgefahr (36 Paare) und Tierstimmen; der Speicher nimmt neu auch MP3 an |
 | `015_versionierung.sql` | Die Datenbank kennt ihre Version (Tabelle `app_meta`), damit Website und Datenbank zusammenpassen |
+| `016_bildmeldungen.sql` | Meldungen zu unpassenden Bildern (Tabelle `image_reports`, Funktion zum Melden ohne Anmeldung) |
 
 ## Offen und geplant
 
