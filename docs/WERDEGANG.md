@@ -59,7 +59,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **QR-Codes:** Jeder Eintrag zeigt seinen Direktlink mit QR-Code; pro Kategorie lassen sich alle QR-Codes als
   Karten (12 pro A4-Seite) drucken, etwa für einen Lehrpfad oder Posten im Schulzimmer.
 - **Gemeldete Bilder:** Die Übersicht listet die Meldungen aus der Grossansicht mit Vorschau, Anzahl und Begründung;
-  «Anderes Bild suchen» ersetzt das Bild gleich dort, «Erledigt» schliesst die Meldung. Beim Bildplatz im Eintrag steht die Meldung ebenfalls.
+  «Anderes Bild suchen» wechselt zum Eintrag mit allen 4 Bildern und zeigt dort Vorschläge zur Auswahl, «Erledigt» schliesst die Meldung. Beim Bildplatz im Eintrag steht die Meldung ebenfalls.
   Ein neues Bild oder «Bild entfernen» erledigt sie automatisch.
 - **Sicherung:** Ein Knopf lädt alle Kategorien, Einträge und Bildangaben als Datei herunter.
 
@@ -233,6 +233,15 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   beim Anlegen einer Kategorie mit Claude. Claude prüft auch nicht mehr, ob eine Kategorie zu «Natur und Schweiz» passt;
   welche Kategorien es gibt, entscheidet die Lehrperson. Geprüft werden nur noch Überschneidungen mit Bestehendem.
 
+### 29. September – Ersatzbild selbst auswählen (Version 2.3.0)
+
+- **Vorschläge statt Zufall:** «Anderes Bild suchen» hat bisher gleich den nächsten Treffer gespeichert. Ob der besser war,
+  liess sich so nicht beurteilen. Jetzt zeigt die Verwaltung unter den 4 Bildern des Eintrags sechs Vorschläge von
+  Wikimedia Commons (der betroffene Platz ist markiert). Ein Klick nimmt das Bild, «Weitere Vorschläge» sucht weiter,
+  «Abbrechen» behält das alte Bild.
+- **Aus der Meldung direkt zum Eintrag:** «Anderes Bild suchen» bei den gemeldeten Bildern wechselt zum Eintrag und öffnet
+  die Auswahl für den gemeldeten Platz. Wird ein Vorschlag gewählt, ist die Meldung erledigt.
+
 ---
 
 ## Versionen
@@ -243,6 +252,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 2.0.0 | 28.9.2026 | Stand nach Datenbank, Verwaltung, Offline-App, LernApp mit Lernsessions, Unterrichtsmaterial, Verwechslungsgefahr, Tierstimmen und Anleitung; Einführung der Versionierung (Datenbank-Version 15) |
 | 2.1.0 | 29.9.2026 | Unpassende Bilder melden: Knopf «Melden» in der Grossansicht, Liste «Gemeldete Bilder» in der Verwaltung (Datenbank-Version 16) |
 | 2.2.0 | 29.9.2026 | PDF: einzelne Einträge abwählen; keine feste Zahl von 16 Einträgen und keine Themenprüfung mehr beim Anlegen mit Claude |
+| 2.3.0 | 29.9.2026 | «Anderes Bild suchen» zeigt Vorschläge zur Auswahl unter den 4 Bildern des Eintrags, auch aus den gemeldeten Bildern |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 

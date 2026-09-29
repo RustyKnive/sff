@@ -52,6 +52,15 @@ button:disabled{opacity:.4;cursor:default}
 .slot strong{display:block;margin-bottom:6px;font-size:.9rem}
 .slot label{font-size:.78rem;margin-bottom:6px}
 .slot input[type=file]{font-size:.78rem;margin-bottom:6px;max-width:100%}
+/* «Anderes Bild suchen»: markierter Platz und Vorschläge unter den 4 Bildern (openPicker in js/admin.js) */
+.slot.picking{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.picker{margin-top:14px;padding:12px;border:2px solid var(--accent);border-radius:10px}
+.picker h4{margin:0 0 4px}
+.pick-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin:8px 0}
+.pick button{display:block;width:100%;padding:0;border:0;border-radius:8px;overflow:hidden;aspect-ratio:4/3;background:var(--accent-soft);cursor:pointer}
+.pick button:hover:not(:disabled),.pick button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.pick img{width:100%;height:100%;object-fit:cover;display:block}
+.pick a{display:block;margin-top:4px;font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 .hint{font-size:.82rem;color:var(--muted);margin:4px 0 10px}
 .warn{color:var(--warn)}

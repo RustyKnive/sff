@@ -806,7 +806,8 @@ function renderEntry(cat, entry){
       <div class="row" id="labelRow" ${e.labels ? "" : "hidden"}>
         ${labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" value="${esc(l)}"></label>`).join("")}
       </div>
-      ${isNew ? `<p class="hint">Mit Claude ausgefüllt: Die Bilder werden beim Anlegen übernommen. Sonst nach dem Anlegen hochladen.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>`}
+      ${isNew ? `<p class="hint">Mit Claude ausgefüllt: Die Bilder werden beim Anlegen übernommen. Sonst nach dem Anlegen hochladen.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>
+        <div class="picker" id="picker" hidden></div>`}
       ${!isNew && openSlots(e).length ? `<p><button type="button" class="ghost" id="importWm">Fehlende Bilder von Wikimedia übernehmen</button></p>
         <p class="hint">Sucht wie die Seite (Wikipedia-Titelbild, sonst Suchbegriffe unten) und speichert die Bilder mit Quellenangabe.
           Geänderte Suchbegriffe vorher speichern.</p>` : ""}
@@ -968,13 +969,14 @@ function renderEntry(cat, entry){
       await act(async () => storeWikimedia(cat, e, p, await commonsFileImage(name), img), "Bild übernommen.").catch(() => {});
       render();
     });
-    slot.querySelector("[data-otherimg]")?.addEventListener("click", async ev => {
-      ev.target.disabled = true;
-      msg("Anderes Bild wird gesucht …");
-      await act(() => replaceFromWikimedia(cat, e, p, img), "Anderes Bild gespeichert.").catch(() => {});
-      render();
-    });
+    slot.querySelector("[data-otherimg]")?.addEventListener("click", () => openPicker(cat, e, p, labels[p - 1]));
   });
+  // Aus «Gemeldete Bilder» der Übersicht: Auswahl für diesen Platz gleich öffnen
+  if(pickFor?.entry === e.id){
+    const p = pickFor.pos;
+    pickFor = null;
+    openPicker(cat, e, p, labels[p - 1]);
+  }
 
   $("importWm")?.addEventListener("click", async ev => {
     ev.target.disabled = true;
@@ -1002,7 +1004,7 @@ function slotHtml(e, p, label){
     ${img ? `<div class="slot-actions">
       <button type="button" class="ghost" data-crop title="Bild dauerhaft zuschneiden">Zuschneiden</button>
       <button type="button" class="ghost" data-focus title="Welcher Teil in der kleinen Vorschau (Karte, Übersicht) zu sehen ist">Ausschnitt Vorschau</button>
-      <button type="button" class="ghost" data-otherimg title="Nächstes passendes Bild von Wikimedia Commons">Anderes Bild suchen</button>
+      <button type="button" class="ghost" data-otherimg title="Vorschläge von Wikimedia Commons zeigen und eines auswählen">Anderes Bild suchen</button>
       <button type="button" class="danger" data-delimg>Bild entfernen</button></div>`
     : isEmptySlot(e, p)
       ? `<button type="button" class="ghost small" data-slotfill title="«Fehlende Bilder übernehmen» darf diesen Platz wieder füllen">Wieder füllen lassen</button>`
@@ -1302,13 +1304,98 @@ async function importMissing(cat, e, onImage){
   return failed;
 }
 
-// Vorhandenes Bild durch das nächste passende ersetzen
-async function replaceFromWikimedia(cat, e, pos, old){
-  if(old.source_file){
-    if(!rejected.has(e.id)) rejected.set(e.id, new Set());
-    rejected.get(e.id).add(old.source_file);
+/* «Anderes Bild suchen»: Vorschläge unter den 4 Bildern des Eintrags zeigen, der Admin wählt eines oder behält das alte.
+   Die Vorschaubilder werden als Blob geladen (die CSP erlaubt Wikimedia nur für fetch, nicht für <img>);
+   gewählt wird derselbe Blob gespeichert. «Weitere Vorschläge» sucht mit derselben Liste «used» weiter. */
+const PICK_N = 6;
+let pickFor = null;   // { entry, pos }: Auswahl nach dem Wechsel aus der Übersicht öffnen
+let pickUrls = [];    // Blob-Adressen der Vorschläge (werden beim Schliessen freigegeben)
+let pickToken = null; // gehört zur offenen Auswahl; eine noch laufende Suche einer geschlossenen hört damit auf
+
+async function findCandidates(cat, e, pos, used, n){
+  const base = baseTitle(cat, e);
+  const out = [];
+  if(pos === 1){
+    const img = await wikiImage(base).catch(() => null);
+    if(img && !used.has(img.file)){ used.add(img.file); out.push(img); }
   }
-  await importImage(cat, e, pos, usedFiles(e), old);
+  const query = pos === 1 ? base : (e.search_terms[pos - 2] || base);
+  while(out.length < n){
+    try{ out.push(await commonsImage(query, used, base)); }catch(err){ break; }
+  }
+  return out;
+}
+
+function closePicker(){
+  pickToken = null;
+  const box = $("picker");
+  if(box){ box.hidden = true; box.replaceChildren(); }
+  document.querySelectorAll(".slot.picking").forEach(s => s.classList.remove("picking"));
+  pickUrls.forEach(u => URL.revokeObjectURL(u));
+  pickUrls = [];
+}
+
+function openPicker(cat, e, pos, label){
+  closePicker();
+  const box = $("picker");
+  const old = e.images.find(i => i.position === pos);
+  const used = usedFiles(e);
+  document.querySelector(`.slot[data-pos="${pos}"]`)?.classList.add("picking");
+  box.hidden = false;
+  box.innerHTML = `<h4>Bild ${pos} · ${esc(label)}: anderes Bild wählen</h4>
+    <p class="hint">Oben siehst du alle 4 Bilder des Eintrags (Bild ${pos} ist markiert). Klick auf einen Vorschlag ersetzt Bild ${pos}${
+      slotReports(e, pos).length ? " und erledigt die Meldung" : ""}.</p>
+    <div class="pick-list"></div>
+    <p class="hint" id="pickMsg"></p>
+    <div class="slot-actions">
+      <button type="button" class="ghost" id="pickMore">Weitere Vorschläge</button>
+      <button type="button" class="ghost" id="pickCancel">Abbrechen (Bild behalten)</button>
+    </div>`;
+  const list = box.querySelector(".pick-list"), note = $("pickMsg"), more = $("pickMore");
+  const token = pickToken = {};
+  let busy = false;
+  const load = async () => {
+    if(busy) return;
+    busy = true;
+    more.disabled = true;
+    note.textContent = "Vorschläge werden gesucht …";
+    const found = await findCandidates(cat, e, pos, used, PICK_N).catch(() => []);
+    for(const c of found){
+      if(pickToken !== token) return;
+      try{
+        const r = await retry(async () => { const r = await fetch(c.src); if(!r.ok) throw httpError(r); return r; }, 2);
+        const blob = await r.blob();
+        if(pickToken !== token) return;
+        const url = URL.createObjectURL(blob);
+        pickUrls.push(url);
+        const card = document.createElement("div");
+        card.className = "pick";
+        card.innerHTML = `<button type="button" title="Dieses Bild nehmen"><img src="${url}" alt=""></button>
+          <a href="${/^https:\/\//.test(c.page) ? esc(c.page) : "#"}" target="_blank" rel="noopener" title="${esc(c.file)}">${esc(c.file)}</a>`;
+        card.querySelector("button").addEventListener("click", async () => {
+          list.querySelectorAll("button").forEach(b => { b.disabled = true; });
+          note.textContent = "Bild wird gespeichert …";
+          await act(async () => storeImage(cat, e, pos, await resizeImage(blob), old, sourceUrl(c.page), c.file),
+            `Bild ${pos} ersetzt.`).catch(() => {});
+          if(old?.source_file){   // verworfenes Bild nicht wieder vorschlagen
+            if(!rejected.has(e.id)) rejected.set(e.id, new Set());
+            rejected.get(e.id).add(old.source_file);
+          }
+          closePicker();
+          render();
+        });
+        list.append(card);
+      }catch(err){ /* Vorschau nicht ladbar: auslassen */ }
+    }
+    if(pickToken !== token) return;
+    note.textContent = found.length ? "" : list.children.length ? "Keine weiteren Vorschläge gefunden." : "Keine Vorschläge gefunden. Suchbegriff unten anpassen und speichern, oder eine Commons-Adresse in «Quelle» einfügen.";
+    more.disabled = !found.length;
+    busy = false;
+  };
+  more.addEventListener("click", load);
+  $("pickCancel").addEventListener("click", closePicker);
+  document.querySelector(".slots").scrollIntoView({ behavior:"smooth", block:"start" });
+  load();
 }
 
 // Alle Einträge mit fehlenden Bildern nacheinander bearbeiten (Stand für die Übersicht)
@@ -1337,6 +1424,7 @@ async function importAll(todo){
    ANSICHT WÄHLEN
 ------------------------------------------------------------------- */
 function render(){
+  closePicker();   // offene Bildauswahl verwerfen (Blob-Adressen freigeben)
   renderSidebar();
   const r = route();
   const main = $("main");
@@ -1373,7 +1461,7 @@ function render(){
           ${reportStale(e, r) ? `<br><span class="hint">Inzwischen steht dort ein anderes Bild.</span>` : ""}
           <p class="hint">${esc(reportText(r))}</p>
           <div class="slot-actions">
-            ${img ? `<button type="button" class="ghost small" data-rother="${r.id}" title="Nächstes passendes Bild von Wikimedia Commons">Anderes Bild suchen</button>` : ""}
+            ${img ? `<button type="button" class="ghost small" data-rother="${r.id}" title="Zum Eintrag wechseln und aus Vorschlägen von Wikimedia Commons wählen">Anderes Bild suchen</button>` : ""}
             <button type="button" class="ghost small" data-rdone="${r.id}">Erledigt</button>
           </div>
         </div></div>`).join("")}</div>`
@@ -1410,12 +1498,10 @@ function render(){
     await act(() => clearReports(e, r.position), "Meldung erledigt.").catch(() => {});
     render();
   }));
-  main.querySelectorAll("[data-rother]").forEach(b => b.addEventListener("click", async () => {
-    const { cat, e, img } = reported.find(x => x.r.id === +b.dataset.rother);
-    b.disabled = true;
-    msg("Anderes Bild wird gesucht …");
-    await act(() => replaceFromWikimedia(cat, e, img.position, img), "Anderes Bild gespeichert, Meldung erledigt.").catch(() => {});
-    render();
+  main.querySelectorAll("[data-rother]").forEach(b => b.addEventListener("click", () => {
+    const { e, r } = reported.find(x => x.r.id === +b.dataset.rother);
+    pickFor = { entry:e.id, pos:r.position };
+    location.hash = "#/e/" + e.id;
   }));
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
   setupBatch();
