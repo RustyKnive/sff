@@ -590,7 +590,39 @@ function fillPdfSelect(){
   const keep = lastCat || sel.value;
   sel.innerHTML = CATS.map(c => `<option value="${esc(c.id)}">${esc(c.name)} (${c.items.length})</option>`).join("");
   if(CATS.some(c => c.id === keep)) sel.value = keep;
+  fillPdfItems();
 }
+
+// Einträge der gewählten Kategorie zum Abwählen; standardmässig sind alle angewählt.
+// Abgewählte merkt sich pdfOff, solange die Kategorie gleich bleibt (auch beim Neuladen der Daten).
+let pdfOff = new Set(), pdfOffCat = null;
+const pdfCatNow = () => CATS.find(c => c.id === document.getElementById("pdfCat").value);
+function fillPdfItems(){
+  const cat = pdfCatNow();
+  if(!cat) return;
+  if(cat.id !== pdfOffCat){ pdfOff = new Set(); pdfOffCat = cat.id; }
+  document.getElementById("pdfItems").innerHTML = cat.items.map(it => `<label>
+    <input type="checkbox" value="${esc(it.id)}" ${pdfOff.has(it.id) ? "" : "checked"}> ${esc(it.n)}</label>`).join("");
+  pdfCount();
+}
+function pdfCount(){
+  const cat = pdfCatNow();
+  const n = cat ? cat.items.filter(it => !pdfOff.has(it.id)).length : 0;
+  document.getElementById("pdfCount").textContent = `${n} von ${cat ? cat.items.length : 0} gewählt.`;
+}
+document.getElementById("pdfCat").addEventListener("change", fillPdfItems);
+document.getElementById("pdfItems").addEventListener("change", e => {
+  const box = e.target;
+  if(box.checked) pdfOff.delete(box.value); else pdfOff.add(box.value);
+  pdfCount();
+});
+const pdfSetAll = on => {
+  const cat = pdfCatNow();
+  pdfOff = new Set(on || !cat ? [] : cat.items.map(it => it.id));
+  fillPdfItems();
+};
+document.getElementById("pdfAll").addEventListener("click", () => pdfSetAll(true));
+document.getElementById("pdfNone").addEventListener("click", () => pdfSetAll(false));
 
 // Hauptbild eines Eintrags ins <img> laden (eigenes Bild, sonst online); gibt die Bilddaten zurück
 function loadPrintImage(el, cat, item){
@@ -616,14 +648,14 @@ const MEMORY_PER_PAGE = 20;   // 4 × 5 Karten
    text   Übersicht: Hauptbild, darüber Name, Beschreibung, Steckbrief (8 pro Seite)
    blatt  Arbeitsblatt: nur Bilder mit Nummer und Linie (zufällige Reihenfolge), am Schluss das Lösungsblatt
    memory Memory: Bildkarten und Namenskarten zum Ausschneiden (je 20 pro Seite) */
-async function printCategory(cat, mode = "text"){
+async function printCategory(cat, mode = "text", chosen = cat.items){
   const btn = document.getElementById("pdfBtn");
   btn.disabled = true;
   pdfMsg.textContent = "Bilder werden geladen …";
   const sub = it => it.s ? ` <span class="${cat.latin ? "latin" : ""}">${esc(it.s)}</span>` : "";
-  let items = cat.items, title = cat.name;
+  let items = chosen, title = cat.name;
   if(mode === "blatt"){
-    items = shuffled(cat.items);
+    items = shuffled(chosen);
     title += " – Arbeitsblatt";
     printBox.innerHTML = chunk(items, PER_PAGE).map((p, pi) => `<div class="print-page">${p.map((it, i) => `
       <figure class="print-cell">
@@ -668,8 +700,11 @@ async function printCategory(cat, mode = "text"){
 }
 
 document.getElementById("pdfBtn").addEventListener("click", () => {
-  const cat = CATS.find(c => c.id === document.getElementById("pdfCat").value);
-  if(cat) printCategory(cat, document.getElementById("pdfMode").value).catch(e => {
+  const cat = pdfCatNow();
+  if(!cat) return;
+  const chosen = cat.items.filter(it => !pdfOff.has(it.id));
+  if(!chosen.length){ pdfMsg.textContent = "Mindestens einen Eintrag anwählen."; return; }
+  printCategory(cat, document.getElementById("pdfMode").value, chosen).catch(e => {
     pdfMsg.textContent = "PDF konnte nicht erstellt werden (" + e.message + ").";
     document.getElementById("pdfBtn").disabled = false;
   });

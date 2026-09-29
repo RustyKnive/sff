@@ -52,6 +52,7 @@ Knopf oben rechts, klappt eine Liste auf (schliesst mit Klick daneben oder Esc):
 - «Copyright» (`#/copyright`): Urheberrecht und Bildnachweis (alle eigenen Bilder mit Link auf `source_page`).
 - «Jetzt zu sehen» (`#/jetzt`, `renderSeason()`): liest aus den Steckbrief-Zeilen, deren Schlüssel in `SEASON_KEYS` steht (`Blütezeit`, `Flugzeit`, `Zeit`, `Laichzeit`, `Aktiv`), die Monate (`seasonMonths()`, Monatsnamen `MONATE`, Bereiche «Juni–September» auch über den Jahreswechsel) und zeigt die Einträge des laufenden Monats nach Kategorie.
 - «Quiz für die Klasse» (`#/quiz`): Kategorie (oder alle gemischt) und Anzahl wählen, pro Frage wechseln alle Bilder des Eintrags ohne Text und Beschriftung im Takt `QUIZ_TAKT` = 2000 ms (Überblendung, beginnt mit Bild 1, `quizTimer` wird beim Weiterblättern und Schliessen gestoppt), `<dialog class="beamer">` im Vollbild (nur der Dialog per `beamer.requestFullscreen()`; die ganze Seite im Vollbild läge im Top Layer über dem Dialog). Leertaste/Enter/Pfeil rechts = Lösung, dann nächstes Bild; Pfeil links zurück (`showQuizItem`, `quizSolution`, `quizGo`). Tasten nur, wenn kein Knopf den Fokus hat.
+- «PDF drucken»: Unter der Auswahl stehen alle Einträge der Kategorie als Kontrollkästchen (`#pdfItems`, `fillPdfItems()`), standardmässig angewählt; abgewählte merkt sich `pdfOff` (Eintrags-IDs), solange die Kategorie gleich bleibt; «Alle»/«Keine» (`pdfSetAll()`). `printCategory(cat, mode, chosen)` druckt nur die gewählten.
 - «PDF drucken» hat drei Arten (`#pdfMode`, `printCategory(cat, mode)`): `text` Steckbriefe (wie oben), `blatt` Arbeitsblatt (Bilder gemischt mit Nummer und Schreiblinie, danach Lösungsblatt `.print-solution`), `memory` (`MEMORY_PER_PAGE` = 20; je 16 Bild- und Namenskarten mit gestrichelter Schnittlinie).
 Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und in `PAGES` in `js/index.js`. Ihre Adressen gehen vor Kategorien mit gleicher `id`; solche Slugs (`lernapp`, `jetzt`, `quiz`, `pdf`, `einstellungen`, `admin`, `copyright`) darum nicht vergeben.
 
@@ -119,7 +120,7 @@ Die Anzeige lässt sich installieren (Startbildschirm) und funktioniert ohne Int
 ## Neue Kategorie mit Claude (admin.html → «+ Neue Kategorie»)
 
 Ohne Claude-API und ohne zusätzliche Kosten: Der Auftrag wird über claude.ai (Abo) erledigt, per Kopieren und Einfügen.
-1. Name und Anzahl Einträge eingeben, «Auftrag für Claude kopieren» (`aiPrompt()` in `js/admin.js`). Der Auftrag enthält alle bestehenden Kategorie- und Eintragsnamen (gegen Doppelte), die Konventionen und einen Beispiel-Eintrag (Buche) samt JSON-Format.
+1. Name und Anzahl Einträge (ohne Obergrenze, Vorgabe 16) eingeben, «Auftrag für Claude kopieren» (`aiPrompt()` in `js/admin.js`). Der Auftrag enthält alle bestehenden Kategorie- und Eintragsnamen (gegen Doppelte), die Konventionen und einen Beispiel-Eintrag (Buche) samt JSON-Format.
 2. Auf claude.ai einfügen. Claude prüft die Kategorie und antwortet mit einem JSON-Codeblock: `passt`, `pruefung`, `name`, `description`, `latin`, `labels`, `entries` (mit Beschreibung, Steckbrief, Suchbegriffen, `wp`).
 3. Antwort einfügen, «Antwort übernehmen» (`aiParse()`: nimmt das JSON zwischen erster «{» und letzter «}», ersetzt Eszett durch «ss», begrenzt Längen). Die Angaben landen im Formular, die Einträge als Liste zum Abwählen und Korrigieren.
 4. «Anlegen mit N Einträgen» (`createWithAi()`): Kategorie mit `visible = false`, Einträge, danach Bilder mit `importMissing`. Das Ergebnis steht oben auf der Kategorieseite. Einblenden erst nach dem Durchsehen.
@@ -139,7 +140,7 @@ Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt da
 
 - Sprache Deutsch, **Schweizer Rechtschreibung: nie «ß», immer «ss»** (auch im Code und in Kommentaren).
 - Texte sachlich und für Sek I verständlich: 3–4 Sätze Beschreibung, 3–4 Steckbrief-Zeilen.
-- **Jede Kategorie hat genau 16 sichtbare Einträge** (2 volle A4-Seiten im PDF, doppelseitig ohne leeres Feld). Fehlt einer: typischen Schweizer Vertreter ergänzen. Sind es mehr: die weniger typischen ausblenden (`visible = false`), nie löschen. Die Zahl der Kategorien ist frei. Richtwert 3 Suchbegriffe pro Eintrag, passend zu den Bildbeschriftungen 2–4.
+- Die Zahl der Einträge pro Kategorie ist frei (seit 2.2.0; 16 ergeben 2 volle A4-Seiten im PDF), ebenso die Zahl der Kategorien. Beim Drucken lassen sich einzelne Einträge abwählen. Welche Kategorien es gibt, entscheidet der User; der Claude-Auftrag prüft nur Überschneidungen, nicht ob das Thema passt. Richtwert 3 Suchbegriffe pro Eintrag, passend zu den Bildbeschriftungen 2–4.
 - Farben nur über die CSS-Variablen in `:root`. Der Dunkelmodus läuft über `prefers-color-scheme`.
 - Die Anzeige (`index.html`) bleibt ohne Bibliotheken. supabase-js und qrcode-generator nur im Admin.
 - Druck- und Beamer-Ansichten (Arbeitsblatt, Memory, QR-Karten, Quiz) verwenden bewusst feste Farben (Papier weiss, Beamer dunkel) statt der Variablen.

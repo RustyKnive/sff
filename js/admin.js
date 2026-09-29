@@ -184,7 +184,7 @@ function renderCategory(cat){
       ${isNew ? `<div class="ai">
         <h3>Einträge mit Claude erstellen</h3>
         <div class="ai-row">
-          <label>Anzahl Einträge <input type="number" name="aiCount" min="1" max="20" value="8"></label>
+          <label>Anzahl Einträge <input type="number" name="aiCount" min="1" value="16"></label>
           <button type="button" class="ghost" id="aiCopy">1. Auftrag für Claude kopieren</button>
           <a href="https://claude.ai/new" target="_blank" rel="noopener">2. claude.ai öffnen ↗</a>
         </div>
@@ -288,7 +288,7 @@ let aiReport = null;  // Ergebnis für die Kategorieseite: { id, text, isErr }
 // Gemeinsame Teile aller Aufträge an Claude (neue Kategorie, neuer Eintrag)
 const AI_INTRO = `Du arbeitest an «Natur und Schweiz», einer Lern- und Nachschlageseite für die Sekundarstufe I (12–15 Jahre).
 Sie zeigt Kategorien (z. B. Bäume, Amphibien, Berge) mit Einträgen. Jeder Eintrag hat 4 Bilder, eine Beschreibung und einen Steckbrief.
-Es geht um Natur, Landschaft und Sehenswürdigkeiten der Schweiz: Einträge müssen in der Schweiz vorkommen bzw. liegen,
+Welche Kategorien es gibt, entscheidet die Lehrperson. Wo es zur Kategorie passt, stehen Vertreter aus der Schweiz im Vordergrund,
 und es sollen die bekanntesten und für Schülerinnen und Schüler wichtigsten sein.`;
 const AI_RULES = `Sprache: Deutsch mit Schweizer Rechtschreibung (nie Eszett, immer «ss»; Anführungszeichen «…»).
 Texte sachlich, anschaulich und für Sek I verständlich. Die Fakten müssen stimmen: Lieber eine Angabe weglassen als raten.`;
@@ -311,8 +311,8 @@ function aiPrompt(name, count){
 
 Neue Kategorie: «${name}», mit ${count} Einträgen (die bekanntesten zuerst).
 
-1. Prüfe, ob die Kategorie zur Seite passt und ob sie sich mit bestehenden Kategorien oder Einträgen überschneidet.
-   Keine Einträge, die es schon gibt.
+1. Prüfe, ob sich die Kategorie mit bestehenden Kategorien oder Einträgen überschneidet.
+   Keine Einträge, die es schon gibt. (Ob die Kategorie zur Seite passt, entscheidet die Lehrperson; nicht prüfen.)
 2. Schlage Name der Kategorie (Mehrzahl wie die bestehenden), einen kurzen Untertitel der Kachel und genau 4 kurze
    Bildbeschriftungen vor (Bild 1 zeigt das Ganze, z. B. Baum, Blätter, Früchte, Rinde).
    latin = true bei Lebewesen: Der Untertitel jedes Eintrags ist dann der lateinische Name. Sonst nennt er Ort, Kanton oder Art.
@@ -327,7 +327,7 @@ Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel-Eintrag aus
 \`\`\`json
 {
   "passt": true,
-  "pruefung": "2–4 Sätze: Passt die Kategorie? Überschneidungen? Hinweise",
+  "pruefung": "1–3 Sätze: Überschneidungen? Hinweise",
   "name": "Bäume",
   "description": "Die wichtigsten Waldbäume",
   "latin": true,
@@ -391,7 +391,7 @@ function setupAi(form){
   $("aiCopy").addEventListener("click", async () => {
     const name = F.name.value.trim();
     if(!name){ F.name.focus(); msg("Zuerst den Namen der Kategorie eingeben.", true); return; }
-    const count = Math.min(20, Math.max(1, +F.aiCount.value || 8));
+    const count = Math.max(1, Math.round(+F.aiCount.value) || 16);
     try{
       await navigator.clipboard.writeText(aiPrompt(name, count));
       msg("Auftrag kopiert. Jetzt auf claude.ai einfügen und senden.");

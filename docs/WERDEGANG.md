@@ -34,6 +34,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
     als **Steckbriefe** (A4, 8 Einträge pro Seite, Bildquelle klein im jeweiligen Bild),
     als **Arbeitsblatt** (Bilder mit Nummer und Schreiblinie, Lösungsblatt am Schluss) oder
     als **Memory** zum Ausschneiden (eine Seite Bildkarten, eine Seite Namenskarten).
+    Alle Einträge der Kategorie sind angewählt; einzelne lassen sich vor dem Drucken abwählen.
   - *Einstellungen:* Anleitung zu allen Möglichkeiten der App (aufklappbar nach Themen), Anleitung zum Installieren als App (mit Knopf, wo der Browser das anbietet) und alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto» und «zugeschnitten»).
@@ -50,7 +51,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»,
   ein bestimmtes Commons-Bild über seine Adresse oder viele auf einmal über eine Liste), dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
 - **Mit Claude (über claude.ai, ohne Zusatzkosten):**
-  - *Neue Kategorie:* Claude prüft die Idee und schreibt alle Einträge; Vorschlag durchsehen, abwählen, korrigieren oder abbrechen.
+  - *Neue Kategorie* (Thema und Anzahl Einträge frei wählbar): Claude prüft auf Überschneidungen und schreibt alle Einträge; Vorschlag durchsehen, abwählen, korrigieren oder abbrechen.
   - *Neuer Eintrag* über einen Namen oder ein Foto: Claude bestimmt die Art bzw. schreibt den Eintrag,
     das Formular lässt sich vor dem Übernehmen ändern. Ein eigenes Foto wird Bild 1.
 - **Verwechslungsgefahr** pro Eintrag pflegen (Name des anderen Eintrags und Unterschied).
@@ -223,6 +224,15 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   ersetzt das Bild direkt, «Erledigt» schliesst die Meldung. Ursprünglich war eine Mail pro Meldung gewünscht; dafür bräuchte
   es aber einen Maildienst mit eigenem Schlüssel. Die Liste kostet nichts und funktioniert auch auf Schul-iPads ohne Mail-App.
 
+### 29. September – Einträge fürs PDF abwählen (Version 2.2.0)
+
+- **Auswahl beim Drucken:** Unter «PDF drucken» stehen alle Einträge der gewählten Kategorie, standardmässig angewählt.
+  Einzelne lassen sich abwählen («Alle» und «Keine» helfen bei vielen Einträgen). So lässt sich auch aus einer Kategorie
+  mit mehr als 16 Einträgen genau die gewünschte Auswahl drucken.
+- **Keine feste Zahl mehr:** Die Regel «genau 16 sichtbare Einträge pro Kategorie» fällt weg, ebenso die Obergrenze
+  beim Anlegen einer Kategorie mit Claude. Claude prüft auch nicht mehr, ob eine Kategorie zu «Natur und Schweiz» passt;
+  welche Kategorien es gibt, entscheidet die Lehrperson. Geprüft werden nur noch Überschneidungen mit Bestehendem.
+
 ---
 
 ## Versionen
@@ -232,6 +242,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 1.0.0 | 23.9.2026 | erste Version: eine einzige HTML-Datei, 9 Kategorien mit je 9 Einträgen |
 | 2.0.0 | 28.9.2026 | Stand nach Datenbank, Verwaltung, Offline-App, LernApp mit Lernsessions, Unterrichtsmaterial, Verwechslungsgefahr, Tierstimmen und Anleitung; Einführung der Versionierung (Datenbank-Version 15) |
 | 2.1.0 | 29.9.2026 | Unpassende Bilder melden: Knopf «Melden» in der Grossansicht, Liste «Gemeldete Bilder» in der Verwaltung (Datenbank-Version 16) |
+| 2.2.0 | 29.9.2026 | PDF: einzelne Einträge abwählen; keine feste Zahl von 16 Einträgen und keine Themenprüfung mehr beim Anlegen mit Claude |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -248,7 +259,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | PDF über den Druckdialog des Browsers | keine zusätzliche Bibliothek nötig |
 | Neue Kategorien zuerst ausgeblendet | Inhalte werden vor dem Veröffentlichen geprüft |
 | Einträge nur einzeln verschieben | Mehrfach-Verschieben ist nicht gewünscht |
-| Genau 16 sichtbare Einträge pro Kategorie | 2 volle A4-Seiten im PDF, doppelseitig ohne leeres Feld; weitere werden ausgeblendet, nicht gelöscht |
+| Anzahl Einträge pro Kategorie frei (bis 2.1.0 genau 16) | beim Drucken lassen sich einzelne Einträge abwählen; 16 ergeben weiterhin 2 volle A4-Seiten |
 | Schweizer Rechtschreibung (immer «ss») | Zielpublikum Schweizer Schulen |
 | Wachhalten über GitHub Actions statt bezahltem Supabase-Plan | kostenlos; die Abfrage liest nur öffentliche Daten mit dem öffentlichen Schlüssel |
 | Sicherung als Datei aus der Verwaltung | die kostenlose Supabase-Stufe hat keine automatischen Sicherungen zum Herunterladen |
