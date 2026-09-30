@@ -606,9 +606,11 @@ function buildOverview(){
 // Seiten aus dem Menü (stehen in index.html); gehen vor gleichnamigen Kategorien
 const PAGES = {
   lernapp:{ title:"LernApp", intro:"Namen zu Bildern lernen, mit dem Leitner-System." },
+  spiele:{ title:"Spiele", intro:"Memory, Verwechslungs-Duell und Steckbrief-Detektiv: dasselbe Wissen spielerisch üben." },
   quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
-  einstellungen:{ title:"Einstellungen", intro:"Anleitung zu allen Möglichkeiten der App und Einstellungen für dieses Gerät." },
+  hilfe:{ title:"Hilfe", intro:"Was die Seite kann, womit man beginnt, und eine Anleitung zu allen Möglichkeiten." },
+  einstellungen:{ title:"Einstellungen", intro:"Als App installieren, Bilder für offline herunterladen und Version." },
   admin:{ title:"Admin", intro:"Zugang zur Verwaltung." },
   copyright:{ title:"Copyright", intro:"Urheberrecht und Bildnachweis." }
 };
@@ -1141,6 +1143,8 @@ function renderLernQuiz(){
       <div><b>${lernStreak()}</b> ${lernStreak() === 1 ? "Tag" : "Tage"} in Folge</div>
     </div>
     <div class="lern-bar" title="${s.richtig} von ${s.total} richtig beantwortet"><i></i></div>
+    <p class="lern-hint lern-kasten">Karteikasten mit 5 Fächern
+      <button type="button" class="help-tip" data-help="leitner" aria-label="Hilfe: Der Karteikasten">?</button></p>
     <div class="lern-boxes">${s.boxes.map((n, i) => `<div class="lern-box"><span><i></i></span><small>Fach ${i + 1}<br>${n}</small></div>`).join("")}</div>
     ${catStats.length > 1 ? `<div class="lern-catprog">${catStats.map(r => `
       <span>${esc(r.cat.name)}</span><span class="lern-mini"><i></i></span><small>${r.richtig}/${r.total}</small>`).join("")}</div>` : ""}
@@ -1560,8 +1564,9 @@ const cardOf = (cat, item) => cardsOf(cat)[cat.items.indexOf(item)];
 // Ansicht vorbereiten: Lightbox zu, Hinweise der Übersicht weg, Menüseiten ausblenden
 function resetView(pageId){
   if(lightbox.open) lightbox.close();
-  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily")]) if(el) el.hidden = true;
+  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily"), catBar]) if(el) el.hidden = true;
   quickLearn.hidden = false;
+  closeHelp();
   grid.replaceChildren();
   window.scrollTo(0, 0);
   for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== pageId;
@@ -1576,19 +1581,130 @@ function setHead(title, intro, sub = true){
   document.title = sub ? title + " – Natur und Schweiz by toj-apps" : "Natur und Schweiz by toj-apps";
 }
 
+/* ------------------------------------------------------------------
+   ORIENTIERUNG: Leiste in der Kategorie, Einführung beim ersten Besuch, «?»-Erklärungen
+------------------------------------------------------------------- */
+const catBar = document.getElementById("catBar");
+// Wege zu den Spielen mit dieser Kategorie (die Spiele-Seite wählt sie über lastCat vor)
+function showCatBar(cat){
+  const duel = duelPairs().some(p => p.a.cat === cat || p.b.cat === cat);
+  catBar.innerHTML = `<span class="cat-bar-label">Spiele zu ${esc(cat.name)}:</span>
+    <a class="chip" href="#/spiele/memo">Memory</a>
+    ${duel ? `<a class="chip" href="#/spiele/duel">Verwechslungs-Duell</a>` : ""}
+    <a class="chip" href="#/spiele/detektiv">Steckbrief-Detektiv</a>
+    <button type="button" class="help-tip" data-help="karte" aria-label="Hilfe: Karten ansehen">?</button>`;
+  catBar.hidden = false;
+}
+
+// Kurze Erklärungen bei den «?»-Knöpfen: beim Darüberfahren sichtbar, ein Klick hält sie offen (mit Link zur Hilfe)
+const HELP = {
+  start:{ title:"So funktioniert die Seite", text:"Eine Kachel öffnet eine Kategorie mit Bildern und Steckbriefen. "
+    + "Die Suche findet Einträge in allen Kategorien. «Lernen» übt die Namen mit einem Karteikasten, «Spielen» führt zu "
+    + "Memory, Verwechslungs-Duell und Steckbrief-Detektiv, «Drucken» erstellt Steckbriefe, Arbeitsblätter und Memory-Karten." },
+  karte:{ title:"Karten ansehen", text:"Mit den Pfeilen, den Punkten oder durch Wischen blätterst du durch die Bilder; "
+    + "die letzte Seite zeigt Beschreibung und Steckbrief, bei Tieren oft mit Stimme. Ein Tipp aufs Bild zeigt es gross, dort kannst du zoomen. "
+    + "Die Knöpfe daneben starten die Spiele mit dieser Kategorie." },
+  leitner:{ title:"Der Karteikasten", text:"Jeder Begriff liegt in einem von 5 Fächern. Richtig beantwortet, rutscht er "
+    + "ein Fach weiter und kommt erst nach 1, 3, 7 oder 30 Tagen wieder. Falsch beantwortet, geht er zurück in Fach 1 und kommt bald nochmals. "
+    + "So übst du genau das, was noch nicht sitzt." }
+};
+const helpPop = document.createElement("div");
+helpPop.className = "help-pop";
+helpPop.id = "helpPop";
+helpPop.setAttribute("role", "tooltip");
+helpPop.hidden = true;
+document.body.append(helpPop);
+let helpFor = null, helpPinned = false;
+function openHelp(btn, pinned){
+  const h = HELP[btn.dataset.help];
+  if(!h) return;
+  if(helpFor && helpFor !== btn) closeHelp();
+  helpPop.innerHTML = `<b>${esc(h.title)}</b><p>${esc(h.text)}</p><a href="#/hilfe">Mehr in der Hilfe →</a>`;
+  helpPop.hidden = false;
+  helpFor = btn;
+  helpPinned = pinned;
+  btn.setAttribute("aria-expanded", "true");
+  btn.setAttribute("aria-describedby", "helpPop");
+  // unter dem Knopf, ganz im Fenster (Position über CSSOM, die CSP verbietet style-Attribute)
+  const r = btn.getBoundingClientRect(), w = helpPop.offsetWidth;
+  helpPop.style.left = Math.max(8, Math.min(document.documentElement.clientWidth - w - 8, r.left + r.width / 2 - w / 2)) + scrollX + "px";
+  helpPop.style.top = r.bottom + 8 + scrollY + "px";
+}
+function closeHelp(){
+  if(!helpFor) return;
+  helpFor.setAttribute("aria-expanded", "false");
+  helpFor.removeAttribute("aria-describedby");
+  helpFor = null;
+  helpPop.hidden = true;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest(".help-tip[data-help]");
+  if(b){ if(helpFor === b && helpPinned) closeHelp(); else openHelp(b, true); return; }
+  if(helpFor && !e.target.closest(".help-pop")) closeHelp();
+});
+const canHover = matchMedia("(hover: hover)");
+document.addEventListener("mouseover", e => {
+  const b = canHover.matches && e.target.closest(".help-tip[data-help]");
+  if(b && helpFor !== b) openHelp(b, false);
+});
+document.addEventListener("mouseout", e => {
+  if(!helpFor || helpPinned || e.target.closest(".help-tip") !== helpFor) return;
+  if(!helpFor.contains(e.relatedTarget)) closeHelp();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape" && helpFor){ const b = helpFor; closeHelp(); b.focus(); } });
+addEventListener("resize", closeHelp);
+
+// Einführung in 4 Schritten: automatisch beim ersten Besuch der Startseite, sonst über Hilfe → «Einführung nochmals zeigen»
+const introDlg = document.getElementById("introDlg");
+const INTRO_KEY = "sff-einfuehrung";
+const introSteps = [...introDlg.querySelectorAll(".intro-step")];
+let introStep = 0;
+function introShow(i){
+  introStep = Math.max(0, Math.min(introSteps.length - 1, i));
+  introSteps.forEach((s, k) => { s.hidden = k !== introStep; });
+  document.getElementById("introBack").hidden = introStep === 0;
+  document.getElementById("introSkip").hidden = introStep === introSteps.length - 1;   // am Schluss gibt es nichts mehr zu überspringen
+  document.getElementById("introNext").textContent = introStep === introSteps.length - 1 ? "Los geht's" : "Weiter";
+}
+function openIntro(){
+  document.getElementById("introHide").checked = true;
+  introShow(0);
+  introDlg.showModal();
+  document.getElementById("introNext").focus();
+}
+const introSeen = () => { try{ return !!localStorage.getItem(INTRO_KEY); }catch(e){ return true; } };
+introDlg.addEventListener("close", () => {
+  try{
+    if(document.getElementById("introHide").checked) localStorage.setItem(INTRO_KEY, "1");
+    else localStorage.removeItem(INTRO_KEY);
+  }catch(e){}
+});
+document.getElementById("introNext").addEventListener("click", () => {
+  if(introStep >= introSteps.length - 1) introDlg.close(); else introShow(introStep + 1);
+});
+document.getElementById("introBack").addEventListener("click", () => introShow(introStep - 1));
+document.getElementById("introSkip").addEventListener("click", () => introDlg.close());
+document.getElementById("introAgain").addEventListener("click", openIntro);
+
 function render(){
   const id = location.hash.replace(/^#\/?/, "");
   const [first, second] = id.split("/");
-  const page = PAGES[id];
+  const pageId = PAGES[id] ? id : first === "spiele" ? "spiele" : null;   // #/spiele/<spiel> springt zum Spiel
+  const page = pageId && PAGES[pageId];
   const cat = page ? null : CATS.find(c => c.id === first);
-  resetView(page ? id : null);
+  resetView(pageId);
   if(page){
     setHead(page.title, page.intro);
-    if(id === "copyright"){ buildCredits(); refresh(); }
-    if(id === "pdf") fillPdfSelect();
-    if(id === "lernapp"){ renderLern(); fillGameSelects(); }
-    if(id === "quiz") fillQuizSelect();
-    if(id === "einstellungen") showVersion();
+    if(pageId === "copyright"){ buildCredits(); refresh(); }
+    if(pageId === "pdf") fillPdfSelect();
+    if(pageId === "lernapp") renderLern();
+    if(pageId === "spiele"){
+      fillGameSelects();
+      const game = second && document.getElementById(second);
+      if(game?.classList.contains("game")) game.scrollIntoView();
+    }
+    if(pageId === "quiz") fillQuizSelect();
+    if(pageId === "einstellungen") showVersion();
     lastCat = null;
     return;
   }
@@ -1602,9 +1718,9 @@ function render(){
     showDaily();
     return;
   }
-  setHead(cat.name, "Mit der Maus auf ein Bild fahren und mit den Pfeilen durch die Bilder und den Steckbrief blättern. "
-    + "Ein Klick vergrössert; dort lässt sich mit Mausrad, Doppelklick oder zwei Fingern zoomen.");
+  setHead(cat.name, "Mit den Pfeilen oder durch Wischen durch Bilder und Steckbrief blättern; ein Tipp aufs Bild vergrössert.");
   grid.append(...cardsOf(cat));
+  showCatBar(cat);
   // Direktlink auf einen Eintrag (#/kategorie/eintrag): Karte zeigen und gross öffnen
   const item = second && cat.items.find(it => slugify(it.n) === second);
   if(item){
@@ -1952,6 +2068,8 @@ loadCats().then(cats => {
   lastData = JSON.stringify(cats);
   window.addEventListener("hashchange", () => { searchEl.value = ""; render(); });
   render();
+  // Einführung nur auf der Startseite, nicht bei Direktlinks (z. B. über einen QR-Code)
+  if(!location.hash.replace(/^#\/?/, "") && !introSeen()) openIntro();
   setupOffline().catch(() => {
     document.getElementById("offlineMsg").textContent = "Der Offline-Speicher ist in diesem Browser nicht verfügbar (z. B. im privaten Fenster).";
   });

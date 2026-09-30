@@ -255,9 +255,48 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
   color:var(--card);font-weight:600;text-decoration:none;white-space:nowrap}
 .quick:hover{opacity:.9}
 .quick svg{width:18px;height:18px;flex:0 0 auto}
-@media (max-width:420px){ .quick{padding:9px 12px} .quick-print{padding:10px} .quick-print span{display:none} }
-/* Ist «Lernen» ausgeblendet (Lernhinweis auf der Übersicht), hat «Drucken» auch auf dem Handy Platz für den Text */
-@media (max-width:420px){ .search-row:has(.quick-learn[hidden]) .quick-print{padding:9px 12px} .search-row:has(.quick-learn[hidden]) .quick-print span{display:inline} }
+/* Unter 560 px steht das Suchfeld allein auf der ersten Zeile, darunter «Lernen», «Spielen», «Drucken» (nur Symbol) und «?» */
+@media (max-width:560px){ .search-row{flex-wrap:wrap} .search{flex:1 0 100%} .quick{padding:9px 14px} .quick-print{padding:10px} .quick-print span{display:none} }
+/* Ist «Lernen» ausgeblendet (Lernhinweis auf der Übersicht), hat «Drucken» Platz für den Text */
+@media (max-width:560px){ .search-row:has(.quick-learn[hidden]) .quick-print{padding:9px 14px} .search-row:has(.quick-learn[hidden]) .quick-print span{display:inline} }
+
+/* «?»-Knöpfe mit kurzer Erklärung (js/index.js openHelp) */
+.help-tip,.page button.help-tip:not(.nav):not(.dot){flex:0 0 auto;display:inline-grid;place-items:center;width:30px;height:30px;padding:0;
+  border:1.5px solid var(--accent);border-radius:50%;background:var(--card);color:var(--accent);font-family:inherit;font-weight:700;font-size:.95rem;line-height:1;cursor:pointer;vertical-align:middle}
+.help-tip:hover,.help-tip[aria-expanded="true"]{background:var(--accent);color:var(--card)}
+.help-tip.help-inline{width:22px;height:22px;font-size:.8rem;cursor:default}
+.help-pop{position:absolute;z-index:30;width:min(320px,calc(100vw - 16px));padding:12px 14px;border-radius:12px;background:var(--card);
+  color:var(--ink);box-shadow:var(--shadow),0 0 0 1px var(--accent-soft);font-size:.92rem;line-height:1.45}
+.help-pop p{margin:4px 0 8px}
+.help-pop a{color:var(--accent);font-weight:600}
+.lern-kasten{display:flex;align-items:center;gap:8px;margin:0 0 6px}
+.page .lern-kasten button.help-tip:not(.nav):not(.dot){width:24px;height:24px;font-size:.8rem}
+
+/* Leiste in der Kategorie: Wege zu den Spielen */
+.cat-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px -54px 0 0}
+.cat-bar-label{color:var(--muted);font-size:.92rem}
+.chip{padding:6px 14px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:.92rem;text-decoration:none}
+.chip:hover{background:var(--accent);color:var(--card)}
+
+/* Spiele-Seite und Hinweis in der LernApp */
+#page-spiele .game:first-child{margin-top:0;padding-top:0;border-top:none}
+.lern-more{margin-top:28px;padding:12px 16px;border-radius:12px;background:var(--accent-soft)}
+.lern-more a{font-weight:600}
+
+/* Einführung beim ersten Besuch */
+.intro-dlg{width:min(520px,calc(100vw - 32px));padding:22px 22px 16px;border:none;border-radius:var(--radius);background:var(--card);
+  color:var(--ink);box-shadow:var(--shadow)}
+.intro-dlg::backdrop{background:rgba(20,30,20,.55)}
+.intro-dlg h2{margin:.2rem 0 .6rem;font-size:1.3rem;color:var(--accent)}
+.intro-dlg p{margin:0 0 .8rem;line-height:1.5}
+.intro-kicker{margin:0!important;color:var(--muted);font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.intro-keep{display:flex;align-items:center;gap:8px;margin:6px 0 12px;color:var(--muted);font-size:.9rem}
+.intro-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.intro-nav button{padding:8px 16px;border:none;border-radius:99px;background:var(--accent);color:var(--card);font:inherit;font-weight:600;cursor:pointer}
+.intro-nav button.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.intro-nav #introSkip{box-shadow:none;padding-left:4px;padding-right:4px;color:var(--muted)}
+.intro-nav #introBack{margin-left:auto}
+.intro-nav #introBack[hidden] + #introNext{margin-left:auto}
 .search{display:block;flex:1 1 auto;min-width:0;width:auto;max-width:none;margin:0;padding:10px 16px;border:1.5px solid var(--accent-soft);
   border-radius:99px;background:var(--card);color:var(--ink);font:inherit}
 .search:focus{outline:none;border-color:var(--accent)}

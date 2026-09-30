@@ -1,3 +1,4 @@
+| 2.9.0 | 30.9.2026 | Besser zurechtfinden: Einführung beim ersten Besuch, «Hilfe» im Menü, «?»-Erklärungen, Spiele auf eigener Seite mit Knopf «Spielen» und Wegen aus jeder Kategorie |
 | 2.8.0 | 30.9.2026 | Zwei neue Spiele am Ende der LernApp: Verwechslungs-Duell (zwei ähnliche Arten, danach der Unterschied) und Steckbrief-Detektiv (Hinweise nacheinander, Punkte fürs frühe Erraten) |
 | 2.7.0 | 30.9.2026 | Memory am Bildschirm am Ende der LernApp: 4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name |
 # Natur und Schweiz – Werdegang der Website
@@ -6,7 +7,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.8.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 30. September 2026 · Version 2.9.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 36 Verwechslungspaare · Tierstimmen für 28 Arten
 
 ---
@@ -18,9 +19,11 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge) und der **Entdeckung des Tages**
   (jeden Tag ein anderer Eintrag aus wechselnden Kategorien, für alle gleich; «Noch eine» zeigt einen weiteren zufälligen Eintrag).
 - **Suche** über alle Kategorien: deutscher Name, lateinischer Name oder Kategorie, ohne Rücksicht auf Umlaute und Grossschreibung.
-- **Knöpfe «Lernen» und «Drucken»** gleich neben der Suche (Übersicht und Kategorien): führen direkt zur LernApp und zum PDF-Druck, damit man diese auch ohne Menü findet.
+- **Knöpfe «Lernen», «Spielen» und «Drucken»** gleich neben der Suche (Übersicht und Kategorien): führen direkt zur LernApp, zu den Spielen und zum PDF-Druck, damit man diese auch ohne Menü findet. Ein «?» daneben erklärt kurz, was die Seite kann.
+- **Einführung beim ersten Besuch:** vier kurze Schritte (Ansehen – Lernen – Spielen – Womit beginnen?), überspringbar, erscheint danach nicht mehr von selbst.
 - **Kategorie** mit einer Karte pro Eintrag: durch die Bilder und den Steckbrief blättern (Pfeile, Punkte, Tastatur).
   Es werden nur die vorhandenen Bilder gezeigt.
+  Unter der Suche führen Knöpfe direkt zu den Spielen mit dieser Kategorie; ein «?» erklärt die Bedienung der Karten.
 - **Direktlink auf jeden Eintrag** (z. B. `#/voegel/amsel`): öffnet die Kategorie, hebt die Karte hervor und zeigt sie gross.
   In der Grossansicht teilt der Knopf «Teilen» diesen Link (auf dem Handy über das Teilen-Menü, sonst in die Zwischenablage).
 - **Verwechslungsgefahr:** Auf der Textseite steht bei ähnlichen Arten «Nicht verwechseln mit …» mit dem Unterschied
@@ -40,13 +43,14 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
     als **Arbeitsblatt** (Bilder mit Nummer und Schreiblinie, Lösungsblatt am Schluss) oder
     als **Memory** zum Ausschneiden (eine Seite Bildkarten, eine Seite Namenskarten).
     Alle Einträge der Kategorie sind angewählt; einzelne lassen sich vor dem Drucken abwählen.
-  - *Einstellungen:* Anleitung zu allen Möglichkeiten der App (aufklappbar nach Themen), Anleitung zum Installieren als App (mit Knopf, wo der Browser das anbietet) und alle Bilder für die Nutzung ohne Internet herunterladen.
+  - *Hilfe:* was die Seite kann, «Womit beginne ich?», die Einführung zum nochmals Ansehen und eine Anleitung zu allen Möglichkeiten (aufklappbar nach Themen).
+  - *Einstellungen:* Anleitung zum Installieren als App (mit Knopf, wo der Browser das anbietet) und alle Bilder für die Nutzung ohne Internet herunterladen.
   - *Admin:* Hinweisseite mit Link, die Verwaltung öffnet sich in einem neuen Tab.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto», «zugeschnitten» und «KI-generiert»).
   - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
     Mehrere **Lernsessions** nebeneinander, jede mit eigenen Kategorien, eigener Farbe und eigenem Fortschritt; umschalten über die farbige Leiste, löschen unter «Lernsessions verwalten».
-    Ganz unten ein **Memory** am Bildschirm: 4 × 4 Karten mit bis zu 8 zufälligen Paaren aus Bild und Name einer Kategorie (oder aller gemischt).
-    Dazu zwei weitere Spiele: das **Verwechslungs-Duell** (welches von zwei ähnlichen Bildern zeigt die gesuchte Art, danach der Unterschied) und der **Steckbrief-Detektiv** (Hinweise nacheinander, wer früh richtig rät, bekommt mehr Punkte).
+    Ein «?» erklärt den Karteikasten mit seinen fünf Fächern.
+  - *Spiele:* **Memory** am Bildschirm (4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name), **Verwechslungs-Duell** (welches von zwei ähnlichen Bildern zeigt die gesuchte Art, danach der Unterschied) und **Steckbrief-Detektiv** (Hinweise nacheinander, wer früh richtig rät, bekommt mehr Punkte); jeweils für eine Kategorie oder alle gemischt.
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -306,6 +310,23 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   vier Namen; je früher die Antwort stimmt, desto mehr Punkte. «Nächster Hinweis» und jede falsche Antwort kosten einen
   Punkt. So wird Wissen über die Arten geübt, nicht nur das Erkennen am Bild.
 - Beide Spiele zählen wie das Memory nicht für den Lernstand.
+
+### 30. September – Besser zurechtfinden (Version 2.9.0)
+
+Ein Kollege aus Bildung und Informatik hat die Seite ausführlich getestet. Sein Fazit: Die Inhalte überzeugen, schwierig
+sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckte er eher zufällig. Darum:
+
+- **Einführung beim ersten Besuch:** Wer die Startseite zum ersten Mal öffnet, sieht vier kurze Schritte: Ansehen, Lernen,
+  Spielen und «Womit beginnen?». Man kann sie überspringen; danach erscheint sie nicht mehr von selbst. Wer über einen
+  Direktlink oder QR-Code kommt, wird nicht unterbrochen.
+- **Hilfe im Menü:** Die Anleitung stand bisher unter «Einstellungen». Sie hat jetzt einen eigenen Menüpunkt «Hilfe» mit
+  einer kurzen Beschreibung der Seite, dem neuen Thema «Womit beginne ich?» und einem Knopf, der die Einführung nochmals zeigt.
+- **«?»-Symbole:** Neben der Suche, in jeder Kategorie und beim Karteikasten der LernApp erklärt ein «?» in wenigen Sätzen,
+  was man hier tun kann. Am Computer erscheint die Erklärung schon beim Darüberfahren.
+- **Spiele mit eigener Seite:** Memory, Duell und Detektiv stehen nicht mehr am Ende der LernApp, sondern auf der Seite
+  «Spiele» (Menü und neuer Knopf «Spielen» neben der Suche). In jeder Kategorie führen Knöpfe direkt zum gewünschten Spiel,
+  die Kategorie ist dann schon gewählt.
+- Auf dem Handy steht das Suchfeld jetzt allein auf der ersten Zeile, damit es trotz der zusätzlichen Knöpfe breit genug bleibt.
 
 ---
 

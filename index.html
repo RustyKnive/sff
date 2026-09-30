@@ -24,9 +24,11 @@
     <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="menu" id="menu" hidden>
       <a class="menu-item" href="#/lernapp">LernApp</a>
+      <a class="menu-item" href="#/spiele">Spiele</a>
       <a class="menu-item" href="#/jetzt">Jetzt zu sehen</a>
       <a class="menu-item" href="#/quiz">Quiz für die Klasse</a>
       <a class="menu-item" href="#/pdf">PDF drucken</a>
+      <a class="menu-item" href="#/hilfe">Hilfe</a>
       <a class="menu-item" href="#/einstellungen">Einstellungen</a>
       <a class="menu-item" href="#/admin">Admin</a>
       <a class="menu-item" href="#/copyright">Copyright</a>
@@ -39,8 +41,12 @@
   <div class="search-row" id="searchRow">
     <input type="search" id="search" class="search" placeholder="Suchen: Name oder lateinischer Name" aria-label="Suchen" autocomplete="off">
     <a class="quick quick-learn" id="quickLearn" href="#/lernapp" title="LernApp: Namen üben mit dem Karteikasten" aria-label="Lernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/><path d="M9 8h6"/></svg><span>Lernen</span></a>
+    <a class="quick quick-play" href="#/spiele" title="Spiele: Memory, Verwechslungs-Duell, Steckbrief-Detektiv" aria-label="Spielen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg><span>Spielen</span></a>
     <a class="quick quick-print" href="#/pdf" title="Steckbriefe, Arbeitsblatt oder Memory als PDF drucken" aria-label="Drucken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg><span>Drucken</span></a>
+    <button type="button" class="help-tip" data-help="start" aria-label="Hilfe: So funktioniert die Seite">?</button>
   </div>
+  <!-- Leiste in einer Kategorie: Wege zu den Spielen mit dieser Kategorie (js/index.js showCatBar) -->
+  <div class="cat-bar" id="catBar" hidden></div>
   <!-- Hinweis der LernApp auf der Übersicht (js/index.js showLernBanner) -->
   <a class="lern-banner" id="lernBanner" href="#/lernapp" hidden></a>
   <!-- Entdeckung des Tages auf der Übersicht (js/index.js showDaily) -->
@@ -48,10 +54,14 @@
 </header>
 <main id="grid"></main>
 
-<!-- Seiten aus dem Menü (Adresse #/lernapp, #/quiz, #/pdf, #/einstellungen, #/admin, #/copyright; #/jetzt nutzt das Raster) -->
+<!-- Seiten aus dem Menü (Adresse #/lernapp, #/spiele, #/quiz, #/pdf, #/hilfe, #/einstellungen, #/admin, #/copyright; #/jetzt nutzt das Raster) -->
 <section class="page" id="page-lernapp" hidden>
   <div id="lern"></div>
-  <!-- Memory am Ende der LernApp (js/index.js memoStart): je Bild und Name eines Eintrags ergeben ein Paar -->
+  <p class="lern-more">Lieber spielerisch üben? <a href="#/spiele">Zu den Spielen: Memory, Verwechslungs-Duell und Steckbrief-Detektiv →</a></p>
+</section>
+<!-- Spiele (#/spiele, #/spiele/<memo|duel|detektiv> springt zum Spiel); zählen nicht für den Lernstand -->
+<section class="page" id="page-spiele" hidden>
+  <!-- Memory (js/index.js memoStart): je Bild und Name eines Eintrags ergeben ein Paar -->
   <div class="game" id="memo">
     <h2>Memory</h2>
     <p>Finde die Paare: Jedes Bild gehört zu einem Namen. Es erscheinen bis zu 8 zufällige Paare aus der gewählten Kategorie.</p>
@@ -125,10 +135,27 @@
     <button type="button" class="ghost" id="pdfAll">Alle</button> <button type="button" class="ghost" id="pdfNone">Keine</button></p>
   <div class="lern-cats" id="pdfItems"></div>
 </section>
-<section class="page" id="page-einstellungen" hidden>
+<section class="page" id="page-hilfe" hidden>
+  <h2>Was kann diese Seite?</h2>
+  <p>Natur und Schweiz zeigt typische Pflanzen, Tiere und Landschaften der Schweiz, jeweils mit Bildern und Steckbrief.
+    Du kannst sie <b>ansehen</b> (Kategorien und Suche), mit einem Karteikasten <b>lernen</b> (LernApp), in drei
+    <b>Spielen</b> üben und für den Unterricht <b>drucken</b>. Bei den <span class="help-tip help-inline" aria-hidden="true">?</span>-Symbolen
+    erscheint jeweils eine kurze Erklärung.</p>
+  <p><button type="button" id="introAgain">Einführung nochmals zeigen</button></p>
   <h2>Anleitung</h2>
   <p>Tippe auf ein Thema, um es aufzuklappen.</p>
   <div class="guide">
+    <details>
+      <summary>Womit beginne ich?</summary>
+      <ol>
+        <li><b>Kategorie wählen:</b> am besten die, die ihr gerade im Unterricht behandelt, oder eine, die dich interessiert.</li>
+        <li><b>Ansehen:</b> Karten durchblättern, Bilder vergrössern, Steckbriefe lesen, bei Tieren die Stimme anhören.</li>
+        <li><b>Lernen:</b> In der LernApp eine Lernsession mit dieser Kategorie starten. Jeden Tag ein paar Minuten reichen;
+          der Karteikasten sagt dir, was heute dran ist.</li>
+        <li><b>Spielen:</b> Zur Abwechslung oder zur Kontrolle Memory, Verwechslungs-Duell oder Steckbrief-Detektiv spielen.</li>
+      </ol>
+      <p>Lehrpersonen finden unter «Drucken» Steckbriefe, Arbeitsblätter und Memory-Karten, im Menü das Beamer-Quiz.</p>
+    </details>
     <details>
       <summary>Kategorien und Einträge ansehen</summary>
       <p>Die Startseite zeigt eine Kachel pro Kategorie, z. B. Bäume, Vögel oder Berge. Ein Tipp öffnet die Kategorie mit
@@ -136,6 +163,8 @@
       <ul>
         <li><b>Blättern:</b> Pfeile links und rechts, die Punkte unten, auf dem Handy wischen, am Computer die Pfeiltasten.</li>
         <li><b>Zurück zur Übersicht:</b> Knopf «Übersicht» oben links oder «Zurück» im Browser.</li>
+        <li><b>Spiele zu dieser Kategorie:</b> Die Knöpfe unter der Suche starten Memory, Duell oder Detektiv gleich mit der
+          geöffneten Kategorie.</li>
       </ul>
     </details>
     <details>
@@ -191,7 +220,14 @@
           Wer mehr will, holt sich «10 weitere neue Begriffe» oder übt frei weiter (zählt nicht).</li>
         <li><b>Dranbleiben:</b> Die Startseite erinnert an fällige Begriffe, und die Serie zählt die Tage in Folge.</li>
         <li>Der Lernstand bleibt nur auf diesem Gerät gespeichert, es braucht kein Konto.</li>
-        <li><b>Memory:</b> Ganz unten auf der Seite der LernApp Kategorie wählen und «Memory starten». Es erscheinen
+      </ul>
+    </details>
+    <details>
+      <summary>Spiele</summary>
+      <p>Knopf «Spielen» neben der Suche oder Menü → «Spiele». Aus einer Kategorie heraus ist sie schon gewählt. Die Spiele
+        zählen nicht für den Lernstand der LernApp, sie üben dasselbe Wissen spielerisch.</p>
+      <ul>
+        <li><b>Memory:</b> Kategorie wählen und «Memory starten». Es erscheinen
           16 Karten mit bis zu 8 zufälligen Paaren aus Bild und Name. Zwei Karten aufdecken: Passen sie, bleiben sie offen,
           sonst drehen sie sich wieder um. «Neues Memory» mischt neue Paare.</li>
         <li><b>Verwechslungs-Duell:</b> Zwei ähnliche Arten stehen nebeneinander (z. B. Fichte und Weisstanne). Tippe auf das
@@ -220,7 +256,7 @@
     <details>
       <summary>Offline und als App</summary>
       <p>Die Seite lässt sich wie eine App installieren und funktioniert auch ohne Internet. Anleitung und Knopf zum
-        Herunterladen aller Bilder stehen weiter unten auf dieser Seite. Neue Inhalte erscheinen, sobald wieder Internet da ist.</p>
+        Herunterladen aller Bilder stehen unter Menü → «Einstellungen». Neue Inhalte erscheinen, sobald wieder Internet da ist.</p>
     </details>
     <details>
       <summary>Für Lehrpersonen</summary>
@@ -233,7 +269,8 @@
       </ul>
     </details>
   </div>
-
+</section>
+<section class="page" id="page-einstellungen" hidden>
   <h2>Als App installieren</h2>
   <p>Die Seite lässt sich wie eine App auf dem Handy, dem Tablet oder dem Computer installieren. Sie öffnet sich dann
     in einem eigenen Fenster ohne Adressleiste und funktioniert auch ohne Internet (am besten zusammen mit «Alle Bilder herunterladen», siehe unten).</p>
@@ -281,6 +318,43 @@
   <h2>Bildnachweis</h2>
   <div id="credits"></div>
 </section>
+
+<!-- Einführung beim ersten Besuch der Startseite (js/index.js openIntro), später über Hilfe → «Einführung nochmals zeigen» -->
+<dialog class="intro-dlg" id="introDlg" aria-labelledby="introTitle">
+  <div class="intro-step">
+    <p class="intro-kicker">1 von 4 · Ansehen</p>
+    <h2 id="introTitle">Willkommen bei Natur und Schweiz</h2>
+    <p>Hier findest du typische Pflanzen, Tiere und Landschaften der Schweiz. Tippe auf eine Kachel, um eine Kategorie
+      zu öffnen: Jede Karte hat bis zu vier Bilder und einen Steckbrief. Die Suche findet Einträge in allen Kategorien.</p>
+  </div>
+  <div class="intro-step" hidden>
+    <p class="intro-kicker">2 von 4 · Lernen</p>
+    <h2>Namen lernen mit dem Karteikasten</h2>
+    <p>Mit «Lernen» öffnest du die LernApp: Sie zeigt ein Bild, und du nennst den Namen. Ein Karteikasten mit fünf Fächern
+      merkt sich, was du schon kannst, und fragt Schwieriges öfter ab. Ein paar Minuten pro Tag reichen.
+      Dein Fortschritt bleibt auf diesem Gerät gespeichert.</p>
+  </div>
+  <div class="intro-step" hidden>
+    <p class="intro-kicker">3 von 4 · Spielen</p>
+    <h2>Spielend üben</h2>
+    <p>Unter «Spielen» warten drei Spiele: <b>Memory</b> (Bild und Name finden), <b>Verwechslungs-Duell</b> (zwei ähnliche
+      Arten unterscheiden) und <b>Steckbrief-Detektiv</b> (aus Hinweisen die Art erraten). In jeder Kategorie führen Knöpfe
+      direkt zu den Spielen mit dieser Kategorie.</p>
+  </div>
+  <div class="intro-step" hidden>
+    <p class="intro-kicker">4 von 4 · Loslegen</p>
+    <h2>Womit beginnen?</h2>
+    <p>Wähle die Kategorie, die ihr gerade im Unterricht behandelt: zuerst die Karten ansehen, dann eine Lernsession
+      starten, zwischendurch spielen. Lehrpersonen finden unter «Drucken» Steckbriefe, Arbeitsblätter und Memory-Karten.</p>
+    <p>Hilfe gibt es jederzeit im Menü unter «Hilfe» und bei den <span class="help-tip help-inline" aria-hidden="true">?</span>-Symbolen.</p>
+  </div>
+  <label class="intro-keep"><input type="checkbox" id="introHide" checked> Nicht mehr automatisch zeigen</label>
+  <div class="intro-nav">
+    <button type="button" class="ghost" id="introSkip">Überspringen</button>
+    <button type="button" class="ghost" id="introBack">Zurück</button>
+    <button type="button" id="introNext" autofocus>Weiter</button>
+  </div>
+</dialog>
 
 <footer>
   Bilder: <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, Urheber und Lizenz unter <a href="#/copyright">Copyright</a>.
