@@ -12,10 +12,11 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 - `css/basis.css` gemeinsame Farben und Grundlagen, `css/index.css`, `css/admin.css` pro Seite
 - `sw.js`, `manifest.webmanifest`, `icons/` Offline-App (siehe unten)
 - `supabase/` Datenbankschema und nummerierte Änderungen
+- `.htaccess` Einstellungen des Webservers (Hostpoint), `tools/hostpoint-paket.ps1` Upload-Paket (siehe «Veröffentlichen»)
 - `docs/TECHNIK.md` technische Umsetzung und Begründungen (Architektur, Sicherheit, Offline, Algorithmen, Tests, Probleme). Bei grösseren technischen Änderungen mitführen.
 - `docs/WERDEGANG.md` Dokumentation für den User: was die Seite kann und wie sie entstanden ist. **Bei jeder neuen Möglichkeit im selben Commit nachführen** (Abschnitt «Was die Seite heute kann», neuer Eintrag unter «Werdegang» mit Datum, bei Bedarf «Bewusste Entscheide», Datenbank-Tabelle und «Stand» mit den aktuellen Zahlen). Für den User geschrieben, nicht für Entwickler: keine Funktionsnamen.
 
-Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (`tools/`) wurden nach der Migration entfernt (in der Git-Geschichte noch vorhanden).
+Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (damals `tools/`) wurden nach der Migration entfernt (in der Git-Geschichte noch vorhanden).
 
 ## Datenmodell (supabase/schema.sql)
 
@@ -112,9 +113,8 @@ Die Anzeige lässt sich installieren (Startbildschirm) und funktioniert ohne Int
 - `sw.js` (Service Worker): Seite und `loadCats()`-Antwort «Netz zuerst» (nach 4 s oder ohne Netz der gespeicherte Stand), Storage-Bilder «Speicher zuerst» im Cache `sff-bilder`. Wikimedia-Fallback wird nicht gespeichert.
 - Anfragen mit `Authorization` (Verwaltung, supabase-js) und `admin.html` laufen nie über den Speicher, damit keine Admin-Daten im Cache landen.
 - Neue Datei für die Anzeige (JS, CSS, Symbol): in `FILES` in `sw.js` eintragen. Der Cache-Name `APP` ergibt sich aus der Website-Version (`sff-app-<version>`, `importScripts("js/version.js")`); mit jeder neuen Version entsteht ein neuer Speicher, alte werden beim Aktivieren gelöscht. Registriert wird mit `updateViaCache:"none"`, damit der Browser auch `js/version.js` ohne Cache auf Änderungen prüft.
-- GitHub Pages erlaubt dem Browser 10 Minuten Zwischenspeicher (`max-age=600`). Darum holt `sw.js` Seite und App-Dateien mit `cache:"no-cache"` (Seitenaufrufe über eine neue `Request` aus der Adresse, weil sich `navigate`-Anfragen nicht mit Optionen kopieren lassen). So sind neue Versionen nach dem Deploy sofort da.
+- `sw.js` holt Seite und App-Dateien mit `cache:"no-cache"` (Seitenaufrufe über eine neue `Request` aus der Adresse, weil sich `navigate`-Anfragen nicht mit Optionen kopieren lassen), zusätzlich setzt `.htaccess` für HTML/JS/CSS `Cache-Control: no-cache`. So sind neue Versionen nach dem Hochladen sofort da.
 - Headless Chrome auf diesem Rechner installiert keine Service Worker (auch die alte `sw.js` nicht, vermutlich Richtlinien des verwalteten Chrome): Service-Worker-Verhalten darum im normalen Browser prüfen (Entwicklertools → Application → Service Workers).
-- Nach einem Push baut GitHub Pages die Seite neu (Aktion «pages build and deployment», meist 1–2 Minuten). Hängt der Build in «queued», stösst ein neuer Push einen frischen an. Stand prüfen: `https://api.github.com/repos/RustyKnive/sff/actions/runs?per_page=1`.
 - Knopf «Alle Bilder herunterladen» unter Menü → Einstellungen: lädt alle eigenen Bilder in `sff-bilder` und entfernt dort ersetzte oder gelöschte.
 - `manifest.webmanifest` und `icons/` (Steinbock, Vorlage `steinbock.svg`; PNG 512 per headless Chrome, 192/180 daraus verkleinert). Neues Symbol immer unter neuem Dateinamen, sonst zeigen Browser das alte weiter.
 
@@ -149,6 +149,14 @@ Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt da
 - Kein eingebetteter Code: kein `<script>` mit Inhalt, kein `<style>`, keine `style="…"`- oder `on…="…"`-Attribute. Die Content-Security-Policy (`<meta>` in beiden HTML-Dateien) erlaubt nur eigene Dateien und blockiert alles andere. Neue externe Quellen (anderes Supabase-Projekt, weitere Bild-Server) dort eintragen. Wikimedia liefert Bilder von `upload.wikimedia.org` und `thumb.wikimedia.org`; beide stehen in der CSP.
 - supabase-js liegt als Datei in `js/lib/` (Version im Dateinamen). Zum Aktualisieren die neue `dist/umd/supabase.min.js` von jsDelivr herunterladen und den Pfad in `admin.html` anpassen.
 - Links aus Daten (z. B. «Quelle») nur mit `http(s)://` verwenden; die Datenbank prüft das zusätzlich.
+
+## Veröffentlichen (seit 2.4.1, Hostpoint)
+
+- Die Seite läuft auf dem Webspace des Users bei Hostpoint: **https://je-net.ch/sff/** (Ordner `sff/`, Apache). Supabase bleibt Datenbank und Bildspeicher; alle Pfade im Code sind relativ, darum ist keine Adresse fest eingetragen.
+- Ablauf: committen und pushen (Repo = Quelle und Sicherung), dann `powershell -File tools/hostpoint-paket.ps1` → Ordner `..\sff-upload` (neben dem Repo, nicht im Repo). Der User lädt dessen Inhalt selbst per SFTP hoch (Dateien überschreiben); keine Zugangsdaten in dieser Sitzung oder im Repo. Danach die Version auf der Seite prüfen (Einstellungen → Version).
+- Hochgeladen werden nur `index.html`, `admin.html`, `config.js`, `sw.js`, `manifest.webmanifest`, `.htaccess`, `css/`, `js/`, `icons/`. Neue Datei oder neuer Ordner, den die Seite braucht → im Skript ergänzen. Gelöschte Dateien auf dem Webspace von Hand entfernen.
+- `.htaccess`: HTTPS erzwingen, keine Ordnerlisten, `nosniff`, nicht einbettbar (`frame-ancestors` geht nicht im Meta-CSP), `no-cache` für HTML/JS/CSS, Symbole 30 Tage.
+- GitHub Pages (`https://rustyknive.github.io/sff/`) liefert seit dem Umzug den Branch `gh-pages` aus: nur eine Weiterleitung auf die neue Adresse (mit `#/…`, damit Direktlinks und gedruckte QR-Codes weiter funktionieren) und eine `sw.js`, die den alten Service Worker samt Speicher entfernt. Der Branch `main` wird nicht mehr von GitHub Pages ausgeliefert.
 
 ## Versionierung (seit 2.0.0)
 

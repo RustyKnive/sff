@@ -31,7 +31,7 @@ Vier Vorgaben haben fast jeden technischen Entscheid geprägt:
               Supabase (Gratis-Stufe)
               Postgres · Storage «bilder» · Auth (TOTP)
                        ▲
- GitHub Pages ─ liefert die statischen Dateien aus
+ Webspace Hostpoint (je-net.ch/sff/) ─ liefert die statischen Dateien aus
  GitHub Actions ─ fragt die Datenbank täglich ab (Wachhalten)
  Wikimedia Commons ─ Quelle für Bilder und Tierstimmen
  claude.ai ─ Texte für neue Inhalte (Kopieren und Einfügen)
@@ -132,7 +132,7 @@ Ein Service Worker (`sw.js`) macht die Anzeige installierbar und offline nutzbar
 
 | Inhalt | Strategie | Begründung |
 |---|---|---|
-| Seite, Skripte, Styles | Netz zuerst, `cache:"no-cache"` | neue Versionen sofort; GitHub Pages erlaubt sonst 10 Minuten Browser-Cache |
+| Seite, Skripte, Styles | Netz zuerst, `cache:"no-cache"` | neue Versionen sofort, auch wenn der Webserver Browser-Cache erlaubt (GitHub Pages: 10 Minuten; Hostpoint: `.htaccess` setzt `no-cache`) |
 | Daten (die eine Anfrage) | Netz zuerst, nach 4 s der gespeicherte Stand | schlechtes Netz auf Exkursion soll nicht blockieren |
 | eigene Bilder | Speicher zuerst | Bilder ändern ihren Pfad bei jeder Änderung, ein gespeichertes Bild ist also nie veraltet |
 | Tierstimmen (MP3) | nicht gespeichert | Browser laden Audio mit Range-Anfragen, die der Cache nicht bedienen kann |
@@ -256,7 +256,7 @@ Erfahrungen damit:
 | Problem | Ursache | Lösung |
 |---|---|---|
 | Wikimedia antwortet mit HTTP 429 | zu viele Anfragen, eine Klasse hinter einer Adresse | Warteschlange (3 API-Anfragen, 4 Downloads gleichzeitig), Wiederholen mit wachsender Wartezeit, eigene Bildkopien |
-| Neue Version erst nach Minuten sichtbar | GitHub Pages erlaubt 10 Minuten Browser-Cache | Service Worker holt App-Dateien mit `cache:"no-cache"` |
+| Neue Version erst nach Minuten sichtbar | GitHub Pages erlaubte 10 Minuten Browser-Cache | Service Worker holt App-Dateien mit `cache:"no-cache"` |
 | «Zurück» verliess die Kategorie statt die Grossansicht zu schliessen | Dialog ohne eigenen Verlaufseintrag | `history.pushState` beim Öffnen, `popstate` schliesst |
 | Link in «Nicht verwechseln mit» schloss die neue Grossansicht gleich wieder | das `close`-Ereignis des alten Dialogs kommt verzögert | Handler bricht ab, wenn der Dialog schon wieder offen ist |
 | Grossansicht zeigte bei Einträgen mit Tierstimme nur den Text | `showModal()` fokussiert das erste Bedienelement (auf der Textseite), der Browser scrollt dorthin | Fokus auf «Schliessen» (`autofocus`), Karussell setzt `scrollLeft` zurück und blättert bei Fokus zur richtigen Seite |

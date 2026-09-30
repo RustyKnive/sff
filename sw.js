@@ -38,7 +38,7 @@ self.addEventListener("fetch", e => {
     const path = url.pathname.slice(new URL(self.registration.scope).pathname.length);
     if(req.mode === "navigate" ? (path === "" || path === "index.html") : FILES.includes(path)){
       // «no-cache»: beim Server nachfragen statt die bis zu 10 Minuten alte Kopie aus dem Browser-Speicher
-      // zu nehmen (GitHub Pages: max-age=600). Unverändert antwortet er kurz mit 304.
+      // zu nehmen (falls der Webserver Zwischenspeichern erlaubt). Unverändert antwortet er kurz mit 304.
       // Seitenaufrufe (navigate) lassen sich nicht mit neuen Optionen kopieren, darum neu aus der Adresse.
       const fresh = req.mode === "navigate"
         ? new Request(req.url, { cache:"no-cache", credentials:"same-origin" })

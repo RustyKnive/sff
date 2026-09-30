@@ -66,7 +66,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 ### Technik in Kürze
 
 - Reines HTML, CSS und JavaScript ohne Build; die Anzeige kommt ohne Bibliotheken aus.
-- Daten und Bilder in **Supabase** (Postgres-Datenbank und Speicher); gehostet auf GitHub Pages.
+- Daten und Bilder in **Supabase** (Postgres-Datenbank und Speicher); seit 30.9.2026 auf dem eigenen Webspace bei Hostpoint (https://je-net.ch/sff/), vorher auf GitHub Pages.
 - Schreiben dürfen nur Admins mit zweitem Faktor (Row Level Security). Strenge Content-Security-Policy:
   Die Seiten laden nur eigene Dateien und die erlaubten Quellen.
 - **Wachhalten:** Ein kostenloses Supabase-Projekt schläft nach etwa einer Woche ohne Zugriff ein. Eine automatische
@@ -252,6 +252,16 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   und OpenAI überlässt die Rechte der Person, die sie erzeugt. Ein Copyright-Vermerk ist darum nicht vorgeschrieben,
   die Kennzeichnung sorgt aber für Transparenz.
 
+### 30. September – Eigener Webspace (Version 2.4.1)
+
+- **Neue Adresse:** Die Seite läuft neu unter https://je-net.ch/sff/ auf dem eigenen Webspace bei Hostpoint. Die Datenbank
+  und die Bilder bleiben in Supabase, an Inhalten und Funktionen ändert sich nichts.
+- **Alte Adresse leitet weiter:** Wer die alte Adresse auf GitHub Pages aufruft, auch über einen gedruckten QR-Code oder
+  einen Direktlink zu einem Eintrag, landet automatisch an derselben Stelle der neuen Seite. Die installierte App muss
+  man einmal von der neuen Adresse aus neu installieren.
+- **Einstellungen des Webservers:** Die Seite erzwingt HTTPS, lässt sich nicht in fremde Seiten einbetten, und neue
+  Versionen sind nach dem Hochladen sofort sichtbar.
+
 ---
 
 ## Versionen
@@ -264,6 +274,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 2.2.0 | 29.9.2026 | PDF: einzelne Einträge abwählen; keine feste Zahl von 16 Einträgen und keine Themenprüfung mehr beim Anlegen mit Claude |
 | 2.3.0 | 29.9.2026 | «Anderes Bild suchen» zeigt Vorschläge zur Auswahl unter den 4 Bildern des Eintrags, auch aus den gemeldeten Bildern |
 | 2.4.0 | 29.9.2026 | KI-generierte Bilder im Bildnachweis und im Druck gekennzeichnet (Datenbank-Version 17) |
+| 2.4.1 | 30.9.2026 | Umzug auf den eigenen Webspace bei Hostpoint (https://je-net.ch/sff/), alte Adresse leitet weiter; Datenbank bleibt in Supabase |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -283,6 +294,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | Anzahl Einträge pro Kategorie frei (bis 2.1.0 genau 16) | beim Drucken lassen sich einzelne Einträge abwählen; 16 ergeben weiterhin 2 volle A4-Seiten |
 | Schweizer Rechtschreibung (immer «ss») | Zielpublikum Schweizer Schulen |
 | Wachhalten über GitHub Actions statt bezahltem Supabase-Plan | kostenlos; die Abfrage liest nur öffentliche Daten mit dem öffentlichen Schlüssel |
+| Eigener Webspace, Datenbank bleibt in Supabase | eigene Adresse und eigene Einstellungen des Webservers; die Datenbank samt Verwaltung und Anmeldung müsste sonst neu gebaut werden |
 | Sicherung als Datei aus der Verwaltung | die kostenlose Supabase-Stufe hat keine automatischen Sicherungen zum Herunterladen |
 | Tierstimmen als MP3 im eigenen Speicher | spielt in allen Browsern, unabhängig von Wikimedia; nicht im Offline-Speicher, weil Browser Töne stückweise laden |
 | Versionsnummern für Website und Datenbank, Prüfung beim Start | eine neue Website mit veralteter Datenbank ist der gefährlichste Fehler; so wird er sofort und verständlich gemeldet |

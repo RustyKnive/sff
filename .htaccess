@@ -1,0 +1,29 @@
+# Einstellungen für den Webspace bei Hostpoint (Apache), gilt nur für den Ordner /sff/.
+# GitHub Pages beachtet diese Datei nicht.
+
+Options -Indexes
+
+# Immer über HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+AddType application/manifest+json .webmanifest
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # Nicht in fremde Seiten einbetten (frame-ancestors geht nicht im CSP-Meta-Tag)
+  Header always set Content-Security-Policy "frame-ancestors 'none'"
+  Header always set X-Frame-Options "DENY"
+
+  # Seite, Skripte, Stile: immer beim Server nachfragen (unverändert = kurze Antwort 304),
+  # damit eine neue Version nach dem Hochladen sofort da ist.
+  <FilesMatch "\.(html|js|css|webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  # Symbole bekommen bei jeder Änderung einen neuen Dateinamen, dürfen also lange im Speicher bleiben.
+  <FilesMatch "\.(png|svg)$">
+    Header set Cache-Control "max-age=2592000"
+  </FilesMatch>
+</IfModule>
