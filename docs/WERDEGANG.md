@@ -1,3 +1,4 @@
+| 2.11.1 | 30.9.2026 | Feld mit dem Lernziel so breit wie Suchzeile und Karten, am Computer und auf dem Handy |
 | 2.11.0 | 30.9.2026 | Lernziel oben in jeder Kategorie, 37 weitere Verwechslungspaare (Datenbank-Version 19) |
 | `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
 | 2.10.0 | 30.9.2026 | Lernfortschritt auf den Kacheln der Startseite: Ring mit «6/16» bzw. «✓ gelernt» über alle Lernsessions |
@@ -10,7 +11,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.11.0 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 30. September 2026 · Version 2.11.1 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
 
 ---

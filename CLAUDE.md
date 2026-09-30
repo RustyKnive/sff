@@ -20,7 +20,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (damals `tools/`
 
 ## Datenmodell (supabase/schema.sql)
 
-- `categories`: `id` (Slug, gleichzeitig die Adresse `#/<id>`), `name`, `description`, `goal` (Lernziel, ein Satz ohne Anzahl, höchstens 300 Zeichen, 019; steht oben in der Kategorie als `header p.goal` «Lernziel: …», leer = kurzer Bedienhinweis), `latin` (true → Untertitel kursiv als lateinischer Name), `labels` (4 Bildbeschriftungen), `cover_entry_id` (Eintrag für die Übersichtskachel), `sort`.
+- `categories`: `id` (Slug, gleichzeitig die Adresse `#/<id>`), `name`, `description`, `goal` (Lernziel, ein Satz ohne Anzahl, höchstens 300 Zeichen, 019; steht oben in der Kategorie als `header p.goal` «Lernziel: …», mit `margin-right:-54px` so breit wie Suchzeile und Raster, leer = kurzer Bedienhinweis), `latin` (true → Untertitel kursiv als lateinischer Name), `labels` (4 Bildbeschriftungen), `cover_entry_id` (Eintrag für die Übersichtskachel), `sort`.
 - `entries`: `category_id`, `name`, `subtitle`, `description`, `facts` (jsonb-Array `[{k, v}]`, damit die Reihenfolge erhalten bleibt), `search_terms` (Suchbegriffe für Bilder 2–4), `wp` (englischer Wikipedia-Titel für das Hauptbild), `labels` (optional eigene 4 Beschriftungen), `empty_slots` (bewusst leere Bildplätze 1–4, 013), `confusions` und `sound_*` (Verwechslungsgefahr und Tierstimme, 014), `sort`.
 - `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»), `thumb_x`/`thumb_y`/`thumb_zoom` (Ausschnitt der Vorschau, siehe Verwaltung), `edited` (zugeschnitten). Position 1 ist das Hauptbild.
 - `admins`: `user_id`. Nur wer hier eingetragen ist, darf schreiben (`is_admin()`). Alle dürfen lesen.

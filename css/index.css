@@ -282,7 +282,7 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .page .lern-kasten button.help-tip:not(.nav):not(.dot){width:24px;height:24px;font-size:.8rem}
 
 /* Lernziel oben in der Kategorie (019) */
-header p.goal{max-width:760px;margin-top:10px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);color:var(--ink)}
+header p.goal{max-width:none;margin:10px -54px 0 0;padding:10px 14px;border-radius:12px;background:var(--accent-soft);color:var(--ink)}
 header p.goal b{color:var(--accent)}
 
 /* Leiste in der Kategorie: Wege zu den Spielen */
