@@ -60,13 +60,14 @@ async function reload(){
   renderSidebar();
 }
 
-/* Gemeldete Bilder (016): Meldungen aus der Anzeige («Melden» in der Grossansicht).
+/* Gemeldete Bilder (016) und Textfehler (018): Meldungen aus der Anzeige («Melden» bzw. «Fehler im Text melden» in der Grossansicht).
    Fehlt die Tabelle (Datenbank älter als 016), bleibt die Liste einfach leer. */
 let reports = [];
 async function loadReports(){
   const { data, error } = await sb.from("image_reports").select("*").order("last_at", { ascending:false });
   reports = error ? [] : data;
 }
+// Platz 1–4 = Bild, Platz 0 = Fehler im Text (018)
 const slotReports = (e, p) => reports.filter(r => r.entry_id === e.id && r.position === p);
 // Meldung ist veraltet, wenn am Platz inzwischen ein anderes Bild steht
 const reportStale = (e, r) => (e.images.find(i => i.position === r.position)?.storage_path ?? null) !== r.storage_path;
@@ -749,6 +750,8 @@ function renderEntry(cat, entry){
     <p class="hint"><a href="#/k/${esc(cat.id)}">← ${esc(cat.name)}</a></p>
     <h2>${isNew ? "Neuer Eintrag" : esc(e.name)}</h2>
     ${aiReport ? `<p class="ai-verdict ${aiReport.isErr ? "warn" : ""}">${esc(aiReport.text)}</p>` : ""}
+    ${isNew ? "" : slotReports(e, 0).map(r => `<p class="report-note">⚑ Fehler im Text gemeldet (Nr. ${r.id}): ${esc(reportText(r))}
+      <button type="button" class="ghost small" id="textReportDone">Meldung erledigt</button></p>`).join("")}
     <form id="entryForm">
       ${isNew ? `<div class="ai">
         <h3>Mit Claude ausfüllen</h3>
@@ -835,6 +838,10 @@ function renderEntry(cat, entry){
   const F = form.elements;
   const facts = $("facts");
   $("addFact").addEventListener("click", () => facts.insertAdjacentHTML("beforeend", factRow()));
+  $("textReportDone")?.addEventListener("click", async () => {
+    await act(() => clearReports(e, 0), "Meldung erledigt.").catch(() => {});
+    render();
+  });
   facts.addEventListener("click", ev => { if(ev.target.closest("[data-delfact]")) ev.target.closest(".fact").remove(); });
   F.ownLabels.addEventListener("change", () => { $("labelRow").hidden = !F.ownLabels.checked; });
   const confusions = $("confusions");
@@ -1443,9 +1450,13 @@ function render(){
   const todo = cats.flatMap(c => c.entries.filter(e => openSlots(e).length).map(e => ({ cat:c, e })));
   const missing = todo.reduce((s, t) => s + openSlots(t.e).length, 0);
   const empty = cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + (e.empty_slots || []).length, 0), 0);
-  const reported = reports.map(r => {
+  const reported = reports.filter(r => r.position > 0).map(r => {
     const f = findEntry(r.entry_id);
     return f && { r, cat:f.cat, e:f.entry, img:f.entry.images.find(i => i.position === r.position) };
+  }).filter(Boolean);
+  const textReported = reports.filter(r => r.position === 0).map(r => {
+    const f = findEntry(r.entry_id);
+    return f && { r, cat:f.cat, e:f.entry };
   }).filter(Boolean);
   main.innerHTML = `<h2>Übersicht</h2>
     ${schemaMissing() ? `<p class="warn"><b>Datenbank-Update fehlt:</b> Die Datenbank ist auf Version ${dbSchema || "14 oder älter"},
@@ -1469,6 +1480,19 @@ function render(){
           </div>
         </div></div>`).join("")}</div>`
     : `<p class="hint">Keine offenen Meldungen. Besucherinnen und Besucher können in der Grossansicht mit «Melden» auf ein unpassendes Bild hinweisen.</p>`}
+    <h3>Gemeldete Textfehler${textReported.length ? ` (${textReported.length})` : ""}</h3>
+    ${textReported.length ? `<p class="hint">Auf der Textseite der Grossansicht lässt sich ein Fehler in Beschreibung, Steckbrief
+      oder Verwechslungsgefahr melden. Die Meldenden sehen die Nummer der Meldung und können sie vorweisen.
+      Weitere Meldungen zum selben Eintrag zählen hoch und hängen ihren Text an.</p>
+      <div class="reports">${textReported.map(({ r, cat, e }) => `<div class="report-row text-row">
+        <div>
+          <b>Nr. ${r.id}</b> · <b><a href="#/e/${esc(e.id)}">${esc(e.name)}</a></b> <small>(${esc(cat.name)})</small>
+          <p class="hint">${esc(reportText(r))}</p>
+          <div class="slot-actions">
+            <button type="button" class="ghost small" data-tdone="${r.id}">Erledigt</button>
+          </div>
+        </div></div>`).join("")}</div>`
+    : `<p class="hint">Keine offenen Meldungen. Auf der Textseite der Grossansicht lässt sich mit «Fehler im Text melden» auf einen Fehler hinweisen.</p>`}
     <h3>Eigene Bilder</h3>
     ${todo.length || bulk ? `
       <p>Bei ${todo.length} ${todo.length === 1 ? "Eintrag" : "Einträgen"} ${missing === 1 ? "fehlt 1 Bild" : `fehlen insgesamt ${missing} Bilder`}.</p>
@@ -1499,6 +1523,11 @@ function render(){
   main.querySelectorAll("[data-rdone]").forEach(b => b.addEventListener("click", async () => {
     const { e, r } = reported.find(x => x.r.id === +b.dataset.rdone);
     await act(() => clearReports(e, r.position), "Meldung erledigt.").catch(() => {});
+    render();
+  }));
+  main.querySelectorAll("[data-tdone]").forEach(b => b.addEventListener("click", async () => {
+    const { e } = textReported.find(x => x.r.id === +b.dataset.tdone);
+    await act(() => clearReports(e, 0), "Meldung erledigt.").catch(() => {});
     render();
   }));
   main.querySelectorAll("[data-rother]").forEach(b => b.addEventListener("click", () => {

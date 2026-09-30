@@ -27,6 +27,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Lightbox:** Ein Klick zeigt Bilder und Text bildschirmfüllend. Bilder lassen sich zoomen
   (Mausrad, Doppelklick, zwei Finger, Tasten `+` `-` `0`), vergrössert verschieben und auf dem Handy wischen.
   Passt ein Bild nicht, meldet der Knopf «Melden» es an die Verwaltung (freiwillig mit kurzer Begründung, ohne Namen).
+  Einen Fehler im Text meldet der Knopf «Fehler im Text melden» auf der Textseite (mit kurzer Beschreibung, ohne Namen);
+  die Meldenden sehen danach eine Nummer, mit der sie den gefundenen Fehler bei der Lehrperson vorweisen können.
 - **Menü:**
   - *Jetzt zu sehen:* was laut Steckbrief in diesem Monat blüht, fliegt, wächst oder laicht, nach Kategorien geordnet.
   - *Quiz für die Klasse:* Bilder einer Kategorie bildschirmfüllend für den Beamer, pro Eintrag wechseln die Bilder alle 2 Sekunden; Leertaste zeigt die Lösung,
@@ -62,6 +64,8 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Gemeldete Bilder:** Die Übersicht listet die Meldungen aus der Grossansicht mit Vorschau, Anzahl und Begründung;
   «Anderes Bild suchen» wechselt zum Eintrag mit allen 4 Bildern und zeigt dort Vorschläge zur Auswahl, «Erledigt» schliesst die Meldung. Beim Bildplatz im Eintrag steht die Meldung ebenfalls.
   Ein neues Bild oder «Bild entfernen» erledigt sie automatisch.
+- **Gemeldete Textfehler:** eigene Liste in der Übersicht mit Nummer, Eintrag, Anzahl und Beschreibung; «Erledigt»
+  schliesst die Meldung. Im Eintrag steht die Meldung oben, mit «Meldung erledigt».
 - **Sicherung:** Ein Knopf lädt alle Kategorien, Einträge und Bildangaben als Datei herunter.
 
 ### Technik in Kürze
@@ -270,6 +274,15 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   Kategorie heraus ist diese beim Drucken schon gewählt. Auf schmalen Handys bleibt «Lernen» beschriftet (ab 2.5.1),
   «Drucken» zeigt nur das Symbol, das Suchfeld wird dafür etwas schmaler.
 
+### 30. September – Fehler im Text melden (Version 2.6.0)
+
+- **Fehler finden lohnt sich:** Die Seite soll auch in anderen Fächern eingesetzt werden, darum müssen die Inhalte stimmen.
+  Für gefundene Fehler gibt es einen kleinen Preis. Bisher liessen sich nur Bilder melden; neu hat die Textseite der
+  Grossansicht den Knopf «Fehler im Text melden». Man beschreibt, was falsch ist und wie es richtig wäre.
+- **Nummer statt Name:** Nach dem Melden erscheint gross eine Nummer. Damit können Schülerinnen und Schüler den Fund bei
+  der Lehrperson vorweisen, ohne dass ihr Name in der Datenbank landet.
+- **In der Verwaltung:** Die Übersicht hat eine eigene Liste «Gemeldete Textfehler»; im Eintrag steht die Meldung oben.
+
 ---
 
 ## Versionen
@@ -285,6 +298,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 2.4.1 | 30.9.2026 | Umzug auf den eigenen Webspace bei Hostpoint (https://je-net.ch/sff/), alte Adresse leitet weiter; Datenbank bleibt in Supabase |
 | 2.5.0 | 30.9.2026 | Knöpfe «Lernen» und «Drucken» neben der Suche, damit LernApp und PDF-Druck ohne Menü zu finden sind |
 | 2.5.1 | 30.9.2026 | Auf dem Handy bleibt der Knopf «Lernen» beschriftet, das Suchfeld wird dafür schmaler |
+| 2.6.0 | 30.9.2026 | Fehler im Text melden: Knopf auf der Textseite, Meldungsnummer für die Meldenden, Liste «Gemeldete Textfehler» in der Verwaltung (Datenbank-Version 18) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -329,6 +343,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `015_versionierung.sql` | Die Datenbank kennt ihre Version (Tabelle `app_meta`), damit Website und Datenbank zusammenpassen |
 | `016_bildmeldungen.sql` | Meldungen zu unpassenden Bildern (Tabelle `image_reports`, Funktion zum Melden ohne Anmeldung) |
 | `017_ki_bilder.sql` | Kennzeichnung der 19 mit ChatGPT erzeugten Infografiken (Wetterphänomene) |
+| `018_textmeldungen.sql` | Meldungen zu Fehlern im Text (Platz 0 in `image_reports`, Funktion `report_text` mit Meldungsnummer) |
 
 ## Offen und geplant
 

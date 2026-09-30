@@ -152,6 +152,7 @@ audio{display:block;width:100%;max-width:420px;margin:4px 0}
   border-left:4px solid var(--warn);border-radius:10px;font-size:.9rem}
 .report-row .thumb{margin:0}
 .report-row .hint{margin:4px 0 8px}
+.report-row.text-row{grid-template-columns:1fr}
 @media (max-width:520px){ .report-row{grid-template-columns:1fr} }
 .report-note{margin:0 0 8px;padding:6px 8px;border-radius:8px;border-left:4px solid var(--warn);background:var(--accent-soft);
   font-size:.78rem;color:var(--warn)}

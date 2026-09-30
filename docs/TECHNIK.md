@@ -123,6 +123,8 @@ Creative-Commons-Lizenzen einen Hinweis auf Änderungen verlangen. Der Bildnachw
   Eintrag und Bildnummer, kürzt den Grund auf 200 Zeichen, fasst wiederholte Meldungen zu einer Zeile zusammen und nimmt
   ab 500 offenen Meldungen nichts mehr an. So kann niemand die Datenbank vollschreiben oder fremde Meldungen lesen. Die
   Verwaltung zeigt den Grund nur über `esc()`.
+- **Textmeldungen (018):** `report_text()` funktioniert gleich (Beschreibung Pflicht, höchstens 300 Zeichen, gleicher
+  Eintrag zählt hoch, gemeinsame Grenze von 500 offenen Meldungen) und gibt nur die Nummer der eigenen Meldung zurück.
 - **Keine Admin-Daten im Offline-Speicher:** Anfragen mit `Authorization` und die Verwaltung selbst umgehen den Service Worker.
 - **Datenschutz:** keine Konten für Lernende, kein Tracking, keine Cookies. Der Lernstand liegt nur im `localStorage` des Geräts.
 

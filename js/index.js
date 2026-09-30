@@ -191,6 +191,8 @@ function slidesHtml(cat, item, labels, big){
         const hit = findByName(c.name);
         return `<p>${hit ? `<a href="${entryLink(hit.cat, hit.item)}">${esc(c.name)}</a>` : `<b>${esc(c.name)}</b>`}: ${esc(c.diff)}</p>`;
       }).join("")}</div>` : ""}
+      ${big ? `<p class="text-report"><button class="report-text" data-report-text title="Stimmt etwas im Text nicht? Hier melden.">${
+        reported.has(item.id + "-t") ? "✓ Fehler gemeldet" : "⚑ Fehler im Text melden"}</button></p>` : ""}
     </div></div>`;
 }
 function controlsHtml(item, labels){
@@ -337,6 +339,10 @@ function openLightbox(cat, item, start){
     ev.stopPropagation();
     openReport(item, +b.dataset.report, labels, b);
   }));
+  root.querySelector("[data-report-text]").addEventListener("click", ev => {
+    ev.stopPropagation();
+    openTextReport(item, ev.currentTarget);
+  });
   document.body.classList.add("lb-open");
   lightbox.showModal();
   // Eigener Verlaufseintrag (gleiche Adresse): «Zurück» schliesst nur die Lightbox
@@ -417,6 +423,57 @@ function openReport(item, k, labels, btn){
 }
 // Klick neben das Fenster schliesst es
 reportDlg.addEventListener("click", e => { if(e.target === reportDlg) reportDlg.close(); });
+
+/* Fehler im Text melden (Knopf unten auf der Textseite der Lightbox): Beschreibung ist Pflicht, gespeichert über
+   report_text (018) in derselben Tabelle wie die Bildmeldungen (Platz 0). Die Datenbank gibt eine Nummer zurück;
+   sie bleibt im Fenster stehen, damit Lernende einen gefundenen Fehler bei der Lehrperson vorweisen können. */
+function openTextReport(item, btn){
+  const key = item.id + "-t";
+  if(reported.has(key)){ toast("Für diesen Eintrag hast du schon einen Fehler gemeldet. Danke!"); return; }
+  reportDlg.innerHTML = `
+    <h2 id="reportTitle">Fehler im Text melden</h2>
+    <p>Stimmt etwas in der Beschreibung, im Steckbrief oder bei der Verwechslungsgefahr von <b>${esc(item.n)}</b> nicht?
+      Die Meldung geht ohne Namen an die Verwaltung.</p>
+    <label>Was ist falsch, und wie wäre es richtig?
+      <textarea maxlength="300" rows="4" placeholder="z. B. Die Blütezeit ist April bis Juni, nicht März."></textarea></label>
+    <div class="report-btns">
+      <button type="button" class="ghost" data-act="cancel">Abbrechen</button>
+      <button type="button" data-act="send">Melden</button>
+    </div>`;
+  const input = reportDlg.querySelector("textarea");
+  const send = async () => {
+    const reason = input.value.trim();
+    if(reason.length < 3){ toast("Bitte kurz beschreiben, was nicht stimmt."); input.focus(); return; }
+    const b = reportDlg.querySelector("[data-act=send]");
+    b.disabled = true;
+    try{
+      const r = await fetch(CFG.url + "/rest/v1/rpc/report_text", {
+        method:"POST",
+        headers:{ apikey:CFG.key, "Content-Type":"application/json" },
+        body:JSON.stringify({ p_entry:item.id, p_reason:reason })
+      });
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      const nr = await r.json();
+      reported.add(key);
+      btn.textContent = "✓ Fehler gemeldet";
+      reportDlg.innerHTML = `
+        <h2 id="reportTitle">Danke!</h2>
+        <p>Deine Meldung zu <b>${esc(item.n)}</b> ist angekommen.</p>
+        <p class="report-nr">Meldung Nr. ${esc(nr)}</p>
+        <p>Merke dir die Nummer, falls deine Lehrperson danach fragt.</p>
+        <div class="report-btns"><button type="button" data-act="cancel">Schliessen</button></div>`;
+      reportDlg.querySelector("[data-act=cancel]").addEventListener("click", () => reportDlg.close());
+      reportDlg.querySelector("[data-act=cancel]").focus();
+    }catch(e){
+      b.disabled = false;
+      toast(navigator.onLine ? "Melden hat nicht geklappt. Bitte später nochmals versuchen." : "Melden geht nur mit Internet.");
+    }
+  };
+  reportDlg.querySelector("[data-act=cancel]").addEventListener("click", () => reportDlg.close());
+  reportDlg.querySelector("[data-act=send]").addEventListener("click", send);
+  reportDlg.showModal();
+  input.focus();
+}
 
 /* Zoomen (Lightbox und LernApp): Mausrad, Doppelklick bzw. doppelt tippen, zwei Finger.
    Vergrössert lässt sich das Bild ziehen; Wischen blättert nur ungezoomt (onSwipe).
