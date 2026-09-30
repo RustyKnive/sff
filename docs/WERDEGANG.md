@@ -1,3 +1,4 @@
+| 2.12.0 | 30.9.2026 | Farbe als Leitsystem: Lernen Petrolblau, Spielen Sonnengelb, Grundfarbe Grün |
 | 2.11.2 | 30.9.2026 | Memory: lange Namen (z. B. Alpenschneehuhn) werden kleiner gesetzt statt mitten im Wort umgebrochen |
 | 2.11.1 | 30.9.2026 | Feld mit dem Lernziel so breit wie Suchzeile und Karten (Computer und Handy) und in eigenem, frischem Grün mit Strich links, damit es auffällt |
 | 2.11.0 | 30.9.2026 | Lernziel oben in jeder Kategorie, 37 weitere Verwechslungspaare (Datenbank-Version 19) |
@@ -12,7 +13,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.11.2 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 30. September 2026 · Version 2.12.0 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
 
 ---
@@ -55,6 +56,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
     Mehrere **Lernsessions** nebeneinander, jede mit eigenen Kategorien, eigener Farbe und eigenem Fortschritt; umschalten über die farbige Leiste, löschen unter «Lernsessions verwalten».
     Ein «?» erklärt den Karteikasten mit seinen fünf Fächern.
+  - *Farbe als Leitsystem:* Lernen in Petrolblau, Spielen in Sonnengelb, alles andere in Grün, das Lernziel in Maigrün.
   - *Spiele:* **Memory** am Bildschirm (4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name), **Verwechslungs-Duell** (welches von zwei ähnlichen Bildern zeigt die gesuchte Art, danach der Unterschied) und **Steckbrief-Detektiv** (Hinweise nacheinander, wer früh richtig rät, bekommt mehr Punkte); jeweils für eine Kategorie oder alle gemischt.
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
@@ -353,6 +355,18 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Verwechslungs-Duell 71 statt 34 Paare. Bei Bergen, Gewässern, Sehenswürdigkeiten und Naturwundern gibt es bewusst keine,
   weil dort kaum echte Verwechslungen vorkommen.
 - Auf dem Handy steht das Suchfeld jetzt wirklich allein auf der ersten Zeile (in 2.9.0 hatte eine andere Regel das verhindert).
+
+### 30. September – Farbe als Leitsystem (Version 2.12.0)
+
+- **Jeder Bereich hat seine Farbe:** Lernen ist **Petrolblau**, Spielen **Sonnengelb**, alles andere bleibt im bisherigen Grün;
+  das Lernziel hat sein eigenes Maigrün. Die Farbe erscheint dort, wo man den Bereich betritt oder erkennt: Knöpfe «Lernen»
+  und «Spielen» neben der Suche, Lernhinweis und Fortschrittsringe auf der Startseite, die Leiste mit den Spielen in der
+  Kategorie, Titel mit Farbstrich, Knöpfe und Balken in LernApp und Spielen, Punkte im Menü, Einführung und Hilfe.
+  So sieht man auf einen Blick, wo man ist.
+- Die Farben wurden sparsam gesetzt (Knöpfe, Striche, kleine Markierungen), damit die Bilder im Vordergrund bleiben.
+  Für Spielen standen Orange, Sonnengelb, Beere, Violett und Lemon Green zur Auswahl; Lemon Green wäre zu nah am Lernziel
+  und am Grün gewesen. Sonnengelb trägt dunkle Schrift, damit sie gut lesbar bleibt; alle Farben erfüllen die übliche
+  Norm für Lesbarkeit (WCAG AA), auch im Dunkelmodus.
 
 ---
 

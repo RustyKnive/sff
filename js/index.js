@@ -1605,6 +1605,9 @@ function resetView(pageId){
   for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== pageId;
   grid.hidden = !!pageId;
   searchRow.hidden = !!pageId;   // Suche, «Lernen» und «Drucken» nur auf Übersicht, Kategorien und «Jetzt zu sehen»
+  // Farb-Leitsystem: Bereichsfarbe für Seitentitel (css/index.css, body[data-area])
+  const area = { lernapp:"learn", spiele:"play" }[pageId];
+  if(area) document.body.dataset.area = area; else delete document.body.dataset.area;
 }
 function setHead(title, intro, sub = true){
   document.body.classList.toggle("in-sub", sub);

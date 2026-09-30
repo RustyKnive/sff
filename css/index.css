@@ -3,11 +3,16 @@
   /* Farben der Lernsessions (Grün, Blau, Orange, Violett, Rot, Türkis, Gelb, Rosa) */
   --s0:#2f6b3a; --s1:#2d62b3; --s2:#c7620e; --s3:#7a47b8; --s4:#c0392b; --s5:#12808a; --s6:#a8860a; --s7:#c2407e;
   /* Lernziel: frisches Maigrün, hebt sich vom übrigen Hellgrün ab */
-  --goal-bg:#e6f2cf; --goal-line:#7aab3a; }
+  --goal-bg:#e6f2cf; --goal-line:#7aab3a;
+  /* Farb-Leitsystem: Lernen Petrolblau, Spielen Sonnengelb (mit dunkler Schrift), Grundfarbe Grün für alles andere */
+  --learn:#1d5f8a; --learn-soft:#dde9f2;
+  --play:#f2c230; --on-play:#1f2a1f; --play-ink:#7a5a00; --play-soft:#fbf0c9; --play-card:#f2c230; --on-play-card:#1f2a1f; }
 @media (prefers-color-scheme: dark){
   :root{ --shadow:0 6px 24px rgba(0,0,0,.45);
     --s0:#8fcf94; --s1:#86b2f5; --s2:#f5a55c; --s3:#c09af0; --s4:#f28b82; --s5:#6fd3dc; --s6:#e8cc5a; --s7:#f28fbf;
-    --goal-bg:#2c3a1f; --goal-line:#a6d06a; }
+    --goal-bg:#2c3a1f; --goal-line:#a6d06a;
+    --learn:#8cc8e6; --learn-soft:#1f3440;
+    --play:#f2c94c; --on-play:#1d251e; --play-ink:#f2c94c; --play-soft:#3a321a; --play-card:#c99a1a; --on-play-card:#1d251e; }
 }
 body{line-height:1.5}
 [hidden]{display:none!important}
@@ -480,3 +485,34 @@ dialog.beamer::backdrop{background:#000}
 .guide ul{margin:0 0 .8rem;padding-left:1.2rem}
 .guide li{margin-bottom:.3rem}
 kbd{padding:0 5px;border:1px solid var(--muted);border-radius:4px;font:inherit;font-size:.85em;background:var(--bg)}
+
+/* Farb-Leitsystem (seit 2.12.0): Lernen Petrolblau, Spielen Sonnengelb, alles andere Grün.
+   Je Bereich: Füllfarbe (Knöpfe, Striche), Schriftfarbe auf dem Hintergrund (--*-ink) und Schrift auf der Füllfarbe (--on-*).
+   In den Bereichen übernehmen Überschriften, Balken und Rahmen die Schriftfarbe über --accent; der Seitentitel
+   bekommt die Bereichsfarbe und einen kurzen Strich (body[data-area], js/index.js resetView). */
+#page-lernapp{--accent:var(--learn);--accent-soft:var(--learn-soft)}
+#page-spiele{--accent:var(--play-ink);--accent-soft:var(--play-soft)}
+#page-spiele button:not(.nav):not(.dot):not(.ghost):not(.memo-card):not(.duel-pic):not(.help-tip){background:var(--play);color:var(--on-play)}
+body[data-area="learn"] #title{color:var(--learn)}
+body[data-area="play"] #title{color:var(--play-ink)}
+body[data-area] #title::after{content:"";display:block;width:56px;height:5px;margin-top:8px;border-radius:99px;background:var(--learn)}
+body[data-area="play"] #title::after{background:var(--play)}
+.quick-learn{background:var(--learn)}
+.quick-play{background:var(--play);color:var(--on-play)}
+.lern-banner{background:var(--learn-soft);box-shadow:inset 4px 0 0 var(--learn)}
+.lern-banner-go{color:var(--learn)}
+.cat-bar .chip{background:var(--play-soft);color:var(--play-ink)}
+.cat-bar .chip:hover{background:var(--play);color:var(--on-play)}
+.lern-more{background:var(--play-soft);box-shadow:inset 4px 0 0 var(--play)}
+.page .lern-more a{color:var(--play-ink)}
+/* Fortschritt gehört zum Lernen: Ring und «gelernt» in Petrol (feste Farben, weil sie auf dem Bild liegen) */
+.cat .cat-prog .ring{stroke:#8cc8e6}
+.cat .cat-prog.full{background:#1d5f8a}
+/* Menü, Einführung und Hilfe zeigen dieselben Farben */
+.menu-item.m-learn::before,.menu-item.m-play::before{content:"";display:inline-block;width:10px;height:10px;margin-right:10px;border-radius:50%;background:var(--learn)}
+.menu-item.m-play::before{background:var(--play)}
+.intro-step.learn h2,.intro-step.learn .intro-kicker,.guide details.g-learn summary{color:var(--learn)}
+.intro-step.play h2,.intro-step.play .intro-kicker,.guide details.g-play summary{color:var(--play-ink)}
+/* Memory-Rückseiten: grosse Flächen, darum eine eigene, ruhigere Füllung */
+#page-spiele .memo-back{background:var(--play-card)}
+#page-spiele .memo-back::after{color:var(--on-play-card)}
