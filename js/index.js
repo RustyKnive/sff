@@ -1142,7 +1142,7 @@ function renderLernQuiz(){
     <div class="lern-boxes">${s.boxes.map((n, i) => `<div class="lern-box"><span><i></i></span><small>Fach ${i + 1}<br>${n}</small></div>`).join("")}</div>
     ${catStats.length > 1 ? `<div class="lern-catprog">${catStats.map(r => `
       <span>${esc(r.cat.name)}</span><span class="lern-mini"><i></i></span><small>${r.richtig}/${r.total}</small>`).join("")}</div>` : ""}
-    ${s.neu ? `<p class="lern-hint">${s.neu} neue Begriffe warten noch, pro Tag kommen bis zu ${NEU_PRO_TAG} dazu.</p>` : ""}
+    ${s.neu ? `<p class="lern-hint">${s.neu === 1 ? "1 neuer Begriff wartet" : s.neu + " neue Begriffe warten"} noch, pro Tag kommen bis zu ${NEU_PRO_TAG} dazu.</p>` : ""}
     ${lernCur ? `
       ${lernCardHtml(lernCur)}
       <p class="lern-hint">${counting && round ? `Frage ${round.n + 1} von ${round.size} · ` : ""}${esc(lernCur.cat.name)}
@@ -1177,7 +1177,7 @@ function renderLernQuiz(){
         <p>${roundText} ${s.next < Infinity ? `Die nächste Abfrage ist ${esc(lernWhen(s.next))}.` : "Morgen kommen neue Begriffe dazu."}
           Komm dann wieder: Mit jeder Wiederholung wandern die Begriffe weiter ins Langzeitgedächtnis.</p>
         <div class="offline">
-          ${s.neu ? `<button id="lernMoreNew">${Math.min(NEU_PRO_TAG, s.neu)} weitere neue Begriffe</button>` : ""}
+          ${s.neu ? `<button id="lernMoreNew">${Math.min(NEU_PRO_TAG, s.neu) === 1 ? "1 weiterer neuer Begriff" : Math.min(NEU_PRO_TAG, s.neu) + " weitere neue Begriffe"}</button>` : ""}
           <button class="${s.neu ? "ghost" : ""}" id="lernPracticeBtn">Trotzdem weiterüben</button>
         </div>
         <p class="lern-hint">Freies Üben zählt nicht fürs Lernsystem.</p>

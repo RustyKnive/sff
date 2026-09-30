@@ -299,6 +299,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 2.5.0 | 30.9.2026 | Knöpfe «Lernen» und «Drucken» neben der Suche, damit LernApp und PDF-Druck ohne Menü zu finden sind |
 | 2.5.1 | 30.9.2026 | Auf dem Handy bleibt der Knopf «Lernen» beschriftet, das Suchfeld wird dafür schmaler |
 | 2.6.0 | 30.9.2026 | Fehler im Text melden: Knopf auf der Textseite, Meldungsnummer für die Meldenden, Liste «Gemeldete Textfehler» in der Verwaltung (Datenbank-Version 18) |
+| 2.6.1 | 30.9.2026 | LernApp: Einzahl bei «1 neuer Begriff wartet noch» und «1 weiterer neuer Begriff» |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
