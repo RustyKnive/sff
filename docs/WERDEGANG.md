@@ -1,3 +1,4 @@
+| 2.10.0 | 30.9.2026 | Lernfortschritt auf den Kacheln der Startseite: Ring mit «6/16» bzw. «✓ gelernt» über alle Lernsessions |
 | 2.9.0 | 30.9.2026 | Besser zurechtfinden: Einführung beim ersten Besuch, «Hilfe» im Menü, «?»-Erklärungen, Spiele auf eigener Seite mit Knopf «Spielen» und Wegen aus jeder Kategorie |
 | 2.8.0 | 30.9.2026 | Zwei neue Spiele am Ende der LernApp: Verwechslungs-Duell (zwei ähnliche Arten, danach der Unterschied) und Steckbrief-Detektiv (Hinweise nacheinander, Punkte fürs frühe Erraten) |
 | 2.7.0 | 30.9.2026 | Memory am Bildschirm am Ende der LernApp: 4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name |
@@ -7,7 +8,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.9.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 30. September 2026 · Version 2.10.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 36 Verwechslungspaare · Tierstimmen für 28 Arten
 
 ---
@@ -16,7 +17,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 
 ### Anzeige (index.html)
 
-- **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge) und der **Entdeckung des Tages**
+- **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge), bei Kategorien in einer Lernsession mit **Lernfortschritt** (Ring und «6/16», ganz gelernt «✓ gelernt»), und der **Entdeckung des Tages**
   (jeden Tag ein anderer Eintrag aus wechselnden Kategorien, für alle gleich; «Noch eine» zeigt einen weiteren zufälligen Eintrag).
 - **Suche** über alle Kategorien: deutscher Name, lateinischer Name oder Kategorie, ohne Rücksicht auf Umlaute und Grossschreibung.
 - **Knöpfe «Lernen», «Spielen» und «Drucken»** gleich neben der Suche (Übersicht und Kategorien): führen direkt zur LernApp, zu den Spielen und zum PDF-Druck, damit man diese auch ohne Menü findet. Ein «?» daneben erklärt kurz, was die Seite kann.
@@ -327,6 +328,13 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   «Spiele» (Menü und neuer Knopf «Spielen» neben der Suche). In jeder Kategorie führen Knöpfe direkt zum gewünschten Spiel,
   die Kategorie ist dann schon gewählt.
 - Auf dem Handy steht das Suchfeld jetzt allein auf der ersten Zeile, damit es trotz der zusätzlichen Knöpfe breit genug bleibt.
+
+### 30. September – Lernfortschritt auf der Startseite (Version 2.10.0)
+
+- **Fortschritt über die ganze Seite:** Bisher sah man den Lernstand nur in der LernApp. Neu zeigt jede Kachel einer
+  Kategorie, die man in einer Lernsession lernt, einen kleinen Ring mit «6/16»: so viele Einträge sind schon richtig
+  beantwortet (über alle Lernsessions hinweg). Ist alles gelernt, steht dort «✓ gelernt». Auch dieser Wunsch stammt aus dem
+  Feedback des Kollegen. Der Stand bleibt wie bisher nur auf dem Gerät.
 
 ---
 

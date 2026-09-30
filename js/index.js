@@ -589,6 +589,7 @@ function buildOverview(){
     b.className = "cat";
     b.innerHTML = `<img alt=""><div class="status"><div class="spinner"></div></div>
       <span class="count">${cat.items.length} ${cat.items.length === 1 ? "Eintrag" : "Einträge"}</span>
+      <span class="cat-prog" hidden></span>
       <div class="cap"><strong>${esc(cat.name)}</strong><span>${esc(cat.desc)}</span></div>`;
     b.addEventListener("click", () => { location.hash = "#/" + cat.id; });
     const img = b.querySelector("img");
@@ -897,6 +898,34 @@ function showLernBanner(){
   }else return;
   el.hidden = false;
   quickLearn.hidden = true;
+}
+
+// Fortschritt einer Kategorie über alle Lernsessions: ein Eintrag gilt als gelernt, wenn er in einer Session,
+// die diese Kategorie enthält, richtig beantwortet ist (Fach 2–5). null = Kategorie in keiner Session.
+function catProgress(cat){
+  const sessions = lernStore.sessions.filter(s => s.cats.includes(cat.id));
+  if(!sessions.length) return null;
+  const done = cat.items.filter(it => sessions.some(s => (s.cards[it.id]?.box || 0) >= 2)).length;
+  return { done, total:cat.items.length };
+}
+// Ring auf den Kacheln der Übersicht (bei jedem Anzeigen neu, die Kacheln selbst bleiben zwischengespeichert)
+function showCatProgress(){
+  if(!overviewCards) return;
+  CATS.forEach((cat, i) => {
+    const el = overviewCards[i]?.querySelector(".cat-prog");
+    if(!el) return;
+    const p = catProgress(cat);
+    el.hidden = !p;
+    if(!p) return;
+    const full = p.total > 0 && p.done === p.total;
+    const pct = p.total ? Math.round(100 * p.done / p.total) : 0;
+    el.classList.toggle("full", full);
+    el.title = full ? "Alle Einträge gelernt" : `${p.done} von ${p.total} Einträgen gelernt`;
+    el.innerHTML = `<svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="15.9" pathLength="100" class="ring-bg"/>
+      <circle cx="18" cy="18" r="15.9" pathLength="100" class="ring" stroke-dasharray="${pct} 100"/></svg>`
+      + (full ? "✓ gelernt" : `${p.done}/${p.total}`)
+      + `<span class="sr"> ${esc(el.title)}</span>`;
+  });
 }
 
 // Fortschritt pro Kategorie (richtig = Fach 2–5)
@@ -1714,6 +1743,7 @@ function render(){
     setHead("Natur und Schweiz by toj-apps", "", false);
     if(!overviewCards) overviewCards = buildOverview();
     grid.append(...overviewCards);
+    showCatProgress();
     showLernBanner();
     showDaily();
     return;

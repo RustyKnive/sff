@@ -69,6 +69,15 @@ main{max-width:1200px;margin:0 auto;padding:16px 16px 40px;
 .cat .cap strong{display:block;font-size:1.45rem;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .cat .cap span{font-size:.88rem;opacity:.92}
 .cat .count{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);font-size:.75rem;padding:3px 10px;border-radius:99px}
+/* Lernfortschritt über alle Lernsessions (js/index.js showCatProgress): Ring und «6/16», voll mit Häkchen */
+.cat .cat-prog{position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 4px;
+  border-radius:99px;background:rgba(0,0,0,.55);font-size:.8rem;font-weight:700}
+.cat .cat-prog svg{width:22px;height:22px;transform:rotate(-90deg)}
+.cat .cat-prog circle{fill:none;stroke-width:4}
+.cat .cat-prog .ring-bg{stroke:rgba(255,255,255,.3)}
+.cat .cat-prog .ring{stroke:#8fcf94;stroke-linecap:round}
+.cat .cat-prog.full{background:#2f6b3a}
+.cat .cat-prog.full .ring{stroke:#fff}
 
 /* Einträge */
 .card{position:relative;aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;
