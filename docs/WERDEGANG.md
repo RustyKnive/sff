@@ -267,7 +267,8 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 
 - **Knöpfe neben der Suche:** Wer die Seite zum ersten Mal besucht, fand LernApp und PDF-Druck nur über das Menü. Neu
   stehen «Lernen» und «Drucken» auf derselben Zeile wie die Suche, auf der Übersicht und in jeder Kategorie. Aus einer
-  Kategorie heraus ist diese beim Drucken schon gewählt. Auf schmalen Handys zeigen die Knöpfe nur ihr Symbol.
+  Kategorie heraus ist diese beim Drucken schon gewählt. Auf schmalen Handys bleibt «Lernen» beschriftet (ab 2.5.1),
+  «Drucken» zeigt nur das Symbol, das Suchfeld wird dafür etwas schmaler.
 
 ---
 
@@ -283,6 +284,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 2.4.0 | 29.9.2026 | KI-generierte Bilder im Bildnachweis und im Druck gekennzeichnet (Datenbank-Version 17) |
 | 2.4.1 | 30.9.2026 | Umzug auf den eigenen Webspace bei Hostpoint (https://je-net.ch/sff/), alte Adresse leitet weiter; Datenbank bleibt in Supabase |
 | 2.5.0 | 30.9.2026 | Knöpfe «Lernen» und «Drucken» neben der Suche, damit LernApp und PDF-Druck ohne Menü zu finden sind |
+| 2.5.1 | 30.9.2026 | Auf dem Handy bleibt der Knopf «Lernen» beschriftet, das Suchfeld wird dafür schmaler |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
