@@ -1230,7 +1230,7 @@ function resetView(pageId){
   window.scrollTo(0, 0);
   for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== pageId;
   grid.hidden = !!pageId;
-  searchEl.hidden = !!pageId;   // Suche nur auf Übersicht, Kategorien und «Jetzt zu sehen»
+  searchRow.hidden = !!pageId;   // Suche, «Lernen» und «Drucken» nur auf Übersicht, Kategorien und «Jetzt zu sehen»
 }
 function setHead(title, intro, sub = true){
   document.body.classList.toggle("in-sub", sub);
@@ -1400,6 +1400,7 @@ beamer.addEventListener("close", () => {
    Gross-/Kleinschreibung und mit ä = ae. Zeigt die Karten der Treffer; neue Adresse beendet die Suche.
 ------------------------------------------------------------------- */
 const searchEl = document.getElementById("search");
+const searchRow = document.getElementById("searchRow");
 const SEARCH_MAX = 30;
 let searchTimer = null;
 function runSearch(){

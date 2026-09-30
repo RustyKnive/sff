@@ -16,6 +16,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 - **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge) und der **Entdeckung des Tages**
   (jeden Tag ein anderer Eintrag aus wechselnden Kategorien, für alle gleich; «Noch eine» zeigt einen weiteren zufälligen Eintrag).
 - **Suche** über alle Kategorien: deutscher Name, lateinischer Name oder Kategorie, ohne Rücksicht auf Umlaute und Grossschreibung.
+- **Knöpfe «Lernen» und «Drucken»** gleich neben der Suche (Übersicht und Kategorien): führen direkt zur LernApp und zum PDF-Druck, damit man diese auch ohne Menü findet.
 - **Kategorie** mit einer Karte pro Eintrag: durch die Bilder und den Steckbrief blättern (Pfeile, Punkte, Tastatur).
   Es werden nur die vorhandenen Bilder gezeigt.
 - **Direktlink auf jeden Eintrag** (z. B. `#/voegel/amsel`): öffnet die Kategorie, hebt die Karte hervor und zeigt sie gross.
@@ -262,6 +263,12 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 - **Einstellungen des Webservers:** Die Seite erzwingt HTTPS, lässt sich nicht in fremde Seiten einbetten, und neue
   Versionen sind nach dem Hochladen sofort sichtbar.
 
+### 30. September – LernApp und Druck besser sichtbar (Version 2.5.0)
+
+- **Knöpfe neben der Suche:** Wer die Seite zum ersten Mal besucht, fand LernApp und PDF-Druck nur über das Menü. Neu
+  stehen «Lernen» und «Drucken» auf derselben Zeile wie die Suche, auf der Übersicht und in jeder Kategorie. Aus einer
+  Kategorie heraus ist diese beim Drucken schon gewählt. Auf schmalen Handys zeigen die Knöpfe nur ihr Symbol.
+
 ---
 
 ## Versionen
@@ -275,6 +282,7 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 | 2.3.0 | 29.9.2026 | «Anderes Bild suchen» zeigt Vorschläge zur Auswahl unter den 4 Bildern des Eintrags, auch aus den gemeldeten Bildern |
 | 2.4.0 | 29.9.2026 | KI-generierte Bilder im Bildnachweis und im Druck gekennzeichnet (Datenbank-Version 17) |
 | 2.4.1 | 30.9.2026 | Umzug auf den eigenen Webspace bei Hostpoint (https://je-net.ch/sff/), alte Adresse leitet weiter; Datenbank bleibt in Supabase |
+| 2.5.0 | 30.9.2026 | Knöpfe «Lernen» und «Drucken» neben der Suche, damit LernApp und PDF-Druck ohne Menü zu finden sind |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 

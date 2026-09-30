@@ -12,7 +12,7 @@ header{position:relative;max-width:1200px;margin:0 auto;padding:28px 70px 8px 16
 header h1{margin:0;font-size:clamp(1.6rem,3vw,2.3rem);letter-spacing:-.01em}
 /* Startseite: Titel in einer Zeile, auch auf dem Handy (Breite ohne Rand und Menüknopf, Titel ≈ 14,2 em breit) */
 body:not(.in-sub) header h1{font-size:min(2.3rem, calc((100vw - 86px) / 15));white-space:nowrap}
-body:not(.in-sub) .search{margin-top:20px}
+body:not(.in-sub) .search-row{margin-top:20px}
 
 /* Menü oben rechts */
 .menu-wrap{position:absolute;top:24px;right:16px;z-index:10}
@@ -211,8 +211,14 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lern-done{padding:16px 18px;border-radius:var(--radius);background:var(--card);margin-bottom:12px}
 .lern-done h3{margin-top:0}
 
-/* Suche in der Kopfzeile */
-.search{display:block;width:calc(100% + 54px);max-width:none;margin:12px 0 0;padding:10px 16px;border:1.5px solid var(--accent-soft);
+/* Suche in der Kopfzeile, daneben «Lernen» und «Drucken» (unter 420 px nur Symbole) */
+.search-row{display:flex;gap:8px;align-items:center;width:calc(100% + 54px);margin:12px 0 0}
+.quick{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:99px;background:var(--accent);
+  color:var(--card);font-weight:600;text-decoration:none;white-space:nowrap}
+.quick:hover{opacity:.9}
+.quick svg{width:18px;height:18px;flex:0 0 auto}
+@media (max-width:420px){ .quick{padding:10px} .quick span{display:none} }
+.search{display:block;flex:1 1 auto;min-width:0;width:auto;max-width:none;margin:0;padding:10px 16px;border:1.5px solid var(--accent-soft);
   border-radius:99px;background:var(--card);color:var(--ink);font:inherit}
 .search:focus{outline:none;border-color:var(--accent)}
 

@@ -35,7 +35,12 @@
   <button class="back" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Übersicht</button>
   <h1 id="title">Natur und Schweiz by toj-apps</h1>
   <p id="intro"></p>
-  <input type="search" id="search" class="search" placeholder="Suchen: Name oder lateinischer Name" aria-label="Suchen" autocomplete="off">
+  <!-- Suche und direkte Wege zu LernApp und Druck (Übersicht, Kategorien, «Jetzt zu sehen») -->
+  <div class="search-row" id="searchRow">
+    <input type="search" id="search" class="search" placeholder="Suchen: Name oder lateinischer Name" aria-label="Suchen" autocomplete="off">
+    <a class="quick" href="#/lernapp" title="LernApp: Namen üben mit dem Karteikasten" aria-label="Lernen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/><path d="M9 8h6"/></svg><span>Lernen</span></a>
+    <a class="quick" href="#/pdf" title="Steckbriefe, Arbeitsblatt oder Memory als PDF drucken" aria-label="Drucken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg><span>Drucken</span></a>
+  </div>
   <!-- Hinweis der LernApp auf der Übersicht (js/index.js showLernBanner) -->
   <a class="lern-banner" id="lernBanner" href="#/lernapp" hidden></a>
   <!-- Entdeckung des Tages auf der Übersicht (js/index.js showDaily) -->
@@ -137,7 +142,7 @@
     </details>
     <details>
       <summary>LernApp</summary>
-      <p>Menü → «LernApp». Die LernApp zeigt Bilder eines Eintrags, und du nennst den Namen. Wiederholt wird nach dem
+      <p>Knopf «Lernen» neben der Suche oder Menü → «LernApp». Die LernApp zeigt Bilder eines Eintrags, und du nennst den Namen. Wiederholt wird nach dem
         <b>Leitner-System</b>: Was du richtig weisst, kommt erst nach 1, 3, 7 und 30 Tagen wieder, was du nicht weisst, bald nochmals.</p>
       <ul>
         <li><b>Lernsession:</b> «+ Neue Lernsession», Kategorien und Farbe wählen. Du kannst mehrere Sessions nebeneinander
@@ -160,7 +165,7 @@
     </details>
     <details>
       <summary>PDF drucken: Steckbriefe, Arbeitsblatt, Memory</summary>
-      <p>Menü → «PDF drucken»: Kategorie und Art wählen, bei Bedarf einzelne Einträge abwählen (alle sind angewählt), «PDF erstellen». Im Druckfenster als Ziel «Als PDF speichern»
+      <p>Knopf «Drucken» neben der Suche oder Menü → «PDF drucken» (aus einer Kategorie heraus ist sie schon gewählt): Kategorie und Art wählen, bei Bedarf einzelne Einträge abwählen (alle sind angewählt), «PDF erstellen». Im Druckfenster als Ziel «Als PDF speichern»
         wählen oder direkt drucken.</p>
       <ul>
         <li><b>Übersicht:</b> 8 Steckbriefe pro A4-Seite mit Hauptbild.</li>

@@ -59,7 +59,8 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
 
 ## Suche, Direktlinks, Entdeckung des Tages (index.html)
 
-- Kopf der Startseite: Keine Einleitung (`#intro` leer und versteckt, `setHead(…, "")`). Suchfeld, `#lernBanner` und `#daily` stehen im `<header>` (rechts 70 px Platz für den Menüknopf) und holen mit `margin-right:-54px` bzw. `width:calc(100% + 54px)` die Breite des Rasters (`main`, Rand 16 px). Der Titel der Startseite (`body:not(.in-sub) header h1`) bleibt einzeilig: `min(2.3rem, (100vw − 86px) / 15)`, der Titel ist etwa 14,2 em breit.
+- Kopf der Startseite: Keine Einleitung (`#intro` leer und versteckt, `setHead(…, "")`). Suchzeile `#searchRow`, `#lernBanner` und `#daily` stehen im `<header>` (rechts 70 px Platz für den Menüknopf) und holen mit `margin-right:-54px` bzw. `width:calc(100% + 54px)` die Breite des Rasters (`main`, Rand 16 px). Der Titel der Startseite (`body:not(.in-sub) header h1`) bleibt einzeilig: `min(2.3rem, (100vw − 86px) / 15)`, der Titel ist etwa 14,2 em breit.
+- Neben dem Suchfeld in `#searchRow` (`.search-row`, flex) die Links `.quick` «Lernen» (`#/lernapp`) und «Drucken» (`#/pdf`, vorgewählt über `lastCat`); unter 420 px nur Symbole. `resetView()` blendet die ganze Zeile auf Menüseiten aus.
 - Suchfeld `#search` im Kopf: `runSearch()` vergleicht mit `lernNorm()` Name, Untertitel und Kategorie, höchstens `SEARCH_MAX` = 30 Karten, 200 ms Verzögerung, Esc leert. Jede Adressänderung leert das Feld.
 - Direktlink `#/<kat>/<slug>` (`slugify()`: Kleinbuchstaben, Akzente weg, ä→a, Leerzeichen→«-»; `entryLink()`, `entryUrl()`). Die Kategorie wird gezeigt, die Karte bekommt `.focus`, wird eingeblendet und in der Lightbox geöffnet. Die Verwaltung baut dieselben Links (`linkSlug`, `entryUrl` in `js/admin.js`); beide Funktionen gleich halten.
 - Lightbox-Knopf «Teilen» (`.lb-share`): `navigator.share`, sonst Zwischenablage mit `toast()`.
