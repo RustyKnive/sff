@@ -52,7 +52,7 @@
 <section class="page" id="page-lernapp" hidden>
   <div id="lern"></div>
   <!-- Memory am Ende der LernApp (js/index.js memoStart): je Bild und Name eines Eintrags ergeben ein Paar -->
-  <div class="memo" id="memo">
+  <div class="game" id="memo">
     <h2>Memory</h2>
     <p>Finde die Paare: Jedes Bild gehört zu einem Namen. Es erscheinen bis zu 8 zufällige Paare aus der gewählten Kategorie.</p>
     <div class="offline">
@@ -61,6 +61,28 @@
     </div>
     <p class="memo-status" id="memoStatus" aria-live="polite" hidden></p>
     <div class="memo-grid" id="memoGrid" hidden></div>
+  </div>
+  <!-- Verwechslungs-Duell (js/index.js duelStart): zwei ähnliche Arten, welches Bild zeigt die gesuchte? -->
+  <div class="game" id="duel">
+    <h2>Verwechslungs-Duell</h2>
+    <p>Zwei Arten, die man leicht verwechselt, stehen nebeneinander. Tippe auf das Bild der gesuchten Art.
+      Danach siehst du, woran man die beiden unterscheidet.</p>
+    <div class="offline">
+      <select id="duelCat" aria-label="Kategorie für das Duell"></select>
+      <button id="duelStart">Duell starten</button>
+    </div>
+    <div class="game-board" id="duelBoard"></div>
+  </div>
+  <!-- Steckbrief-Detektiv (js/index.js detStart): Hinweise nacheinander, früh raten gibt mehr Punkte -->
+  <div class="game" id="detektiv">
+    <h2>Steckbrief-Detektiv</h2>
+    <p>Wer ist gesucht? Zuerst siehst du nur eine Zeile aus dem Steckbrief, dann weitere Hinweise und zuletzt das Bild.
+      Je früher du richtig rätst, desto mehr Punkte gibt es. Ein Spiel hat 5 Fälle.</p>
+    <div class="offline">
+      <select id="detCat" aria-label="Kategorie für den Detektiv"></select>
+      <button id="detStart">Spiel starten</button>
+    </div>
+    <div class="game-board" id="detBoard"></div>
   </div>
 </section>
 <section class="page" id="page-admin" hidden>
@@ -172,6 +194,11 @@
         <li><b>Memory:</b> Ganz unten auf der Seite der LernApp Kategorie wählen und «Memory starten». Es erscheinen
           16 Karten mit bis zu 8 zufälligen Paaren aus Bild und Name. Zwei Karten aufdecken: Passen sie, bleiben sie offen,
           sonst drehen sie sich wieder um. «Neues Memory» mischt neue Paare.</li>
+        <li><b>Verwechslungs-Duell:</b> Zwei ähnliche Arten stehen nebeneinander (z. B. Fichte und Weisstanne). Tippe auf das
+          Bild der gesuchten Art; danach steht der Unterschied da. Ein Duell hat bis zu 10 Paare.</li>
+        <li><b>Steckbrief-Detektiv:</b> Zuerst erscheint nur eine Steckbrief-Zeile, dann weitere, die Beschreibung (ohne Namen)
+          und zuletzt das Bild. Wähle den Namen aus vier Vorschlägen. Je früher du richtig rätst, desto mehr Punkte;
+          «Nächster Hinweis» und falsche Antworten kosten je einen Punkt. Ein Spiel hat 5 Fälle.</li>
       </ul>
     </details>
     <details>

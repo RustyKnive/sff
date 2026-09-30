@@ -1,3 +1,4 @@
+| 2.8.0 | 30.9.2026 | Zwei neue Spiele am Ende der LernApp: Verwechslungs-Duell (zwei ähnliche Arten, danach der Unterschied) und Steckbrief-Detektiv (Hinweise nacheinander, Punkte fürs frühe Erraten) |
 | 2.7.0 | 30.9.2026 | Memory am Bildschirm am Ende der LernApp: 4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name |
 # Natur und Schweiz – Werdegang der Website
 
@@ -5,7 +6,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.7.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 30. September 2026 · Version 2.8.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 36 Verwechslungspaare · Tierstimmen für 28 Arten
 
 ---
@@ -45,6 +46,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
     Mehrere **Lernsessions** nebeneinander, jede mit eigenen Kategorien, eigener Farbe und eigenem Fortschritt; umschalten über die farbige Leiste, löschen unter «Lernsessions verwalten».
     Ganz unten ein **Memory** am Bildschirm: 4 × 4 Karten mit bis zu 8 zufälligen Paaren aus Bild und Name einer Kategorie (oder aller gemischt).
+    Dazu zwei weitere Spiele: das **Verwechslungs-Duell** (welches von zwei ähnlichen Bildern zeigt die gesuchte Art, danach der Unterschied) und der **Steckbrief-Detektiv** (Hinweise nacheinander, wer früh richtig rät, bekommt mehr Punkte).
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -292,6 +294,18 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
   dem Namen. Zwei aufgedeckte Karten, die zusammengehören, bleiben offen, sonst drehen sie sich nach gut einer Sekunde um.
   Gezählt werden gefundene Paare und Züge. Bisher gab es das Memory nur zum Ausdrucken und Ausschneiden.
 - Das Memory zählt nicht für den Lernstand der LernApp; es ist ein spielerischer Zugang zum selben Wissen.
+
+### 30. September – Verwechslungs-Duell und Steckbrief-Detektiv (Version 2.8.0)
+
+- **Verwechslungs-Duell:** Unter dem Memory stehen zwei ähnliche Arten nebeneinander, zum Beispiel Rotauge und Alet oder
+  Fichte und Weisstanne. Gefragt wird nach einer der beiden; wer auf ein Bild tippt, sieht beide Namen und den
+  Unterschied aus der Verwechslungsgefahr. Ein Duell hat bis zu 10 Paare aus der gewählten Kategorie (oder allen).
+  Die Paare sind schon in der Datenbank erfasst, es braucht keine zusätzliche Pflege.
+- **Steckbrief-Detektiv:** Gesucht ist ein Eintrag. Zuerst erscheint nur die erste Steckbrief-Zeile, dann die weiteren,
+  die Beschreibung und zuletzt das Bild. Der Name und seine Teile sind in allen Hinweisen durch «…» ersetzt. Man wählt aus
+  vier Namen; je früher die Antwort stimmt, desto mehr Punkte. «Nächster Hinweis» und jede falsche Antwort kosten einen
+  Punkt. So wird Wissen über die Arten geübt, nicht nur das Erkennen am Bild.
+- Beide Spiele zählen wie das Memory nicht für den Lernstand.
 
 ---
 

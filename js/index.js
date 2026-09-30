@@ -1285,12 +1285,19 @@ const memoStatus = document.getElementById("memoStatus");
 let memo = null;           // { pairs:[{cat,item}], cards:[{pair, kind}], open:[i], found, moves, lock }
 let lastMemoCat = null;
 
-// Kommt man aus einer Kategorie, ist sie vorgewählt; sonst die zuletzt gespielte
-function fillMemoSelect(){
-  const keep = lastCat || lastMemoCat || memoSel.value;
-  memoSel.innerHTML = `<option value="*">Alle Kategorien gemischt</option>`
-    + CATS.filter(c => c.items.length > 1).map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
-  if([...memoSel.options].some(o => o.value === keep)) memoSel.value = keep;
+// Auswahl der Kategorie für ein Spiel (Memory, Duell, Detektiv): kommt man aus einer Kategorie,
+// ist sie vorgewählt, sonst die zuletzt gespielte; «*» = alle gemischt
+function fillGameSelect(sel, cats, last){
+  const keep = lastCat || last || sel.value;
+  sel.innerHTML = `<option value="*">Alle Kategorien gemischt</option>`
+    + cats.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  if([...sel.options].some(o => o.value === keep)) sel.value = keep;
+}
+function fillGameSelects(){
+  fillGameSelect(memoSel, CATS.filter(c => c.items.length > 1), lastMemoCat);
+  const duelIds = new Set(duelPairs().flatMap(p => [p.a.cat.id, p.b.cat.id]));
+  fillGameSelect(duelSel, CATS.filter(c => duelIds.has(c.id)), lastDuelCat);
+  fillGameSelect(detSel, CATS.filter(c => c.items.length > 1), lastDetCat);
 }
 
 function memoStart(){
@@ -1362,6 +1369,187 @@ memoGrid.addEventListener("click", e => {
 });
 document.getElementById("memoStart").addEventListener("click", memoStart);
 
+// Hauptbild in ein <img> laden; fehlt es, steht dort ein Hinweis
+function gameImage(img, { cat, item }){
+  loadPrintImage(img, cat, item).catch(() => { img.replaceWith(Object.assign(document.createElement("span"),
+    { className:"game-miss", textContent:"Bild nicht verfügbar" })); });
+}
+
+/* ------------------------------------------------------------------
+   VERWECHSLUNGS-DUELL: zwei ähnliche Arten nebeneinander, welches Bild zeigt die gesuchte?
+   Danach erscheint der Unterschied aus der Verwechslungsgefahr (entries.confusions).
+------------------------------------------------------------------- */
+const DUELL_RUNDE = 10;    // Paare pro Duell
+const duelSel = document.getElementById("duelCat");
+const duelBoard = document.getElementById("duelBoard");
+let duel = null;           // { list:[{a, b, diff}], i, right }
+let lastDuelCat = null;
+
+// Alle Paare, bei denen beide Einträge sichtbar sind; jedes Paar nur einmal (gleicher Unterschied in beide Richtungen)
+function duelPairs(){
+  const seen = new Set(), out = [];
+  for(const cat of CATS) for(const item of cat.items) for(const c of item.cf){
+    const other = findByName(c.name);
+    if(!other || other.item === item || !c.diff) continue;
+    const key = [item.id, other.item.id].sort().join("|");
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push({ a:{ cat, item }, b:other, diff:c.diff });
+  }
+  return out;
+}
+
+function duelStart(){
+  const id = duelSel.value;
+  lastDuelCat = id;
+  const list = shuffled(duelPairs().filter(p => id === "*" || p.a.cat.id === id || p.b.cat.id === id)).slice(0, DUELL_RUNDE);
+  if(!list.length) return;
+  duel = { list, i:0, right:0 };
+  document.getElementById("duelStart").textContent = "Neues Duell";
+  duelShow();
+}
+
+function duelShow(){
+  const { list, i } = duel;
+  if(i >= list.length){
+    duelBoard.innerHTML = `<div class="lern-done"><h3>Duell beendet</h3>
+      <p>${duel.right} von ${list.length} richtig erkannt.${duel.right === list.length ? " Perfekt!" : ""}</p></div>`;
+    return;
+  }
+  const pair = list[i];
+  const sides = shuffled([pair.a, pair.b]);             // welches Bild links steht, ist Zufall
+  const asked = sides[Math.floor(Math.random() * 2)];   // nach welchem gefragt wird, auch
+  duelBoard.innerHTML = `
+    <p class="game-head">Paar ${i + 1} von ${list.length} · ${duel.right} richtig</p>
+    <p class="duel-q">Welches Bild zeigt: <b>${esc(asked.item.n)}</b>?</p>
+    <div class="duel-pics">${sides.map((s, k) => `
+      <button type="button" class="duel-pic" data-k="${k}" aria-label="Bild ${k ? "rechts" : "links"}">
+        <img alt=""><span class="duel-name" hidden>${esc(s.item.n)}</span>
+      </button>`).join("")}</div>
+    <div class="lern-feedback" id="duelFeedback" aria-live="polite"></div>`;
+  const pics = [...duelBoard.querySelectorAll(".duel-pic")];
+  pics.forEach((b, k) => gameImage(b.querySelector("img"), sides[k]));
+  duelBoard.querySelector(".duel-pics").addEventListener("click", e => {
+    const b = e.target.closest(".duel-pic");
+    if(!b || duel.list[duel.i] !== pair || b.disabled) return;
+    const ok = sides[+b.dataset.k] === asked;
+    if(ok) duel.right++;
+    pics.forEach((p, k) => {
+      p.disabled = true;
+      p.querySelector(".duel-name").hidden = false;
+      p.classList.add(sides[k] === asked ? "right" : p === b ? "wrong" : "other");
+    });
+    document.getElementById("duelFeedback").innerHTML = `
+      <p class="${ok ? "ok" : "bad"}">${ok ? `Richtig, das ist <b>${esc(asked.item.n)}</b>.`
+        : `Leider falsch: Das ist <b>${esc(sides[+b.dataset.k].item.n)}</b>.`}</p>
+      <p class="lern-fact"><b>Unterschied:</b> ${esc(pair.diff)}</p>
+      <button id="duelNext">${duel.i + 1 < duel.list.length ? "Nächstes Paar" : "Auswertung"}</button>`;
+    const next = document.getElementById("duelNext");
+    next.addEventListener("click", () => { duel.i++; duelShow(); });
+    next.focus();
+  });
+}
+document.getElementById("duelStart").addEventListener("click", duelStart);
+
+/* ------------------------------------------------------------------
+   STECKBRIEF-DETEKTIV: Hinweise kommen nacheinander (Steckbrief-Zeilen, Beschreibung ohne Namen, zuletzt das Bild).
+   Wer früh richtig rät, bekommt mehr Punkte; jede falsche Antwort deckt den nächsten Hinweis auf.
+------------------------------------------------------------------- */
+const DETEKTIV_FAELLE = 5;   // Fälle pro Spiel
+const detSel = document.getElementById("detCat");
+const detBoard = document.getElementById("detBoard");
+let det = null;              // { list:[{cat,item}], pool, i, points, shown, penalty, done }
+let lastDetCat = null;
+
+// Namen im Text abdecken: jedes Wort, das einen Teil des Namens (oder des Untertitels) enthält, wird zu «…»;
+// Teile ab 3 Buchstaben (Reh, Aal, Inn), ohne Artikel und Bindewörter
+const DET_FUELL = new Set(["der", "die", "das", "des", "dem", "den", "und", "von", "vom", "zum", "zur", "mit"]);
+function detMask(text, item){
+  const parts = `${item.n} ${item.s || ""}`.toLowerCase().split(/[^\p{L}]+/u).filter(w => w.length >= 3 && !DET_FUELL.has(w));
+  return text.replace(/[\p{L}-]+/gu, w => parts.some(p => w.toLowerCase().includes(p)) ? "…" : w)
+    .replace(/…\s*\([^)]*\)/g, "…");   // Zweitname in Klammern nach dem Namen («Die Waldföhre (Waldkiefer)»)
+}
+function detHints({ item }){
+  return [
+    ...item.f.map(f => ({ label:f.k, text:detMask(f.v, item) })),
+    ...(item.t ? [{ label:"Beschreibung", text:detMask(item.t, item) }] : []),
+    { label:"Bild", image:true }
+  ];
+}
+
+function detStart(){
+  const id = detSel.value;
+  lastDetCat = id;
+  const pool = CATS.filter(c => id === "*" || c.id === id).flatMap(cat => cat.items.map(item => ({ cat, item })));
+  if(pool.length < 2) return;
+  det = { list:shuffled(pool).slice(0, DETEKTIV_FAELLE), pool, i:0, points:0 };
+  document.getElementById("detStart").textContent = "Neues Spiel";
+  detCase();
+}
+
+function detCase(){
+  const { list, i } = det;
+  if(i >= list.length){
+    const max = list.reduce((s, p) => s + detHints(p).length, 0);
+    detBoard.innerHTML = `<div class="lern-done"><h3>Alle Fälle gelöst</h3>
+      <p>${det.points} von ${max} möglichen Punkten.</p></div>`;
+    return;
+  }
+  const cur = list[i], hints = detHints(cur);
+  Object.assign(det, { shown:1, penalty:0, done:false });
+  detBoard.innerHTML = `
+    <p class="game-head" id="detHead"></p>
+    <ol class="det-hints">${hints.map((h, k) => `<li${k ? " hidden" : ""}>${h.image
+      ? `<b>Bild:</b><img alt="Bild des gesuchten Eintrags">` : `<b>${esc(h.label)}:</b> ${esc(h.text)}`}</li>`).join("")}</ol>
+    <div class="lern-choices" id="detChoices">${lernChoices(cur, det.pool).map(n =>
+      `<button type="button" class="ghost" data-name="${esc(n)}">${esc(n)}</button>`).join("")}</div>
+    <p><button type="button" class="ghost" id="detMore">Nächster Hinweis (−1 Punkt)</button></p>
+    <div class="lern-feedback" id="detFeedback" aria-live="polite"></div>`;
+  const img = detBoard.querySelector(".det-hints img");
+  if(img) gameImage(img, cur);   // gleich laden, damit das Bild beim letzten Hinweis schon da ist
+  const items = [...detBoard.querySelectorAll(".det-hints li")];
+  const more = document.getElementById("detMore");
+  const worth = () => Math.max(0, hints.length + 1 - det.shown - det.penalty);
+  const head = () => {
+    document.getElementById("detHead").textContent = `Fall ${i + 1} von ${list.length} · `
+      + (det.done ? "" : `Hinweis ${det.shown} von ${hints.length} · noch ${worth()} ${worth() === 1 ? "Punkt" : "Punkte"} möglich · `)
+      + `total ${det.points} ${det.points === 1 ? "Punkt" : "Punkte"}`;
+    more.hidden = det.done || det.shown >= hints.length;
+  };
+  const reveal = () => {
+    if(det.shown >= hints.length) return false;
+    items[det.shown++].hidden = false;
+    return true;
+  };
+  head();
+  more.addEventListener("click", () => { reveal(); head(); });
+  document.getElementById("detChoices").addEventListener("click", e => {
+    const b = e.target.closest("button[data-name]");
+    if(!b || b.disabled || det.done) return;
+    if(b.dataset.name !== cur.item.n){
+      b.disabled = true;
+      b.classList.add("wrong");
+      if(!reveal()) det.penalty++;   // alle Hinweise schon offen: falsche Antwort kostet trotzdem
+      head();
+      return;
+    }
+    det.done = true;
+    const got = worth();
+    det.points += got;
+    while(reveal());
+    b.classList.add("right");
+    detBoard.querySelectorAll("#detChoices button").forEach(x => { x.disabled = true; });
+    head();
+    document.getElementById("detFeedback").innerHTML = `
+      <p class="ok">Richtig, es ist <b>${esc(cur.item.n)}</b>! ${got} ${got === 1 ? "Punkt" : "Punkte"}.</p>
+      <button id="detNext">${i + 1 < list.length ? "Nächster Fall" : "Auswertung"}</button>`;
+    const next = document.getElementById("detNext");
+    next.addEventListener("click", () => { det.i++; detCase(); });
+    next.focus();
+  });
+}
+document.getElementById("detStart").addEventListener("click", detStart);
+
 // Karten einer Kategorie (einmal gebaut, danach wiederverwendet: Kategorie, Suche, «Jetzt zu sehen»)
 function cardsOf(cat){
   if(!catCards.has(cat.id)) catCards.set(cat.id, cat.items.map(it => buildCard(cat, it)));
@@ -1398,7 +1586,7 @@ function render(){
     setHead(page.title, page.intro);
     if(id === "copyright"){ buildCredits(); refresh(); }
     if(id === "pdf") fillPdfSelect();
-    if(id === "lernapp"){ renderLern(); fillMemoSelect(); }
+    if(id === "lernapp"){ renderLern(); fillGameSelects(); }
     if(id === "quiz") fillQuizSelect();
     if(id === "einstellungen") showVersion();
     lastCat = null;
