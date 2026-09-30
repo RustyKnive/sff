@@ -11,7 +11,7 @@ let CATS = [];
    Bild: src, page, file, fx/fy/z Ausschnitt für die 4:3-Kacheln (null = Mitte, nicht vergrössert),
    edited zugeschnitten (Hinweis im Bildnachweis); cf Verwechslungsgefahr [{name, diff}], snd Tierstimme {src, page, file} */
 async function loadCats(){
-  const select = "id,name,description,latin,labels,cover_entry_id,"
+  const select = "id,name,description,goal,latin,labels,cover_entry_id,"
     + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
     + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited))";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
@@ -22,7 +22,7 @@ async function loadCats(){
   const publicUrl = path => CFG.url + "/storage/v1/object/public/" + CFG.bucket + "/"
     + path.split("/").map(encodeURIComponent).join("/");
   return rows.map(c => ({
-    id:c.id, name:c.name, desc:c.description, latin:c.latin, labels:c.labels,
+    id:c.id, name:c.name, desc:c.description, goal:c.goal || "", latin:c.latin, labels:c.labels,
     cover:Math.max(0, c.entries.findIndex(e => e.id === c.cover_entry_id)),
     items:c.entries.map(e => ({
       id:e.id, n:e.name, s:e.subtitle, t:e.description, f:e.facts || [],
@@ -1606,6 +1606,7 @@ function setHead(title, intro, sub = true){
   document.body.classList.toggle("in-sub", sub);
   titleEl.textContent = title;
   introEl.textContent = intro;
+  introEl.classList.remove("goal");
   introEl.hidden = !intro;   // Startseite ohne Einleitung
   document.title = sub ? title + " – Natur und Schweiz by toj-apps" : "Natur und Schweiz by toj-apps";
 }
@@ -1748,7 +1749,10 @@ function render(){
     showDaily();
     return;
   }
-  setHead(cat.name, "Mit den Pfeilen oder durch Wischen durch Bilder und Steckbrief blättern; ein Tipp aufs Bild vergrössert.");
+  // Lernziel der Kategorie (019); ohne Lernziel ein kurzer Bedienhinweis
+  setHead(cat.name, cat.goal ? "Lernziel: " + cat.goal
+    : "Mit den Pfeilen oder durch Wischen durch Bilder und Steckbrief blättern; ein Tipp aufs Bild vergrössert.");
+  if(cat.goal){ introEl.innerHTML = `<b>Lernziel:</b> ${esc(cat.goal)}`; introEl.classList.add("goal"); }
   grid.append(...cardsOf(cat));
   showCatBar(cat);
   // Direktlink auf einen Eintrag (#/kategorie/eintrag): Karte zeigen und gross öffnen

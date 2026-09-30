@@ -20,7 +20,7 @@ Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (damals `tools/`
 
 ## Datenmodell (supabase/schema.sql)
 
-- `categories`: `id` (Slug, gleichzeitig die Adresse `#/<id>`), `name`, `description`, `latin` (true → Untertitel kursiv als lateinischer Name), `labels` (4 Bildbeschriftungen), `cover_entry_id` (Eintrag für die Übersichtskachel), `sort`.
+- `categories`: `id` (Slug, gleichzeitig die Adresse `#/<id>`), `name`, `description`, `goal` (Lernziel, ein Satz ohne Anzahl, höchstens 300 Zeichen, 019; steht oben in der Kategorie als `header p.goal` «Lernziel: …», leer = kurzer Bedienhinweis), `latin` (true → Untertitel kursiv als lateinischer Name), `labels` (4 Bildbeschriftungen), `cover_entry_id` (Eintrag für die Übersichtskachel), `sort`.
 - `entries`: `category_id`, `name`, `subtitle`, `description`, `facts` (jsonb-Array `[{k, v}]`, damit die Reihenfolge erhalten bleibt), `search_terms` (Suchbegriffe für Bilder 2–4), `wp` (englischer Wikipedia-Titel für das Hauptbild), `labels` (optional eigene 4 Beschriftungen), `empty_slots` (bewusst leere Bildplätze 1–4, 013), `confusions` und `sound_*` (Verwechslungsgefahr und Tierstimme, 014), `sort`.
 - `images`: `(entry_id, position 1–4)`, `storage_path` im Bucket `bilder`, `source_page`/`source_file` (für die Lizenzangabe, Knopf «Quelle»), `thumb_x`/`thumb_y`/`thumb_zoom` (Ausschnitt der Vorschau, siehe Verwaltung), `edited` (zugeschnitten). Position 1 ist das Hauptbild.
 - `admins`: `user_id`. Nur wer hier eingetragen ist, darf schreiben (`is_admin()`). Alle dürfen lesen.
@@ -77,7 +77,7 @@ Die Seiten stehen als `<section class="page" id="page-…">` in `index.html` und
 
 ## Verwechslungsgefahr und Tierstimmen (014)
 
-- `entries.confusions` (jsonb `[{name, diff}]`): Name eines anderen Eintrags (beliebige Kategorie) und der Unterschied. Die Textseite zeigt «Nicht verwechseln mit …»; `findByName()` macht aus dem Namen einen Direktlink, fehlt der Eintrag (z. B. Bärlauch), bleibt es Text. Pflege im Eintrag der Verwaltung (Abschnitt «Verwechslungsgefahr», `confRow()`); 014 legt 36 Paare in beide Richtungen an.
+- `entries.confusions` (jsonb `[{name, diff}]`): Name eines anderen Eintrags (beliebige Kategorie) und der Unterschied. Die Textseite zeigt «Nicht verwechseln mit …»; `findByName()` macht aus dem Namen einen Direktlink, fehlt der Eintrag (z. B. Bärlauch), bleibt es Text. Pflege im Eintrag der Verwaltung (Abschnitt «Verwechslungsgefahr», `confRow()`); 014 legt 36 Paare in beide Richtungen an. 019 ergänzt 37 weitere Paare (nur wo der Hinweis noch fehlt, bestehende bleiben), zusammen 73 Paare; 71 davon mit beiden Einträgen, die auch das Verwechslungs-Duell nutzt.
 - `entries.sound_path`, `sound_page` (nur `http(s)://`), `sound_file`: Tierstimme im Bucket `bilder` unter `<kat>/<entry-id>-ton-<zeit>.mp3` (Bucket erlaubt seit 014 `image/jpeg` und `audio/mpeg`). Übernahme nur von Commons: `commonsAudio()` in `js/wikimedia.js` nimmt die MP3-Fassung, die Commons aus OGG/WAV/FLAC erzeugt (`derivatives`), höchstens 5 MB (`MAX_SOUND`). `storeSound()`/`removeSound()` in `js/admin.js`; in der Liste «Bilder aus Liste» als `Eintrag | ton | Commons-Adresse` bzw. `… | ton | entfernen`. Die Anzeige spielt mit `new Audio()` (ein Knopf `data-sound`, erneuter Klick stoppt), CSP `media-src` erlaubt das Supabase-Projekt. Der Bildnachweis führt die Aufnahmen als «Stimme».
 - `sw.js` speichert `.mp3` nicht (Browser laden Audio mit Range-Anfragen, die der Cache nicht bedienen kann); `allImageUrls()` nimmt nur Bilder.
 - Vorschlagsliste der Tierstimmen: `docs/tierstimmen-liste.txt`.

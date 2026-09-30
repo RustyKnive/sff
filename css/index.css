@@ -265,7 +265,7 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .quick:hover{opacity:.9}
 .quick svg{width:18px;height:18px;flex:0 0 auto}
 /* Unter 560 px steht das Suchfeld allein auf der ersten Zeile, darunter «Lernen», «Spielen», «Drucken» (nur Symbol) und «?» */
-@media (max-width:560px){ .search-row{flex-wrap:wrap} .search{flex:1 0 100%} .quick{padding:9px 14px} .quick-print{padding:10px} .quick-print span{display:none} }
+@media (max-width:560px){ .search-row{flex-wrap:wrap} .search-row .search{flex:1 0 100%} .quick{padding:9px 14px} .quick-print{padding:10px} .quick-print span{display:none} }
 /* Ist «Lernen» ausgeblendet (Lernhinweis auf der Übersicht), hat «Drucken» Platz für den Text */
 @media (max-width:560px){ .search-row:has(.quick-learn[hidden]) .quick-print{padding:9px 14px} .search-row:has(.quick-learn[hidden]) .quick-print span{display:inline} }
 
@@ -280,6 +280,10 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .help-pop a{color:var(--accent);font-weight:600}
 .lern-kasten{display:flex;align-items:center;gap:8px;margin:0 0 6px}
 .page .lern-kasten button.help-tip:not(.nav):not(.dot){width:24px;height:24px;font-size:.8rem}
+
+/* Lernziel oben in der Kategorie (019) */
+header p.goal{max-width:760px;margin-top:10px;padding:10px 14px;border-radius:12px;background:var(--accent-soft);color:var(--ink)}
+header p.goal b{color:var(--accent)}
 
 /* Leiste in der Kategorie: Wege zu den Spielen */
 .cat-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px -54px 0 0}

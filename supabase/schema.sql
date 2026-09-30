@@ -38,6 +38,7 @@ create table if not exists public.categories (
   id             text primary key check (id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
   name           text not null,
   description    text not null default '',
+  goal           text not null default '' check (char_length(goal) <= 300),   -- Lernziel der Kategorie (019)
   latin          boolean not null default false,        -- Untertitel = lateinischer Name (kursiv)
   labels         text[] not null default array['Bild 1','Bild 2','Bild 3','Bild 4']
                  check (cardinality(labels) = 4),       -- Beschriftungen der 4 Bilder

@@ -1,3 +1,5 @@
+| 2.11.0 | 30.9.2026 | Lernziel oben in jeder Kategorie, 37 weitere Verwechslungspaare (Datenbank-Version 19) |
+| `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
 | 2.10.0 | 30.9.2026 | Lernfortschritt auf den Kacheln der Startseite: Ring mit «6/16» bzw. «✓ gelernt» über alle Lernsessions |
 | 2.9.0 | 30.9.2026 | Besser zurechtfinden: Einführung beim ersten Besuch, «Hilfe» im Menü, «?»-Erklärungen, Spiele auf eigener Seite mit Knopf «Spielen» und Wegen aus jeder Kategorie |
 | 2.8.0 | 30.9.2026 | Zwei neue Spiele am Ende der LernApp: Verwechslungs-Duell (zwei ähnliche Arten, danach der Unterschied) und Steckbrief-Detektiv (Hinweise nacheinander, Punkte fürs frühe Erraten) |
@@ -8,8 +10,8 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.10.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
-36 Verwechslungspaare · Tierstimmen für 28 Arten
+**Stand:** 30. September 2026 · Version 2.11.0 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
 
 ---
 
@@ -335,6 +337,20 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Kategorie, die man in einer Lernsession lernt, einen kleinen Ring mit «6/16»: so viele Einträge sind schon richtig
   beantwortet (über alle Lernsessions hinweg). Ist alles gelernt, steht dort «✓ gelernt». Auch dieser Wunsch stammt aus dem
   Feedback des Kollegen. Der Stand bleibt wie bisher nur auf dem Gerät.
+
+### 30. September – Lernziele und mehr Verwechslungen (Version 2.11.0)
+
+- **Lernziel pro Kategorie:** Oben in jeder Kategorie steht jetzt in einem Satz, was man danach können soll, zum Beispiel
+  «Die wichtigsten Waldbäume der Schweiz an Wuchs, Blättern oder Nadeln, Früchten und Rinde erkennen und benennen.»
+  Das macht aus der Nachschlage-Seite deutlicher ein Lernangebot. Die 22 Sätze hat Claude entworfen, die Lehrperson hat sie
+  geprüft. In der Verwaltung lässt sich das Lernziel pro Kategorie ändern; neue Kategorien bekommen über den Claude-Auftrag
+  gleich einen Vorschlag.
+- **37 weitere Verwechslungspaare:** «Nicht verwechseln mit …» war der Teil, den der Kollege am besten fand, aber nur bei
+  einem Teil der Einträge vorhanden. Neu dazu kommen zum Beispiel Blindschleiche und Kreuzotter, Vipernatter und Aspisviper,
+  Maronen-Röhrling und Steinpilz, Föhn und Bise oder Wiesen-Fuchsschwanz und Wiesen-Lieschgras. Damit hat auch das
+  Verwechslungs-Duell 71 statt 34 Paare. Bei Bergen, Gewässern, Sehenswürdigkeiten und Naturwundern gibt es bewusst keine,
+  weil dort kaum echte Verwechslungen vorkommen.
+- Auf dem Handy steht das Suchfeld jetzt wirklich allein auf der ersten Zeile (in 2.9.0 hatte eine andere Regel das verhindert).
 
 ---
 

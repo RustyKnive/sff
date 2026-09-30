@@ -170,7 +170,7 @@ $("toOverview").addEventListener("click", () => { location.hash = "#/"; });
 ------------------------------------------------------------------- */
 function renderCategory(cat){
   const isNew = !cat;
-  const c = cat || { id:"", name:"", description:"", latin:false, visible:true, labels:DEFAULT_LABELS, cover_entry_id:null, entries:[] };
+  const c = cat || { id:"", name:"", description:"", goal:"", latin:false, visible:true, labels:DEFAULT_LABELS, cover_entry_id:null, entries:[] };
   const main = $("main");
   const n = c.entries.length;
   if(aiReport && aiReport.id !== c.id) aiReport = null;
@@ -196,6 +196,7 @@ function renderCategory(cat){
         <div id="aiResult"></div>
       </div>` : ""}
       <label>Beschreibung (Untertitel der Kachel) <input type="text" name="description" value="${esc(c.description)}"></label>
+      <label>Lernziel (steht oben in der Kategorie, ein Satz ohne Anzahl) <textarea name="goal" maxlength="300" rows="2">${esc(c.goal || "")}</textarea></label>
       <label class="inline"><input type="checkbox" name="visible" ${c.visible ? "checked" : ""}> Kategorie auf der Seite sichtbar</label>
       <label class="inline"><input type="checkbox" name="latin" ${c.latin ? "checked" : ""}> Untertitel der Einträge ist ein lateinischer Name (kursiv)</label>
       <h3>Bildbeschriftungen (Standard für alle Einträge)</h3>
@@ -233,7 +234,7 @@ function renderCategory(cat){
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const row = {
-      id:F.id.value.trim(), name:F.name.value.trim(), description:F.description.value.trim(),
+      id:F.id.value.trim(), name:F.name.value.trim(), description:F.description.value.trim(), goal:F.goal.value.trim(),
       latin:F.latin.checked, visible:F.visible.checked, labels:[0,1,2,3].map(i => F["label" + i].value.trim())
     };
     const chosen = isNew ? aiChosen() : [];
@@ -316,6 +317,7 @@ Neue Kategorie: «${name}», mit ${count} Einträgen (die bekanntesten zuerst).
    Keine Einträge, die es schon gibt. (Ob die Kategorie zur Seite passt, entscheidet die Lehrperson; nicht prüfen.)
 2. Schlage Name der Kategorie (Mehrzahl wie die bestehenden), einen kurzen Untertitel der Kachel und genau 4 kurze
    Bildbeschriftungen vor (Bild 1 zeigt das Ganze, z. B. Baum, Blätter, Früchte, Rinde).
+   goal ist das Lernziel der Kategorie: ein Satz für Sek I, was man danach erkennen oder wissen soll, ohne Anzahl.
    latin = true bei Lebewesen: Der Untertitel jedes Eintrags ist dann der lateinische Name. Sonst nennt er Ort, Kanton oder Art.
 3. Schreibe jeden Eintrag: ${AI_ENTRY_TASK}
 
@@ -331,6 +333,7 @@ Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel-Eintrag aus
   "pruefung": "1–3 Sätze: Überschneidungen? Hinweise",
   "name": "Bäume",
   "description": "Die wichtigsten Waldbäume",
+  "goal": "Die wichtigsten Waldbäume der Schweiz an Wuchs, Blättern oder Nadeln, Früchten und Rinde erkennen und benennen.",
   "latin": true,
   "labels": ["Baum", "Blätter", "Früchte", "Rinde"],
   "entries": [
@@ -364,7 +367,7 @@ function aiParse(text){
   const entries = (Array.isArray(r.entries) ? r.entries : []).map(aiEntry).filter(e => e.name);
   if(!entries.length) throw new Error("Die Antwort enthält keine Einträge.");
   return {
-    passt:r.passt !== false, pruefung:aiStr(r.pruefung), name:aiStr(r.name, 100), description:aiStr(r.description, 200),
+    passt:r.passt !== false, pruefung:aiStr(r.pruefung), name:aiStr(r.name, 100), description:aiStr(r.description, 200), goal:aiStr(r.goal, 300),
     latin:!!r.latin, labels:[0,1,2,3].map(i => aiStr(r.labels?.[i], 40)), entries
   };
 }
@@ -412,6 +415,7 @@ function setupAi(form){
     // Vorschlag ins Formular übernehmen
     if(r.name){ F.name.value = r.name; F.id.value = slug(r.name); }
     if(r.description) F.description.value = r.description;
+    if(r.goal) F.goal.value = r.goal;
     F.latin.checked = r.latin;
     F.visible.checked = false;   // wird ausgeblendet angelegt, siehe createWithAi
     r.labels.forEach((l, i) => { if(l) F["label" + i].value = l; });
