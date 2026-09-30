@@ -1,4 +1,4 @@
-| 2.11.1 | 30.9.2026 | Feld mit dem Lernziel so breit wie Suchzeile und Karten, am Computer und auf dem Handy |
+| 2.11.1 | 30.9.2026 | Feld mit dem Lernziel so breit wie Suchzeile und Karten (Computer und Handy) und in eigenem, frischem Grün mit Strich links, damit es auffällt |
 | 2.11.0 | 30.9.2026 | Lernziel oben in jeder Kategorie, 37 weitere Verwechslungspaare (Datenbank-Version 19) |
 | `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
 | 2.10.0 | 30.9.2026 | Lernfortschritt auf den Kacheln der Startseite: Ring mit «6/16» bzw. «✓ gelernt» über alle Lernsessions |

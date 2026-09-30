@@ -1,10 +1,13 @@
 /* Anzeige (index.html). Gemeinsame Farben in basis.css */
 :root{ --shadow:0 6px 24px rgba(30,50,30,.12); --radius:16px;
   /* Farben der Lernsessions (Grün, Blau, Orange, Violett, Rot, Türkis, Gelb, Rosa) */
-  --s0:#2f6b3a; --s1:#2d62b3; --s2:#c7620e; --s3:#7a47b8; --s4:#c0392b; --s5:#12808a; --s6:#a8860a; --s7:#c2407e; }
+  --s0:#2f6b3a; --s1:#2d62b3; --s2:#c7620e; --s3:#7a47b8; --s4:#c0392b; --s5:#12808a; --s6:#a8860a; --s7:#c2407e;
+  /* Lernziel: frisches Maigrün, hebt sich vom übrigen Hellgrün ab */
+  --goal-bg:#e6f2cf; --goal-line:#7aab3a; }
 @media (prefers-color-scheme: dark){
   :root{ --shadow:0 6px 24px rgba(0,0,0,.45);
-    --s0:#8fcf94; --s1:#86b2f5; --s2:#f5a55c; --s3:#c09af0; --s4:#f28b82; --s5:#6fd3dc; --s6:#e8cc5a; --s7:#f28fbf; }
+    --s0:#8fcf94; --s1:#86b2f5; --s2:#f5a55c; --s3:#c09af0; --s4:#f28b82; --s5:#6fd3dc; --s6:#e8cc5a; --s7:#f28fbf;
+    --goal-bg:#2c3a1f; --goal-line:#a6d06a; }
 }
 body{line-height:1.5}
 [hidden]{display:none!important}
@@ -282,7 +285,8 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .page .lern-kasten button.help-tip:not(.nav):not(.dot){width:24px;height:24px;font-size:.8rem}
 
 /* Lernziel oben in der Kategorie (019) */
-header p.goal{max-width:none;margin:10px -54px 0 0;padding:10px 14px;border-radius:12px;background:var(--accent-soft);color:var(--ink)}
+header p.goal{max-width:none;margin:10px -54px 0 0;padding:10px 14px;border-radius:12px;background:var(--goal-bg);
+  box-shadow:inset 4px 0 0 var(--goal-line);color:var(--ink)}
 header p.goal b{color:var(--accent)}
 
 /* Leiste in der Kategorie: Wege zu den Spielen */
