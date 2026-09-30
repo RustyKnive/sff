@@ -1348,6 +1348,10 @@ function memoStart(){
       <span class="memo-back" aria-hidden="true"></span>
       <span class="memo-face">${c.kind === "bild" ? `<img alt="">` : `<span class="memo-name">${esc(pairs[c.pair].item.n)}</span>`}</span>
     </button>`).join("");
+  // Lange Namen kleiner setzen statt mitten im Wort umzubrechen («Alpenschneehuhn»): --len = längstes Wort
+  memoGrid.querySelectorAll(".memo-name").forEach(el => {
+    el.style.setProperty("--len", Math.max(...el.textContent.split(/[\s-]+/).map(w => w.length)));
+  });
   // Hauptbilder gleich laden, damit sie beim Aufdecken schon da sind
   memoGrid.querySelectorAll(".memo-card").forEach((b, i) => {
     const c = memo.cards[i];

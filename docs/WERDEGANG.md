@@ -1,3 +1,4 @@
+| 2.11.2 | 30.9.2026 | Memory: lange Namen (z. B. Alpenschneehuhn) werden kleiner gesetzt statt mitten im Wort umgebrochen |
 | 2.11.1 | 30.9.2026 | Feld mit dem Lernziel so breit wie Suchzeile und Karten (Computer und Handy) und in eigenem, frischem Grün mit Strich links, damit es auffällt |
 | 2.11.0 | 30.9.2026 | Lernziel oben in jeder Kategorie, 37 weitere Verwechslungspaare (Datenbank-Version 19) |
 | `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
@@ -11,7 +12,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.11.1 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 30. September 2026 · Version 2.11.2 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
 
 ---
