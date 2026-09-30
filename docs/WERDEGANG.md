@@ -1,10 +1,11 @@
+| 2.7.0 | 30.9.2026 | Memory am Bildschirm am Ende der LernApp: 4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name |
 # Natur und Schweiz – Werdegang der Website
 
 Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amphibien oder Berge mit Einträgen,
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 29. September 2026 · Version 2.4.0 (Datenbank 17) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 30. September 2026 · Version 2.7.0 (Datenbank 18) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 36 Verwechslungspaare · Tierstimmen für 28 Arten
 
 ---
@@ -43,6 +44,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   - *Copyright:* Urheberrecht und vollständiger Bildnachweis (mit «eigenes Foto», «zugeschnitten» und «KI-generiert»).
   - *LernApp:* Kategorien wählen, Bilder erkennen und den Namen eintippen; wiederholt wird nach dem Leitner-System, der Fortschritt bleibt auf dem Gerät gespeichert.
     Mehrere **Lernsessions** nebeneinander, jede mit eigenen Kategorien, eigener Farbe und eigenem Fortschritt; umschalten über die farbige Leiste, löschen unter «Lernsessions verwalten».
+    Ganz unten ein **Memory** am Bildschirm: 4 × 4 Karten mit bis zu 8 zufälligen Paaren aus Bild und Name einer Kategorie (oder aller gemischt).
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -282,6 +284,14 @@ Nach der LernApp stand die Frage, was die Seite im Schulalltag noch nützlicher 
 - **Nummer statt Name:** Nach dem Melden erscheint gross eine Nummer. Damit können Schülerinnen und Schüler den Fund bei
   der Lehrperson vorweisen, ohne dass ihr Name in der Datenbank landet.
 - **In der Verwaltung:** Die Übersicht hat eine eigene Liste «Gemeldete Textfehler»; im Eintrag steht die Meldung oben.
+
+### 30. September – Memory in der LernApp (Version 2.7.0)
+
+- **Memory am Bildschirm:** Am Ende der LernApp steht neu ein Memory. Man wählt eine Kategorie (oder alle gemischt),
+  dann liegen 16 Karten verdeckt im Raster 4 × 4: bis zu 8 zufällige Einträge, je eine Karte mit dem Bild und eine mit
+  dem Namen. Zwei aufgedeckte Karten, die zusammengehören, bleiben offen, sonst drehen sie sich nach gut einer Sekunde um.
+  Gezählt werden gefundene Paare und Züge. Bisher gab es das Memory nur zum Ausdrucken und Ausschneiden.
+- Das Memory zählt nicht für den Lernstand der LernApp; es ist ein spielerischer Zugang zum selben Wissen.
 
 ---
 

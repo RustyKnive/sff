@@ -51,6 +51,17 @@
 <!-- Seiten aus dem Menü (Adresse #/lernapp, #/quiz, #/pdf, #/einstellungen, #/admin, #/copyright; #/jetzt nutzt das Raster) -->
 <section class="page" id="page-lernapp" hidden>
   <div id="lern"></div>
+  <!-- Memory am Ende der LernApp (js/index.js memoStart): je Bild und Name eines Eintrags ergeben ein Paar -->
+  <div class="memo" id="memo">
+    <h2>Memory</h2>
+    <p>Finde die Paare: Jedes Bild gehört zu einem Namen. Es erscheinen bis zu 8 zufällige Paare aus der gewählten Kategorie.</p>
+    <div class="offline">
+      <select id="memoCat" aria-label="Kategorie für das Memory"></select>
+      <button id="memoStart">Memory starten</button>
+    </div>
+    <p class="memo-status" id="memoStatus" aria-live="polite" hidden></p>
+    <div class="memo-grid" id="memoGrid" hidden></div>
+  </div>
 </section>
 <section class="page" id="page-admin" hidden>
   <h2>Verwaltung</h2>
@@ -158,6 +169,9 @@
           Wer mehr will, holt sich «10 weitere neue Begriffe» oder übt frei weiter (zählt nicht).</li>
         <li><b>Dranbleiben:</b> Die Startseite erinnert an fällige Begriffe, und die Serie zählt die Tage in Folge.</li>
         <li>Der Lernstand bleibt nur auf diesem Gerät gespeichert, es braucht kein Konto.</li>
+        <li><b>Memory:</b> Ganz unten auf der Seite der LernApp Kategorie wählen und «Memory starten». Es erscheinen
+          16 Karten mit bis zu 8 zufälligen Paaren aus Bild und Name. Zwei Karten aufdecken: Passen sie, bleiben sie offen,
+          sonst drehen sie sich wieder um. «Neues Memory» mischt neue Paare.</li>
       </ul>
     </details>
     <details>

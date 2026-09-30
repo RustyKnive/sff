@@ -1274,6 +1274,94 @@ function renderLernQuiz(){
   input.focus();
 }
 
+/* ------------------------------------------------------------------
+   MEMORY am Ende der LernApp: 4 × 4 Karten, Bild und Name desselben Eintrags bilden ein Paar
+------------------------------------------------------------------- */
+const MEMO_PAARE = 8;      // höchstens 8 Paare = 16 Karten
+const MEMO_ZEIT = 1200;    // so lange bleiben zwei falsche Karten offen (Millisekunden)
+const memoSel = document.getElementById("memoCat");
+const memoGrid = document.getElementById("memoGrid");
+const memoStatus = document.getElementById("memoStatus");
+let memo = null;           // { pairs:[{cat,item}], cards:[{pair, kind}], open:[i], found, moves, lock }
+let lastMemoCat = null;
+
+// Kommt man aus einer Kategorie, ist sie vorgewählt; sonst die zuletzt gespielte
+function fillMemoSelect(){
+  const keep = lastCat || lastMemoCat || memoSel.value;
+  memoSel.innerHTML = `<option value="*">Alle Kategorien gemischt</option>`
+    + CATS.filter(c => c.items.length > 1).map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");
+  if([...memoSel.options].some(o => o.value === keep)) memoSel.value = keep;
+}
+
+function memoStart(){
+  const id = memoSel.value;
+  lastMemoCat = id;
+  // Zufällige Einträge, jeder Name nur einmal (sonst gäbe es zwei gleiche Namenskarten)
+  const names = new Set();
+  const pairs = shuffled(CATS.filter(c => id === "*" || c.id === id).flatMap(cat => cat.items.map(item => ({ cat, item }))))
+    .filter(p => !names.has(p.item.n) && names.add(p.item.n)).slice(0, MEMO_PAARE);
+  if(pairs.length < 2) return;
+  memo = { pairs, cards:shuffled(pairs.flatMap((p, i) => [{ pair:i, kind:"bild" }, { pair:i, kind:"name" }])),
+    open:[], found:0, moves:0, lock:false };
+  memoGrid.innerHTML = memo.cards.map((c, i) => `
+    <button type="button" class="memo-card" data-i="${i}" aria-label="Karte ${i + 1}, verdeckt">
+      <span class="memo-back" aria-hidden="true"></span>
+      <span class="memo-face">${c.kind === "bild" ? `<img alt="">` : `<span class="memo-name">${esc(pairs[c.pair].item.n)}</span>`}</span>
+    </button>`).join("");
+  // Hauptbilder gleich laden, damit sie beim Aufdecken schon da sind
+  memoGrid.querySelectorAll(".memo-card").forEach((b, i) => {
+    const c = memo.cards[i];
+    if(c.kind !== "bild") return;
+    const { cat, item } = pairs[c.pair];
+    loadPrintImage(b.querySelector("img"), cat, item)
+      .catch(() => { b.querySelector(".memo-face").innerHTML = `<span class="memo-name">Bild nicht verfügbar</span>`; });
+  });
+  memoGrid.hidden = false;
+  memoShowStatus();
+  document.getElementById("memoStart").textContent = "Neues Memory";
+}
+
+function memoShowStatus(){
+  const n = memo.pairs.length;
+  memoStatus.hidden = false;
+  memoStatus.textContent = memo.found === n
+    ? `Geschafft! Alle ${n} Paare in ${memo.moves} Zügen gefunden.`
+    : `${memo.found} von ${n} Paaren gefunden · ${memo.moves} ${memo.moves === 1 ? "Zug" : "Züge"}`;
+}
+
+// Beschriftung für Screenreader: offen zeigt sie den Inhalt, verdeckt nur die Nummer
+function memoLabel(b, open){
+  const i = +b.dataset.i, c = memo.cards[i];
+  b.setAttribute("aria-label", !open ? `Karte ${i + 1}, verdeckt`
+    : c.kind === "name" ? `Karte ${i + 1}: ${memo.pairs[c.pair].item.n}`
+    : `Karte ${i + 1}: Bild${b.classList.contains("found") ? " " + memo.pairs[c.pair].item.n : ""}`);
+}
+
+memoGrid.addEventListener("click", e => {
+  const b = e.target.closest(".memo-card");
+  if(!b || !memo || memo.lock || b.classList.contains("open")) return;
+  b.classList.add("open");
+  memoLabel(b, true);
+  memo.open.push(b);
+  if(memo.open.length < 2) return;
+  memo.moves++;
+  const [x, y] = memo.open;
+  memo.open = [];
+  if(memo.cards[+x.dataset.i].pair === memo.cards[+y.dataset.i].pair){
+    memo.found++;
+    for(const el of [x, y]){ el.classList.add("found"); memoLabel(el, true); }
+    memoShowStatus();
+    return;
+  }
+  memo.lock = true;
+  memoShowStatus();
+  setTimeout(() => {
+    for(const el of [x, y]){ el.classList.remove("open"); memoLabel(el, false); }
+    memo.lock = false;
+  }, MEMO_ZEIT);
+});
+document.getElementById("memoStart").addEventListener("click", memoStart);
+
 // Karten einer Kategorie (einmal gebaut, danach wiederverwendet: Kategorie, Suche, «Jetzt zu sehen»)
 function cardsOf(cat){
   if(!catCards.has(cat.id)) catCards.set(cat.id, cat.items.map(it => buildCard(cat, it)));
@@ -1310,7 +1398,7 @@ function render(){
     setHead(page.title, page.intro);
     if(id === "copyright"){ buildCredits(); refresh(); }
     if(id === "pdf") fillPdfSelect();
-    if(id === "lernapp") renderLern();
+    if(id === "lernapp"){ renderLern(); fillMemoSelect(); }
     if(id === "quiz") fillQuizSelect();
     if(id === "einstellungen") showVersion();
     lastCat = null;

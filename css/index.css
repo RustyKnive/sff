@@ -211,6 +211,25 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .lern-done{padding:16px 18px;border-radius:var(--radius);background:var(--card);margin-bottom:12px}
 .lern-done h3{margin-top:0}
 
+/* Memory am Ende der LernApp: 4 × 4 Karten zum Umdrehen (js/index.js memoStart) */
+.memo{margin-top:36px;padding-top:4px;border-top:1px solid var(--accent-soft)}
+.memo-status{margin-top:14px;font-weight:600}
+.memo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:560px}
+.page .memo-grid button.memo-card:not(.nav):not(.dot){position:relative;aspect-ratio:1;padding:0;border-radius:12px;
+  background:none;color:var(--ink);font-weight:600;perspective:600px}
+.memo-back,.memo-face{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:12px;
+  overflow:hidden;backface-visibility:hidden;transition:transform .35s}
+.memo-back{background:var(--accent);box-shadow:var(--shadow)}
+.memo-back::after{content:"?";color:var(--card);font-size:clamp(1.2rem,6vw,2rem);opacity:.8}
+.memo-face{background:var(--card);box-shadow:inset 0 0 0 1.5px var(--accent-soft);transform:rotateY(180deg)}
+.memo-card.open .memo-back{transform:rotateY(-180deg)}
+.memo-card.open .memo-face{transform:rotateY(0)}
+.memo-card.found .memo-face::after{content:"";position:absolute;inset:0;border-radius:12px;box-shadow:inset 0 0 0 4px var(--accent)}
+.memo-face img{width:100%;height:100%;object-fit:cover;object-position:var(--fx,50%) var(--fy,50%)}
+.memo-name{padding:4px;font-size:clamp(.75rem,3vw,1rem);line-height:1.2;text-align:center;overflow-wrap:anywhere;hyphens:auto}
+.memo-card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){ .memo-back,.memo-face{transition:none} }
+
 /* Suche in der Kopfzeile, daneben «Lernen» und «Drucken» (unter 420 px «Drucken» nur als Symbol) */
 .search-row{display:flex;gap:8px;align-items:center;width:calc(100% + 54px);margin:12px 0 0}
 .quick{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:99px;background:var(--accent);
