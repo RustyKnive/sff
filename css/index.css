@@ -218,6 +218,8 @@ dialog.lightbox::backdrop{background:rgba(0,0,0,.9)}
 .quick:hover{opacity:.9}
 .quick svg{width:18px;height:18px;flex:0 0 auto}
 @media (max-width:420px){ .quick{padding:9px 12px} .quick-print{padding:10px} .quick-print span{display:none} }
+/* Ist «Lernen» ausgeblendet (Lernhinweis auf der Übersicht), hat «Drucken» auch auf dem Handy Platz für den Text */
+@media (max-width:420px){ .search-row:has(.quick-learn[hidden]) .quick-print{padding:9px 12px} .search-row:has(.quick-learn[hidden]) .quick-print span{display:inline} }
 .search{display:block;flex:1 1 auto;min-width:0;width:auto;max-width:none;margin:0;padding:10px 16px;border:1.5px solid var(--accent-soft);
   border-radius:99px;background:var(--card);color:var(--ink);font:inherit}
 .search:focus{outline:none;border-color:var(--accent)}

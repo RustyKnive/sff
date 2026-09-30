@@ -878,6 +878,7 @@ function showLernBanner(){
   const el = document.getElementById("lernBanner");
   if(!el) return;
   el.hidden = true;
+  quickLearn.hidden = false;   // «Lernen» neben der Suche nur, wenn kein Lernhinweis da ist (der führt selbst zur LernApp)
   if(!lernStore.sessions.length) return;
   const per = lernStore.sessions.map(s => ({ s, t:lernToday(s) }));
   const due = per.reduce((n, p) => n + p.t.due, 0), neu = per.reduce((n, p) => n + p.t.neu, 0);
@@ -893,6 +894,7 @@ function showLernBanner(){
     el.innerHTML = `<b>Für heute ist alles wiederholt.</b> ${serie || "Gut gemacht!"} <span class="lern-banner-go">Zur LernApp →</span>`;
   }else return;
   el.hidden = false;
+  quickLearn.hidden = true;
 }
 
 // Fortschritt pro Kategorie (richtig = Fach 2–5)
@@ -1283,6 +1285,7 @@ const cardOf = (cat, item) => cardsOf(cat)[cat.items.indexOf(item)];
 function resetView(pageId){
   if(lightbox.open) lightbox.close();
   for(const el of [document.getElementById("lernBanner"), document.getElementById("daily")]) if(el) el.hidden = true;
+  quickLearn.hidden = false;
   grid.replaceChildren();
   window.scrollTo(0, 0);
   for(const p in PAGES) document.getElementById("page-" + p).hidden = p !== pageId;
@@ -1458,6 +1461,7 @@ beamer.addEventListener("close", () => {
 ------------------------------------------------------------------- */
 const searchEl = document.getElementById("search");
 const searchRow = document.getElementById("searchRow");
+const quickLearn = document.getElementById("quickLearn");
 const SEARCH_MAX = 30;
 let searchTimer = null;
 function runSearch(){
