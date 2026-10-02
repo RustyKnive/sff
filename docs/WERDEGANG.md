@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.13.1 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. Oktober 2026 · Version 2.13.2 (Datenbank 20) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
 
 ---
@@ -377,6 +377,15 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - **Kategorie des Tages:** Die Kategorie der Entdeckung des Tages steht jeden Tag als erste Kachel auf der Startseite,
   mit Schild und Rahmen. Sie wechselt täglich und ist nie dieselbe wie am Vortag; alle sehen am selben Tag dieselbe.
 
+### 2. Oktober – Textkorrekturen aus der KI-Vorprüfung (Version 2.13.2)
+
+- Die Hinweise der KI-Vorprüfung aller Texte (Prüfliste vom 30. September) sind umgesetzt: Bergahorn mit spitzen statt
+  stumpfen Buchten, Beerenfarbe der Vogelbeere überall «orangerot», Smaragdeidechse (auch die Weibchen sind grün),
+  Alpensteinbock (1906 in die Schweiz gebracht, ab 1911 ausgesetzt), Raureif (Fachbegriff Raueis), Admiral (überwintert
+  zunehmend auch bei uns), Erdhummel (fliegt schon bei wenigen Grad über null), Kartoffelkäfer (erstmals Ende des
+  19. Jahrhunderts eingeschleppt), Hundsrose (Blütezeit Mai–Juni) und Alpenglühen (Bedeutung im engeren Sinn).
+- Die vollständige Prüfung der Inhalte durch Menschen anhand der Prüfliste steht noch aus.
+
 ---
 
 ## Versionen
@@ -405,6 +414,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.12.0 | 30.9.2026 | Farbe als Leitsystem: Lernen Petrolblau, Spielen Sonnengelb, Grundfarbe Grün |
 | 2.13.0 | 2.10.2026 | Spielende mit Rückmeldung: Spruch nach Resultat, persönlicher Rekord und Durchschnitt, Paare bzw. Arten zum Nachschauen, Konfetti bei sehr gutem Resultat; Kategorie des Tages als erste Kachel der Startseite |
 | 2.13.1 | 2.10.2026 | Duell: Ändert sich die Zahl der Paare einer Kategorie, beginnt der Rekord neu, damit «x von n richtig» zum Rekord passt |
+| 2.13.2 | 2.10.2026 | Textkorrekturen aus der KI-Vorprüfung in 11 Einträgen, z. B. Bergahorn, Alpensteinbock, Kartoffelkäfer (Datenbank-Version 20) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -453,6 +463,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `017_ki_bilder.sql` | Kennzeichnung der 19 mit ChatGPT erzeugten Infografiken (Wetterphänomene) |
 | `018_textmeldungen.sql` | Meldungen zu Fehlern im Text (Platz 0 in `image_reports`, Funktion `report_text` mit Meldungsnummer) |
 | `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
+| `020_textkorrekturen.sql` | Textkorrekturen aus der KI-Vorprüfung (Prüfliste vom 30.9.2026) in 11 Einträgen, nur die betroffenen Stellen |
 
 ## Offen und geplant
 
