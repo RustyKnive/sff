@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.14.1 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. Oktober 2026 · Version 2.14.2 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge
 
 ---
@@ -411,6 +411,8 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - Wunsch des Users nach dem ersten Ausprobieren (2.14.1): jederzeit unterbrechen können und nach dem ersten gelösten
   Auftrag aussteigen können. Darum ein × in jedem Fenster (auch Esc), das den Stand samt angefangener Antwort speichert,
   und «Fertig für heute» neben «Nächster Auftrag»; «Nochmals lösen» nur noch beim Ansehen aus der Liste.
+- Ebenfalls auf Wunsch des Users (2.14.2): Antworten als ganzer Satz gelten. Füllwörter wie «es ist ein» oder «ich glaube»
+  werden übergangen, im Rest wird der Name gesucht; bei Zahlen genügt es, wenn die richtige Zahl im Satz steht.
 
 ---
 
@@ -443,6 +445,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.13.2 | 2.10.2026 | Textkorrekturen aus der KI-Vorprüfung in 11 Einträgen, z. B. Bergahorn, Alpensteinbock, Kartoffelkäfer (Datenbank-Version 20) |
 | 2.14.0 | 2.10.2026 | Forscheraufträge: einmal pro Tag eine Alltagssituation, ein Rätsel, eine Rechenaufgabe oder eine Forscherfrage als Einstieg, nachforschen in der Kategorie, antworten mit Tipp, Lob und Erklärung; 25 Aufträge über alle Kategorien (Datenbank-Version 21) |
 | 2.14.1 | 2.10.2026 | Forscheraufträge: jederzeit mit × oder Esc unterbrechen (Vermutung und angefangene Antwort bleiben gespeichert), nach dem Lösen «Fertig für heute» neben «Nächster Auftrag» |
+| 2.14.2 | 2.10.2026 | Forscheraufträge: kurze Antworten auch als Satz («Ich glaube, es ist ein Taubenschwänzchen», «Es sind 30'000 Liter»); Füllwörter zählen nicht, wer mit «oder» mehrere Möglichkeiten nennt, rät |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 

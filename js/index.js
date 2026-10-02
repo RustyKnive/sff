@@ -1923,20 +1923,32 @@ function taskNext(){
 }
 const taskActive = () => allTasks().find(t => t.id === taskStore.active && !taskDone(t)) || null;
 
-// Kurze Antwort prüfen: nur Zahlen → Zahlenvergleich («30 000», «30'000 Liter»), sonst wie in der LernApp (Tippfehler erlaubt)
-const taskNumber = s => { const m = String(s).replace(/[\s'’]/g, "").replace(",", ".").match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+/* Kurze Antwort prüfen, auch als ganzer Satz («Ich glaube, es ist ein Taubenschwänzchen!», «Es sind 30'000 Liter»):
+   nur Zahlen → irgendeine Zahl im Satz stimmt; sonst Füllwörter (TASK_FUELL) weglassen und im Rest ein Wort bzw. eine
+   Wortfolge suchen, die wie in der LernApp passt (Tippfehler erlaubt). Wer mit «oder» mehrere Möglichkeiten nennt, rät. */
+const TASK_FUELL = new Set(("der die das den dem des ein eine einen einem einer es ist sind war waren sei wird er sie ich du "
+  + "glaube denke meine vermute schaetze wohl vielleicht wahrscheinlich bestimmt sicher eher also ja nun halt ganz "
+  + "hat habe hast haben gesehen handelt sich um etwa ungefaehr ca circa rund knapp genau mein meine antwort loesung lautet "
+  + "nach meiner meinung tipp").split(" "));
+const taskNumbers = s => (String(s).replace(/(\d)[\s'’](?=\d{3}\b)/g, "$1").match(/-?\d+([.,]\d+)?/g) || [])
+  .map(n => parseFloat(n.replace(",", ".")));
 function taskCheck(t, input){
   const variants = t.answer.split("|").map(s => s.trim()).filter(Boolean);
+  if(/\boder\b/i.test(input)) return false;
   if(variants.length && variants.every(v => /^-?\d+([.,]\d+)?$/.test(v))){
-    const n = taskNumber(input);
-    return n !== null && variants.some(v => taskNumber(v) === n) ? "exact" : false;
+    const nums = taskNumbers(input);
+    return variants.some(v => nums.includes(taskNumbers(v)[0])) ? "exact" : false;
   }
-  const a = input.trim().replace(/^(der|die|das|ein|eine|es ist|das ist)\s+/i, "");
+  const words = input.split(/[^\p{L}\p{N}-]+/u).filter(w => w && !TASK_FUELL.has(lernNorm(w)));
   let best = false;
   for(const v of variants){
-    const m = lernMatch(a, v);
-    if(m === "exact") return "exact";
-    if(m) best = m;
+    // Wortfolgen bis zur Länge des gesuchten Namens plus 1 (Bindestrich- und Mehrwortnamen wie «Grosses Glühwürmchen»)
+    const len = v.split(/[\s-]+/).length + 1;
+    for(let i = 0; i < words.length; i++) for(let j = i + 1; j <= Math.min(words.length, i + len); j++){
+      const m = lernMatch(words.slice(i, j).join(" "), v);
+      if(m === "exact") return "exact";
+      if(m) best = m;
+    }
   }
   return best;
 }
