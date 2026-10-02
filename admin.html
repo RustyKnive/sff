@@ -24,6 +24,11 @@
 <body>
 <header>
   <h1>Verwaltung · Natur und Schweiz</h1>
+  <!-- Hauptbereiche (js/admin.js render): Zu erledigen, Kategorien (Seitenleiste), Werkzeuge -->
+  <nav class="topnav" id="topnav" hidden>
+    <a href="#/" data-nav="todo">Zu erledigen <span class="badge" id="todoCount" hidden></span></a>
+    <a href="#/werkzeuge" data-nav="tools">Werkzeuge</a>
+  </nav>
   <a href="index.html" target="_blank" rel="noopener">Seite ansehen ↗</a>
   <span id="who" class="hint"></span>
   <span id="version" class="hint"></span>
@@ -56,7 +61,6 @@
 
 <div id="appView" class="layout" hidden>
   <aside>
-    <button class="ghost" id="toOverview">← Übersicht</button>
     <h2>Kategorien <small id="catCount"></small></h2>
     <ul class="list" id="catList"></ul>
     <button class="ghost" id="newCat">+ Neue Kategorie</button>

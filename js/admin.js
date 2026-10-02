@@ -10,6 +10,7 @@ const publicUrl = path => sb.storage.from(CFG.bucket).getPublicUrl(path).data.pu
 const DEFAULT_LABELS = ["Bild 1","Bild 2","Bild 3","Bild 4"];
 
 let cats = [];   // alle Kategorien mit Einträgen und Bildern
+let tasks = [];  // Forscheraufträge (021), leer, wenn die Tabelle fehlt
 
 /* ------------------------------------------------------------------
    HILFSFUNKTIONEN
@@ -56,8 +57,12 @@ async function reload(){
     .select("*, entries!entries_category_id_fkey(*, images(*))")
     .order("sort").order("name")
     .order("sort", { referencedTable:"entries" }).order("name", { referencedTable:"entries" }));
-  await loadReports();
+  await Promise.all([loadReports(), loadTasks()]);
   renderSidebar();
+}
+async function loadTasks(){
+  const { data, error } = await sb.from("tasks").select("*").order("sort").order("id");
+  tasks = error ? [] : data;
 }
 
 /* Gemeldete Bilder (016) und Textfehler (018): Meldungen aus der Anzeige («Melden» bzw. «Fehler im Text melden» in der Grossansicht).
@@ -136,17 +141,37 @@ function route(){
 
 function renderSidebar(){
   const r = route();
-  const activeCat = r.type === "k" ? r.id : r.type === "e" ? (r.id === "neu" ? r.extra : findEntry(r.id)?.cat.id) : null;
+  const activeCat = r.type === "k" ? r.id : r.type === "e" ? (r.id === "neu" ? r.extra : findEntry(r.id)?.cat.id)
+    : r.type === "a" ? (r.id === "neu" ? r.extra : tasks.find(x => x.id === r.id)?.category_id) : null;
   const hidden = cats.filter(c => !c.visible).length;
   $("catCount").textContent = `(${cats.length}${hidden ? `, davon ${hidden} ausgeblendet` : ""})`;
-  $("catList").innerHTML = cats.map((c, i) => `
+  $("catList").innerHTML = cats.map((c, i) => {
+    const n = catIssues(c).reports;
+    return `
     <li class="${c.id === activeCat ? "active" : ""} ${c.visible ? "" : "off"}">
       <input type="checkbox" data-vis="${esc(c.id)}" ${c.visible ? "checked" : ""} title="Auf der Seite sichtbar">
-      <a href="#/k/${esc(c.id)}">${esc(c.name)} <small>(${c.entries.length})</small></a>
+      <a href="#/k/${esc(c.id)}">${esc(c.name)} <small>(${c.entries.length})</small>${n ? ` <span class="badge warn" title="Offene Meldungen">⚑ ${n}</span>` : ""}</a>
       <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
       <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < cats.length - 1 ? "" : "disabled"}>↓</button>
-    </li>`).join("");
+    </li>`;
+  }).join("");
+  // Hauptbereiche oben: aktiven markieren, Zahl der offenen Punkte bei «Zu erledigen»
+  const nav = r.type === "werkzeuge" ? "tools" : !r.type ? "todo" : "";
+  document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("active", a.dataset.nav === nav));
+  const open = todoCount();
+  $("todoCount").textContent = open;
+  $("todoCount").hidden = !open;
 }
+// Hinweise pro Kategorie: offene Meldungen (Bild und Text), fehlende Bilder, Bilder ohne Quelle
+function catIssues(c){
+  const ids = new Set(c.entries.map(e => e.id));
+  return {
+    reports:reports.filter(r => ids.has(r.entry_id)).length,
+    missing:c.entries.reduce((s, e) => s + openSlots(e).length, 0),
+    noSource:c.entries.reduce((s, e) => s + e.images.filter(i => !i.source_page && !i.source_file).length, 0)
+  };
+}
+const todoCount = () => reports.length + (cats.some(c => c.entries.some(e => openSlots(e).length)) ? 1 : 0) + (schemaMissing() ? 1 : 0);
 $("catList").addEventListener("click", e => {
   const b = e.target.closest("[data-move]");
   if(b) move("categories", cats, +b.dataset.move, +b.dataset.dir);
@@ -163,19 +188,20 @@ async function setVisible(table, id, visible){
   render();
 }
 $("newCat").addEventListener("click", () => { location.hash = "#/k/neu"; });
-$("toOverview").addEventListener("click", () => { location.hash = "#/"; });
+
 
 /* ------------------------------------------------------------------
    KATEGORIE BEARBEITEN
 ------------------------------------------------------------------- */
-function renderCategory(cat){
+// Neue Kategorie (#/k/neu) bzw. Register «Einstellungen» einer Kategorie (host = Inhalt des Registers)
+function renderCategory(cat, host = $("main")){
   const isNew = !cat;
   const c = cat || { id:"", name:"", description:"", goal:"", latin:false, visible:true, labels:DEFAULT_LABELS, cover_entry_id:null, entries:[] };
-  const main = $("main");
+  const main = host;
   const n = c.entries.length;
   if(aiReport && aiReport.id !== c.id) aiReport = null;
   main.innerHTML = `
-    <h2>${isNew ? "Neue Kategorie" : "Kategorie: " + esc(c.name)}</h2>
+    ${isNew ? "<h2>Neue Kategorie</h2>" : ""}
     ${aiReport ? `<p class="ai-verdict ${aiReport.isErr ? "warn" : ""}">${esc(aiReport.text)}</p>` : ""}
     <form id="catForm">
       <div class="row">
@@ -210,20 +236,7 @@ function renderCategory(cat){
         ${isNew ? `<button type="button" class="ghost" id="cancelNew">Abbrechen</button>`
           : `<button type="button" class="danger" id="delCat">Kategorie löschen</button>`}
       </div>
-    </form>
-    ${isNew ? "" : `
-    <h3>Einträge (${n})</h3>
-    <ul class="list" id="entryList">
-      ${c.entries.map((e, i) => `
-      <li class="${e.visible ? "" : "off"}">
-        <input type="checkbox" data-vis="${e.id}" ${e.visible ? "checked" : ""} title="Auf der Seite sichtbar">
-        <a href="#/e/${e.id}">${esc(e.name)} <small>${esc(e.subtitle)} · ${e.images.length}/4 Bilder</small></a>
-        <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
-        <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < n - 1 ? "" : "disabled"}>↓</button>
-      </li>`).join("")}
-    </ul>
-    <p class="actions"><button class="ghost" id="newEntry">+ Neuer Eintrag</button>
-      <button class="ghost" id="qrAll" title="QR-Codes mit Direktlink zu jedem sichtbaren Eintrag, 12 pro A4-Seite">QR-Codes drucken</button></p>`}`;
+    </form>`;
 
   const form = $("catForm");
   const F = form.elements;
@@ -249,7 +262,8 @@ function renderCategory(cat){
       row.cover_entry_id = F.cover.value || null;
       await act(() => must(sb.from("categories").update(row).eq("id", c.id)), "Gespeichert.");
     }
-    if(location.hash !== "#/k/" + row.id) location.hash = "#/k/" + row.id; else render();
+    const back = "#/k/" + row.id + (isNew ? "" : "/einstellungen");
+    if(location.hash !== back) location.hash = back; else render();
   });
 
   if(isNew){
@@ -265,18 +279,281 @@ function renderCategory(cat){
     await act(() => deleteCategory(c), "Kategorie gelöscht.");
     location.hash = "#/";
   });
-  $("entryList").addEventListener("click", e => {
-    const b = e.target.closest("[data-move]");
-    if(b) move("entries", c.entries, +b.dataset.move, +b.dataset.dir);
-  });
-  $("entryList").addEventListener("change", e => {
-    const box = e.target.closest("[data-vis]");
-    if(box) setVisible("entries", box.dataset.vis, box.checked);
-  });
-  $("newEntry").addEventListener("click", () => { location.hash = "#/e/neu/" + c.id; });
-  $("qrAll").addEventListener("click", () => printQr(c, c.entries.filter(e => e.visible)));
 }
 
+/* ------------------------------------------------------------------
+   KATEGORIE MIT REGISTERN (#/k/<id>[/<register>]): Prüfen (Tabelle mit Text und Bildern aller Einträge),
+   Einträge (Reihenfolge, sichtbar, neu, QR-Codes), Aufträge (Forscheraufträge, 021) und Einstellungen
+------------------------------------------------------------------- */
+const CAT_TABS = [["pruefen", "Prüfen"], ["eintraege", "Einträge"], ["auftraege", "Aufträge"], ["einstellungen", "Einstellungen"]];
+function renderCatPage(cat, tab){
+  if(!CAT_TABS.some(([id]) => id === tab)) tab = "pruefen";
+  const is = catIssues(cat), n = cat.entries.length;
+  const imgs = cat.entries.reduce((s, e) => s + e.images.length, 0);
+  const nTasks = tasks.filter(x => x.category_id === cat.id).length;
+  $("main").innerHTML = `<h2>${esc(cat.name)}</h2>
+    <p class="hint">${cat.visible ? "" : `<span class="badge">ausgeblendet</span> `}${n} Einträge · ${imgs} Bilder${
+      is.missing ? ` · <span class="warn">${is.missing} Bilder fehlen</span>` : ""}${is.reports ? ` · <span class="warn">⚑ ${is.reports} offene Meldungen</span>` : ""}
+      · <a href="index.html#/${esc(cat.id)}" target="_blank" rel="noopener">auf der Seite ansehen ↗</a></p>
+    <nav class="tabs">${CAT_TABS.map(([id, label]) => `<a href="#/k/${esc(cat.id)}${id === "pruefen" ? "" : "/" + id}"
+      class="${id === tab ? "active" : ""}">${label}${id === "eintraege" ? ` <small>${n}</small>` : id === "auftraege" && nTasks ? ` <small>${nTasks}</small>` : ""}</a>`).join("")}</nav>
+    <div id="tabBody"></div>`;
+  const body = $("tabBody");
+  if(tab === "einstellungen") return renderCategory(cat, body);
+  if(tab === "eintraege") return renderEntriesTab(cat, body);
+  if(tab === "auftraege") return renderTasksTab(cat, body);
+  renderCheck(cat, body);
+}
+
+// Register «Einträge»: Liste mit sichtbar, Reihenfolge und Anzahl Bilder
+function renderEntriesTab(cat, body){
+  const n = cat.entries.length;
+  body.innerHTML = `<ul class="list" id="entryList">
+      ${cat.entries.map((e, i) => `
+      <li class="${e.visible ? "" : "off"}">
+        <input type="checkbox" data-vis="${e.id}" ${e.visible ? "checked" : ""} title="Auf der Seite sichtbar">
+        <a href="#/e/${e.id}">${esc(e.name)} <small>${esc(e.subtitle)} · ${e.images.length}/4 Bilder</small></a>
+        <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
+        <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < n - 1 ? "" : "disabled"}>↓</button>
+      </li>`).join("")}
+    </ul>
+    <p class="actions"><button class="ghost" id="newEntry">+ Neuer Eintrag</button>
+      <button class="ghost" id="qrAll" title="QR-Codes mit Direktlink zu jedem sichtbaren Eintrag, 12 pro A4-Seite">QR-Codes drucken</button></p>`;
+  $("entryList").addEventListener("click", ev => {
+    const b = ev.target.closest("[data-move]");
+    if(b) move("entries", cat.entries, +b.dataset.move, +b.dataset.dir);
+  });
+  $("entryList").addEventListener("change", ev => {
+    const box = ev.target.closest("[data-vis]");
+    if(box) setVisible("entries", box.dataset.vis, box.checked);
+  });
+  $("newEntry").addEventListener("click", () => { location.hash = "#/e/neu/" + cat.id; });
+  $("qrAll").addEventListener("click", () => printQr(cat, cat.entries.filter(e => e.visible)));
+}
+
+/* Register «Prüfen»: eine Zeile pro Eintrag mit Name, Beschreibung und Steckbrief, daneben die 4 Bilder mit
+   Werkzeugen (imgTools). Vorschläge von Commons öffnen sich als eigene Zeile direkt unter dem Eintrag. */
+let checkFilter = "alle";   // «alle» oder «hinweise» (Meldungen, fehlende Bilder, ohne Quelle, ausgeblendet)
+const entryHasIssues = e => !e.visible || reports.some(r => r.entry_id === e.id) || openSlots(e).length > 0
+  || e.images.some(i => !i.source_page && !i.source_file);
+function renderCheck(cat, body){
+  const withIssues = cat.entries.filter(entryHasIssues);
+  const rows = checkFilter === "hinweise" ? withIssues : cat.entries;
+  const todo = cat.entries.filter(e => openSlots(e).length).map(e => ({ cat, e }));
+  const missing = todo.reduce((s, x) => s + openSlots(x.e).length, 0);
+  body.innerHTML = `<div class="check-bar">
+      <label class="inline"><input type="radio" name="checkFilter" value="alle" ${checkFilter === "alle" ? "checked" : ""}> alle Einträge (${cat.entries.length})</label>
+      <label class="inline"><input type="radio" name="checkFilter" value="hinweise" ${checkFilter === "hinweise" ? "checked" : ""}> nur mit Hinweisen (${withIssues.length})</label>
+      ${missing && !bulk ? `<button type="button" class="ghost small" id="checkImport">Fehlende Bilder übernehmen (${missing})</button>` : ""}
+    </div>
+    <p class="hint legend">↻ Vorschläge von Commons · ⬆ eigenes Bild hochladen · ✂ zuschneiden · ◎ Ausschnitt der Vorschau ·
+      ✕ entfernen · Klick aufs Bild: gross ansehen · Name: Eintrag bearbeiten</p>
+    <p class="hint" id="importMsg" ${bulk ? "" : "hidden"}></p>
+    <div class="check-wrap"><table class="check">
+      <thead><tr><th>Eintrag und Text</th>${cat.labels.map((l, i) => `<th>${i + 1} · ${esc(l)}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map(e => checkRow(cat, e)).join("")
+        || `<tr><td colspan="5" class="hint">Keine Einträge mit Hinweisen. Alles in Ordnung.</td></tr>`}</tbody>
+    </table></div>`;
+  showBulk();
+  body.querySelectorAll("[name=checkFilter]").forEach(r => r.addEventListener("change", () => { checkFilter = r.value; render(); }));
+  $("checkImport")?.addEventListener("click", ev => { ev.target.disabled = true; $("importMsg").hidden = false; importAll(todo); });
+  body.querySelectorAll("tr[data-entry]").forEach(tr => {
+    const e = cat.entries.find(x => x.id === tr.dataset.entry);
+    const labels = e.labels || cat.labels;
+    tr.querySelectorAll("td[data-pos]").forEach(td => {
+      const p = +td.dataset.pos;
+      const img = e.images.find(i => i.position === p);
+      wireImgTools(td, cat, e, p, img, labels[p - 1], {
+        upload:f => uploadImage(cat, e, p, f, img, "", ""),   // eigenes Foto, Quelle bei Bedarf im Eintrag nachtragen
+        pickerBox:() => {
+          tr.insertAdjacentHTML("afterend", `<tr class="pick-row"><td colspan="5"><div class="picker" id="picker"></div></td></tr>`);
+          return $("picker");
+        }
+      });
+    });
+  });
+}
+function checkRow(cat, e){
+  const labels = e.labels || cat.labels;
+  const textRep = slotReports(e, 0);
+  return `<tr data-entry="${esc(e.id)}" class="${e.visible ? "" : "off"}">
+    <td class="check-text">
+      <div class="check-name"><a href="#/e/${esc(e.id)}" title="Eintrag bearbeiten"><b>${esc(e.name)}</b></a>
+        ${e.subtitle ? `<i>${esc(e.subtitle)}</i>` : ""}
+        ${e.visible ? "" : `<span class="badge">ausgeblendet</span>`}
+        <a class="ext" href="${esc(entryUrl(cat, e))}" target="_blank" rel="noopener" title="Auf der Seite ansehen">↗</a></div>
+      ${textRep.map(r => `<p class="report-note">⚑ Textfehler gemeldet (Nr. ${r.id}): ${esc(reportText(r))}</p>`).join("")}
+      <p class="check-desc">${esc(e.description)}</p>
+      ${(e.facts || []).length ? `<p class="check-facts">${e.facts.map(f => `<b>${esc(f.k)}:</b> ${esc(f.v)}`).join(" · ")}</p>` : ""}
+      ${(e.confusions || []).length ? `<p class="check-facts">Nicht verwechseln mit: ${e.confusions.map(c => esc(c.name)).join(", ")}</p>` : ""}
+    </td>
+    ${[1, 2, 3, 4].map(p => `<td class="check-img" data-pos="${p}">${imgCell(e, p, labels[p - 1], labels[p - 1] !== cat.labels[p - 1])}</td>`).join("")}
+  </tr>`;
+}
+// Bild in der Tabelle: Vorschau, Werkzeuge, Meldungen und Hinweise
+function imgCell(e, p, label, ownLabel){
+  const img = e.images.find(i => i.position === p);
+  return `${ownLabel ? `<small class="hint">${esc(label)}</small>` : ""}
+    <div class="thumb">${img ? `<img src="${esc(publicUrl(img.storage_path))}" alt="Bild ${p}" loading="lazy" title="Gross ansehen">`
+      : `<span>${isEmptySlot(e, p) ? "bewusst leer" : "fehlt"}</span>`}</div>
+    ${imgTools(e, p, img)}
+    ${slotReports(e, p).map(r => `<p class="report-note">⚑ ${esc(reportText(r))}${reportStale(e, r) ? " (früheres Bild)" : ""}
+      <button type="button" class="ghost small" data-reportdone>erledigt</button></p>`).join("")}
+    ${img && !img.source_page ? `<p class="flag">${img.source_file ? esc(img.source_file) : "ohne Quelle"}</p>` : ""}
+    ${img?.edited ? `<p class="flag plain">zugeschnitten</p>` : ""}`;
+}
+// Werkzeugleiste eines Bildplatzes (Tabelle und Eintrag): kleine Symbol-Knöpfe mit Erklärung beim Darüberfahren
+function imgTools(e, p, img){
+  const b = (attr, sym, title, cls = "") => `<button type="button" class="tool ${cls}" ${attr} title="${title}" aria-label="${title}">${sym}</button>`;
+  return `<div class="tools">
+    ${b("data-otherimg", "↻", img ? "Anderes Bild: Vorschläge von Wikimedia Commons" : "Vorschläge von Wikimedia Commons")}
+    <label class="tool" tabindex="0" title="${img ? "Durch eigenes Bild ersetzen (hochladen)" : "Eigenes Bild hochladen"}">⬆<input type="file" accept="image/*" hidden></label>
+    ${img ? b("data-crop", "✂", "Zuschneiden") + b("data-focus", "◎", "Ausschnitt der Vorschau (Karte, Übersicht)") + b("data-delimg", "✕", "Bild entfernen", "danger")
+      : isEmptySlot(e, p) ? b("data-slotfill", "⟲", "Wieder füllen lassen: «Fehlende Bilder übernehmen» darf diesen Platz füllen")
+      : b("data-slotempty", "∅", "Leer lassen: «Fehlende Bilder übernehmen» lässt diesen Platz aus")}
+  </div>`;
+}
+// Werkzeuge verbinden; upload(file) speichert eine gewählte Datei, pickerBox() liefert den Platz für die Vorschläge
+function wireImgTools(root, cat, e, p, img, label, { upload, pickerBox }){
+  root.querySelector("[data-otherimg]")?.addEventListener("click", () => openPicker(cat, e, p, label, root, pickerBox));
+  const file = root.querySelector(".tools input[type=file]");
+  file.addEventListener("change", ev => { const f = ev.target.files[0]; if(f) upload(f); });
+  root.querySelector("label.tool")?.addEventListener("keydown", ev => {
+    if(ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); file.click(); }
+  });
+  root.querySelector("[data-crop]")?.addEventListener("click", () => editCrop(cat, e, img));
+  root.querySelector("[data-focus]")?.addEventListener("click", () => editFocus(e, img));
+  root.querySelector("[data-delimg]")?.addEventListener("click", async () => {
+    if(!confirm(`Bild ${p} von «${e.name}» entfernen?`)) return;
+    await act(() => removeImage(e, img), "Bild entfernt.").catch(() => {});
+    render();
+  });
+  root.querySelectorAll("[data-reportdone]").forEach(b => b.addEventListener("click", async () => {
+    await act(() => clearReports(e, p), "Meldung erledigt.").catch(() => {});
+    render();
+  }));
+  root.querySelector("[data-slotempty]")?.addEventListener("click", async () => {
+    await act(() => setEmptySlot(e, p, true), `Bildplatz ${p} bleibt leer.`).catch(() => {});
+    render();
+  });
+  root.querySelector("[data-slotfill]")?.addEventListener("click", async () => {
+    await act(() => setEmptySlot(e, p, false), `Bildplatz ${p} darf wieder gefüllt werden.`).catch(() => {});
+    render();
+  });
+  const thumb = root.querySelector(".thumb img");
+  if(thumb){ applyFocus(thumb, img); thumb.addEventListener("click", () => showBig(e, img, label)); }
+}
+// Bild gross ansehen (Dialog #editor), mit Quelle
+function showBig(e, img, label){
+  editorDone?.();
+  editorDone = null;
+  editor.innerHTML = `<h2>${esc(e.name)} · Bild ${img.position} · ${esc(label)}</h2>
+    <img class="big" src="${esc(publicUrl(img.storage_path))}" alt="">
+    <p class="hint">${img.source_page ? `Quelle: <a href="${esc(img.source_page)}" target="_blank" rel="noopener">${esc(img.source_file || img.source_page)}</a>`
+      : esc(img.source_file || "Ohne Quelle (gilt im Bildnachweis als eigenes Foto)")}${img.edited ? " · zugeschnitten" : ""}</p>
+    <div class="actions"><button type="button" id="edCancel">Schliessen</button></div>`;
+  $("edCancel").addEventListener("click", () => editor.close());
+  editor.showModal();
+  $("edCancel").focus();
+}
+
+/* Register «Aufträge» und Auftrag bearbeiten (#/a/<id>, #/a/neu/<kategorie>): Forscheraufträge (021).
+   Die Anzeige zeigt sie einmal pro Tag in der Reihenfolge von sort über alle Kategorien. */
+const TASK_ARTEN = { situation:"Alltagssituation", raetsel:"Rätsel", rechnen:"Rechenaufgabe", frage:"Forscherfrage" };
+const TASK_FORMEN = { choice:"Auswahl", text:"Kurze Antwort", free:"Freie Antwort mit Musterlösung" };
+function renderTasksTab(cat, body){
+  const list = tasks.filter(x => x.category_id === cat.id);
+  body.innerHTML = `<p class="hint">Forscheraufträge erscheinen einmal pro Tag beim Öffnen der Seite und unter «Forscheraufträge»
+      im Menü. Die Antwort soll in einem Eintrag dieser Kategorie stehen.</p>
+    ${list.length ? `<ul class="list tasks">${list.map(x => `<li class="${x.visible ? "" : "off"}">
+        <input type="checkbox" data-tvis="${esc(x.id)}" ${x.visible ? "checked" : ""} title="Auf der Seite sichtbar">
+        <a href="#/a/${esc(x.id)}"><small>${TASK_ARTEN[x.kind] || x.kind} · ${TASK_FORMEN[x.answer_type] || x.answer_type}</small><br>${esc(x.question)}</a>
+      </li>`).join("")}</ul>` : `<p>Noch keine Forscheraufträge in dieser Kategorie.</p>`}
+    <p class="actions"><button class="ghost" id="newTask">+ Neuer Auftrag</button></p>`;
+  body.querySelectorAll("[data-tvis]").forEach(box => box.addEventListener("change", async () => {
+    await act(() => must(sb.from("tasks").update({ visible:box.checked }).eq("id", box.dataset.tvis)),
+      box.checked ? "Eingeblendet." : "Ausgeblendet.").catch(() => {});
+    render();
+  }));
+  $("newTask").addEventListener("click", () => { location.hash = "#/a/neu/" + cat.id; });
+}
+function renderTask(cat, task){
+  const isNew = !task;
+  const x = task || { id:"", entry_id:null, kind:"situation", question:"", guess:false, answer_type:"text", choices:[],
+    answer:"", hint:"", explanation:"", visible:true };
+  const lines = x.answer_type === "choice" ? [x.answer, ...(x.choices || []).filter(c => c !== x.answer)] : [];
+  const sel = (name, map, cur) => `<select name="${name}">${Object.entries(map).map(([k, v]) =>
+    `<option value="${k}" ${k === cur ? "selected" : ""}>${v}</option>`).join("")}</select>`;
+  $("main").innerHTML = `<p class="hint"><a href="#/k/${esc(cat.id)}/auftraege">← ${esc(cat.name)} · Aufträge</a></p>
+    <h2>${isNew ? "Neuer Forscherauftrag" : "Forscherauftrag bearbeiten"}</h2>
+    <form id="taskForm">
+      <div class="row">
+        <label>Art ${sel("kind", TASK_ARTEN, x.kind)}</label>
+        <label>Antwortform ${sel("answer_type", TASK_FORMEN, x.answer_type)}</label>
+        <label>Eintrag mit der Antwort <select name="entry_id"><option value="">– keiner –</option>
+          ${cat.entries.map(e => `<option value="${e.id}" ${e.id === x.entry_id ? "selected" : ""}>${esc(e.name)}</option>`).join("")}</select></label>
+      </div>
+      <label>Frage <textarea name="question" rows="3" maxlength="600" required>${esc(x.question)}</textarea></label>
+      <label class="inline"><input type="checkbox" name="guess" ${x.guess ? "checked" : ""}> Zuerst eine Vermutung notieren lassen</label>
+      <div data-for="choice"><label>Antwortmöglichkeiten: eine pro Zeile, die richtige zuerst (angezeigt werden sie gemischt)
+        <textarea name="choices" rows="4">${esc(lines.join("\n"))}</textarea></label></div>
+      <div data-for="text"><label>Richtige Antwort: mehrere mit «|» trennen (z. B. «Wels|Waller»), nur Zahlen = Zahlenvergleich
+        <input type="text" name="answer" maxlength="300" value="${esc(x.answer_type === "text" ? x.answer : "")}"></label></div>
+      <label>Tipp nach einer falschen Antwort <textarea name="hint" rows="2" maxlength="400">${esc(x.hint)}</textarea></label>
+      <label><span id="explLabel">Erklärung nach der Lösung</span> <textarea name="explanation" rows="4" maxlength="1000">${esc(x.explanation)}</textarea></label>
+      ${isNew ? `<label>Kennung (Kleinbuchstaben und «-», bleibt fest, weil die Lernenden ihren Stand darunter speichern)
+        <input type="text" name="id" required pattern="[a-z0-9\\-]{2,60}"></label>`
+        : `<p class="hint">Kennung: <code>${esc(x.id)}</code></p>`}
+      <label class="inline"><input type="checkbox" name="visible" ${x.visible ? "checked" : ""}> Auf der Seite sichtbar</label>
+      <div class="actions sticky">
+        <button>${isNew ? "Anlegen" : "Speichern"}</button>
+        ${isNew ? `<button type="button" class="ghost" id="cancelTask">Abbrechen</button>`
+          : `<button type="button" class="danger" id="delTask">Auftrag löschen</button>`}
+      </div>
+    </form>`;
+  const form = $("taskForm"), F = form.elements;
+  const showFor = () => {
+    form.querySelectorAll("[data-for]").forEach(d => { d.hidden = d.dataset.for !== F.answer_type.value; });
+    $("explLabel").textContent = F.answer_type.value === "free" ? "Musterlösung (wird nach der eigenen Antwort gezeigt)" : "Erklärung nach der Lösung";
+  };
+  F.answer_type.addEventListener("change", showFor);
+  showFor();
+  // Kennung beim Anlegen aus dem gewählten Eintrag vorschlagen
+  if(isNew) F.entry_id.addEventListener("change", () => {
+    const e = cat.entries.find(y => y.id === F.entry_id.value);
+    if(e && !F.id.value) F.id.value = linkSlug(e.name);
+  });
+  form.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const type = F.answer_type.value;
+    const choices = F.choices.value.split("\n").map(s => s.trim()).filter(Boolean);
+    if(type === "choice" && choices.length < 2) return msg("Für eine Auswahl braucht es mindestens 2 Antwortmöglichkeiten.", true);
+    if(type === "text" && !F.answer.value.trim()) return msg("Bitte die richtige Antwort eintragen.", true);
+    if(type === "free" && !F.explanation.value.trim()) return msg("Bei einer freien Antwort bitte die Musterlösung eintragen.", true);
+    const row = {
+      category_id:cat.id, entry_id:F.entry_id.value || null, kind:F.kind.value, question:F.question.value.trim(),
+      guess:F.guess.checked, answer_type:type, choices:type === "choice" ? choices : [],
+      answer:type === "choice" ? choices[0] : type === "text" ? F.answer.value.trim() : "",
+      hint:F.hint.value.trim(), explanation:F.explanation.value.trim(), visible:F.visible.checked
+    };
+    if(isNew){
+      row.id = F.id.value.trim();
+      if(tasks.some(y => y.id === row.id)) return msg("Diese Kennung gibt es schon. Bitte eine andere wählen.", true);
+      row.sort = Math.max(0, ...tasks.map(y => y.sort || 0)) + 10;
+      await act(() => must(sb.from("tasks").insert(row)), "Auftrag angelegt.").catch(() => null);
+      if(tasks.some(y => y.id === row.id)) location.hash = "#/a/" + row.id;
+      return;
+    }
+    await act(() => must(sb.from("tasks").update(row).eq("id", x.id)), "Gespeichert.").catch(() => {});
+    render();
+  });
+  $("cancelTask")?.addEventListener("click", () => { location.hash = "#/k/" + cat.id + "/auftraege"; });
+  $("delTask")?.addEventListener("click", async () => {
+    if(!confirm("Diesen Forscherauftrag endgültig löschen?")) return;
+    await act(() => must(sb.from("tasks").delete().eq("id", x.id)), "Auftrag gelöscht.").catch(() => {});
+    location.hash = "#/k/" + cat.id + "/auftraege";
+  });
+}
 /* ------------------------------------------------------------------
    NEUE KATEGORIE MIT CLAUDE (kopieren und einfügen über claude.ai, ohne API-Kosten)
    1. aiPrompt() erstellt den Auftrag mit Name, Anzahl und allen bestehenden Namen (gegen Doppelte).
@@ -678,7 +955,7 @@ function printQr(cat, entries){
 }
 
 /* ------------------------------------------------------------------
-   SICHERUNG: alle Kategorien, Einträge und Bildangaben als JSON-Datei herunterladen.
+   SICHERUNG: alle Kategorien, Einträge, Bildangaben und Forscheraufträge als JSON-Datei herunterladen.
    Die Bild- und Tondateien selbst liegen im Supabase-Speicher (und ihre Quellen auf Commons).
 ------------------------------------------------------------------- */
 async function selectAll(table){
@@ -691,7 +968,8 @@ async function selectAll(table){
 }
 async function downloadBackup(){
   const [categories, entries, images] = await Promise.all(["categories", "entries", "images"].map(selectAll));
-  const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket, categories, entries, images };
+  const taskRows = await selectAll("tasks").catch(() => []);   // Forscheraufträge (021); fehlt die Tabelle, leer
+  const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket, categories, entries, images, tasks:taskRows };
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
   a.download = `natur-und-schweiz-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
@@ -699,7 +977,7 @@ async function downloadBackup(){
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-  return { categories:categories.length, entries:entries.length, images:images.length };
+  return { categories:categories.length, entries:entries.length, images:images.length, tasks:taskRows.length };
 }
 
 /* ------------------------------------------------------------------
@@ -751,7 +1029,8 @@ function renderEntry(cat, entry){
   const main = $("main");
   if(aiReport && aiReport.id !== e.id) aiReport = null;
   main.innerHTML = `
-    <p class="hint"><a href="#/k/${esc(cat.id)}">← ${esc(cat.name)}</a></p>
+    <p class="hint"><a href="#/k/${esc(cat.id)}">← ${esc(cat.name)}</a>${isNew ? ""
+      : ` · <a href="${esc(entryUrl(cat, e))}" target="_blank" rel="noopener">auf der Seite ansehen ↗</a>`}</p>
     <h2>${isNew ? "Neuer Eintrag" : esc(e.name)}</h2>
     ${aiReport ? `<p class="ai-verdict ${aiReport.isErr ? "warn" : ""}">${esc(aiReport.text)}</p>` : ""}
     ${isNew ? "" : slotReports(e, 0).map(r => `<p class="report-note">⚑ Fehler im Text gemeldet (Nr. ${r.id}): ${esc(reportText(r))}
@@ -778,6 +1057,7 @@ function renderEntry(cat, entry){
         <button type="button" class="ghost" id="aiRead">Antwort übernehmen</button>
         <div id="aiResult"></div>
       </div>` : ""}
+      <details class="sec" open><summary>Text und Steckbrief</summary>
       <div class="row">
         <label>Name <input type="text" name="name" required value="${esc(e.name)}"></label>
         <label>${cat.latin ? "Lateinischer Name" : "Untertitel (Ort, Gesteinsart …)"} <input type="text" name="subtitle" value="${esc(e.subtitle)}"></label>
@@ -791,14 +1071,28 @@ function renderEntry(cat, entry){
       <h3>Steckbrief</h3>
       <div class="facts" id="facts">${e.facts.map(f => factRow(f.k, f.v)).join("")}</div>
       <button type="button" class="ghost" id="addFact">+ Zeile</button>
+      </details>
 
-      <h3>Verwechslungsgefahr</h3>
+      ${isNew ? "" : `<details class="sec" open><summary>Bilder</summary>
+      <label class="inline"><input type="checkbox" name="ownLabels" ${e.labels ? "checked" : ""}> Eigene Bildbeschriftungen statt «${esc(cat.labels.join(", "))}»</label>
+      <div class="row" id="labelRow" ${e.labels ? "" : "hidden"}>
+        ${labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" value="${esc(l)}"></label>`).join("")}
+      </div>
+      <div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>
+      <div class="picker" id="picker" hidden></div>
+      ${openSlots(e).length ? `<p><button type="button" class="ghost" id="importWm">Fehlende Bilder von Wikimedia übernehmen</button></p>
+        <p class="hint">Sucht wie die Seite (Wikipedia-Titelbild, sonst die Suchbegriffe unter «Online-Ersatz») und speichert
+          die Bilder mit Quellenangabe. Geänderte Suchbegriffe vorher speichern.</p>` : ""}
+      </details>`}
+
+      <details class="sec" ${(e.confusions || []).length ? "open" : ""}><summary>Verwechslungsgefahr${(e.confusions || []).length ? ` (${e.confusions.length})` : ""}</summary>
       <div class="facts" id="confusions">${(e.confusions || []).map(c => confRow(c.name, c.diff)).join("")}</div>
       <button type="button" class="ghost" id="addConf">+ Verwechslung</button>
       <p class="hint">Name des ähnlichen Eintrags (gibt es ihn, wird er verlinkt) und woran man die beiden unterscheidet.
         Gilt nur für diesen Eintrag; beim anderen bei Bedarf ebenfalls eintragen.</p>
+      </details>
 
-      ${isNew ? "" : `<h3>Tierstimme</h3>
+      ${isNew ? "" : `<details class="sec" ${e.sound_path ? "open" : ""}><summary>Tierstimme${e.sound_path ? " ✓" : ""}</summary>
       ${e.sound_path ? `<audio controls preload="none" src="${esc(publicUrl(e.sound_path))}"></audio>
         <p class="hint">Quelle: ${e.sound_page ? `<a href="${esc(e.sound_page)}" target="_blank" rel="noopener">${esc(e.sound_file || e.sound_page)}</a>` : "eigene Aufnahme"}</p>`
         : `<p class="hint">Keine Tierstimme hinterlegt.</p>`}
@@ -806,32 +1100,33 @@ function renderEntry(cat, entry){
       <div class="slot-actions">
         <button type="button" class="ghost" id="soundFetch">Ton von dieser Quelle übernehmen</button>
         ${e.sound_path ? `<button type="button" class="danger" id="soundDel">Ton entfernen</button>` : ""}
-      </div>`}
+      </div>
+      </details>`}
 
-      <h3>Bilder</h3>
-      <label class="inline"><input type="checkbox" name="ownLabels" ${e.labels ? "checked" : ""}> Eigene Bildbeschriftungen statt «${esc(cat.labels.join(", "))}»</label>
-      <div class="row" id="labelRow" ${e.labels ? "" : "hidden"}>
+      ${isNew ? `<details class="sec"><summary>Bilder</summary>
+      <label class="inline"><input type="checkbox" name="ownLabels"> Eigene Bildbeschriftungen statt «${esc(cat.labels.join(", "))}»</label>
+      <div class="row" id="labelRow" hidden>
         ${labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" value="${esc(l)}"></label>`).join("")}
       </div>
-      ${isNew ? `<p class="hint">Mit Claude ausgefüllt: Die Bilder werden beim Anlegen übernommen. Sonst nach dem Anlegen hochladen.</p>` : `<div class="slots">${[1,2,3,4].map(p => slotHtml(e, p, labels[p - 1])).join("")}</div>
-        <div class="picker" id="picker" hidden></div>`}
-      ${!isNew && openSlots(e).length ? `<p><button type="button" class="ghost" id="importWm">Fehlende Bilder von Wikimedia übernehmen</button></p>
-        <p class="hint">Sucht wie die Seite (Wikipedia-Titelbild, sonst Suchbegriffe unten) und speichert die Bilder mit Quellenangabe.
-          Geänderte Suchbegriffe vorher speichern.</p>` : ""}
+      <p class="hint">Mit Claude ausgefüllt: Die Bilder werden beim Anlegen übernommen. Sonst nach dem Anlegen hochladen.</p>
+      </details>` : ""}
 
-      <h3>Online-Ersatz (falls kein eigenes Bild hinterlegt ist)</h3>
+      <details class="sec"><summary>Online-Ersatz und Suchbegriffe</summary>
+      <p class="hint">Gilt, solange ein Bildplatz kein eigenes Bild hat, und für «Fehlende Bilder übernehmen» und die Vorschläge (↻).</p>
       <label>Englischer Wikipedia-Artikel für das Hauptbild (leer = ${cat.latin ? "lateinischer Name" : "Name"})
         <input type="text" name="wp" value="${esc(e.wp)}"></label>
       <div class="row">${terms.map((t, i) => `<label>Suchbegriff Bild ${i + 2} <input type="text" name="q${i}" value="${esc(t)}"></label>`).join("")}</div>
+      </details>
 
-      ${isNew ? "" : `<h3>Direktlink und QR-Code</h3>
+      ${isNew ? "" : `<details class="sec"><summary>Direktlink und QR-Code</summary>
       <div class="qr-box">${qrSvg(entryUrl(cat, e))}
         <p><a href="${esc(entryUrl(cat, e))}" target="_blank" rel="noopener">${esc(entryUrl(cat, e))}</a><br>
           <button type="button" class="ghost small" id="qrOne">QR-Code drucken</button>
           ${e.visible ? "" : `<br><span class="hint">Der Eintrag ist ausgeblendet: Der Link funktioniert erst, wenn er sichtbar ist.</span>`}</p>
-      </div>`}
+      </div>
+      </details>`}
 
-      <div class="actions">
+      <div class="actions sticky">
         <button>${isNew ? "Anlegen" : "Speichern"}</button>
         ${isNew ? `<button type="button" class="ghost" id="cancelEntry">Abbrechen</button>`
           : `<button type="button" class="danger" id="delEntry">Eintrag löschen</button>`}
@@ -938,33 +1233,10 @@ function renderEntry(cat, entry){
     const img = e.images.find(i => i.position === p);
     const page = F["page" + p], file = F["file" + p];
     page.addEventListener("change", () => { if(!file.value) file.value = commonsFile(page.value); });
-    const thumb = slot.querySelector(".thumb img");
-    if(thumb) applyFocus(thumb, img);
-    slot.querySelector("[data-crop]")?.addEventListener("click", () => editCrop(cat, e, img));
-    slot.querySelector("[data-focus]")?.addEventListener("click", () => editFocus(e, img));
-    slot.querySelector("input[type=file]").addEventListener("change", ev => {
-      const f = ev.target.files[0];
-      if(!f) return;
-      // Unveränderte Angaben gehören zum alten Bild: nicht übernehmen (sonst verlinkt der Bildnachweis das falsche Bild)
-      const keep = (input, old) => input.value.trim() === (old || "") ? "" : input.value.trim();
-      uploadImage(cat, e, p, f, img, keep(page, img?.source_page), keep(file, img?.source_file));
-    });
-    slot.querySelector("[data-delimg]")?.addEventListener("click", async () => {
-      if(!confirm(`Bild ${p} entfernen?`)) return;
-      await act(() => removeImage(e, img), "Bild entfernt.");
-      render();
-    });
-    slot.querySelectorAll("[data-reportdone]").forEach(b => b.addEventListener("click", async () => {
-      await act(() => clearReports(e, p), "Meldung erledigt.").catch(() => {});
-      render();
-    }));
-    slot.querySelector("[data-slotempty]")?.addEventListener("click", async () => {
-      await act(() => setEmptySlot(e, p, true), `Bildplatz ${p} bleibt leer.`).catch(() => {});
-      render();
-    });
-    slot.querySelector("[data-slotfill]")?.addEventListener("click", async () => {
-      await act(() => setEmptySlot(e, p, false), `Bildplatz ${p} darf wieder gefüllt werden.`).catch(() => {});
-      render();
+    // Unveränderte Angaben gehören zum alten Bild: nicht übernehmen (sonst verlinkt der Bildnachweis das falsche Bild)
+    const keep = (input, old) => input.value.trim() === (old || "") ? "" : input.value.trim();
+    wireImgTools(slot, cat, e, p, img, labels[p - 1], {
+      upload:f => uploadImage(cat, e, p, f, img, keep(page, img?.source_page), keep(file, img?.source_file))
     });
     // Commons-Adresse aus «Quelle»: dieses Bild herunterladen, verkleinern und mit Quelle speichern
     slot.querySelector("[data-commons]").addEventListener("click", async ev => {
@@ -980,9 +1252,7 @@ function renderEntry(cat, entry){
       await act(async () => storeWikimedia(cat, e, p, await commonsFileImage(name), img), "Bild übernommen.").catch(() => {});
       render();
     });
-    slot.querySelector("[data-otherimg]")?.addEventListener("click", () => openPicker(cat, e, p, labels[p - 1]));
-  });
-  // Aus «Gemeldete Bilder» der Übersicht: Auswahl für diesen Platz gleich öffnen
+  });  // Aus «Gemeldete Bilder» der Übersicht: Auswahl für diesen Platz gleich öffnen
   if(pickFor?.entry === e.id){
     const p = pickFor.pos;
     pickFor = null;
@@ -1004,28 +1274,22 @@ function slotHtml(e, p, label){
     <strong>${p} · ${esc(label)}${p === 1 ? " (Hauptbild)" : ""}</strong>
     ${slotReports(e, p).map(r => `<p class="report-note">⚑ ${esc(reportText(r))}${reportStale(e, r) ? " (betraf ein früheres Bild)" : ""}
       <button type="button" class="ghost small" data-reportdone>Meldung erledigt</button></p>`).join("")}
-    <div class="thumb">${img ? `<img src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy">` : isEmptySlot(e, p) ? "bewusst leer<br>(wird nicht automatisch gefüllt)" : "kein eigenes Bild"}</div>
-    <input type="file" accept="image/*" title="${img ? "Bild ersetzen" : "Bild hochladen"}">
-    <label>Quelle (Commons-Dateiseite) <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
-    <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
-    <button type="button" class="ghost small" data-commons title="Commons-Adresse in «Quelle» einfügen, dann klicken: Bild wird heruntergeladen und gespeichert">Bild von dieser Quelle übernehmen</button>
-    ${img && !img.source_page ? `<p class="hint">${img.source_file
-      ? `Ohne Quelle: Im Bildnachweis steht «${esc(img.source_file)}».`
-      : `Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto. Quelle nachtragen, oder bei einem KI-Bild unter «Dateiname»
-        z. B. «KI-generiert mit ChatGPT (OpenAI)» eintragen, dann «Speichern».`}</p>` : ""}
-    ${img ? "" : `<p class="hint">Bild von Commons: Adresse in «Quelle» einfügen und übernehmen. Eigenes Foto: Datei wählen.</p>`}
-    ${img?.edited ? `<p class="hint">Zugeschnitten (steht so im Bildnachweis).</p>` : ""}
-    ${img ? `<div class="slot-actions">
-      <button type="button" class="ghost" data-crop title="Bild dauerhaft zuschneiden">Zuschneiden</button>
-      <button type="button" class="ghost" data-focus title="Welcher Teil in der kleinen Vorschau (Karte, Übersicht) zu sehen ist">Ausschnitt Vorschau</button>
-      <button type="button" class="ghost" data-otherimg title="Vorschläge von Wikimedia Commons zeigen und eines auswählen">Anderes Bild suchen</button>
-      <button type="button" class="danger" data-delimg>Bild entfernen</button></div>`
-    : isEmptySlot(e, p)
-      ? `<button type="button" class="ghost small" data-slotfill title="«Fehlende Bilder übernehmen» darf diesen Platz wieder füllen">Wieder füllen lassen</button>`
-      : `<button type="button" class="ghost small" data-slotempty title="«Fehlende Bilder übernehmen» lässt diesen Platz aus">Leer lassen</button>`}
+    <div class="thumb">${img ? `<img src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy" title="Gross ansehen">`
+      : `<span>${isEmptySlot(e, p) ? "bewusst leer<br>(wird nicht automatisch gefüllt)" : "kein eigenes Bild"}</span>`}</div>
+    ${imgTools(e, p, img)}
+    ${img && !img.source_page ? `<p class="flag">${img.source_file ? esc(img.source_file) : "ohne Quelle"}</p>` : ""}
+    ${img?.edited ? `<p class="flag plain">zugeschnitten (steht so im Bildnachweis)</p>` : ""}
+    <details class="src"><summary>Quelle${img?.source_page ? " ✓" : ""}</summary>
+      <label>Commons-Dateiseite <input type="url" name="page${p}" value="${esc(img?.source_page)}"></label>
+      <label>Dateiname <input type="text" name="file${p}" value="${esc(img?.source_file)}"></label>
+      <button type="button" class="ghost small" data-commons title="Commons-Adresse oben einfügen, dann klicken: Bild wird heruntergeladen und gespeichert">Bild von dieser Quelle übernehmen</button>
+      <p class="hint">${img && !img.source_page && !img.source_file
+        ? `Ohne Quelle gilt das Bild im Bildnachweis als eigenes Foto. Quelle nachtragen oder bei einem KI-Bild unter «Dateiname»
+          z. B. «KI-generiert mit ChatGPT (OpenAI)» eintragen, dann «Speichern».`
+        : "Geänderte Angaben mit «Speichern» sichern. Ein Bild von Commons: Adresse einfügen und übernehmen."}</p>
+    </details>
   </div>`;
 }
-
 async function uploadImage(cat, entry, pos, file, old, page, fileName){
   msg("Bild wird hochgeladen …");
   await act(async () => {
@@ -1343,21 +1607,24 @@ async function findCandidates(cat, e, pos, used, n){
 function closePicker(){
   pickToken = null;
   const box = $("picker");
-  if(box){ box.hidden = true; box.replaceChildren(); }
-  document.querySelectorAll(".slot.picking").forEach(s => s.classList.remove("picking"));
+  // in der Prüf-Tabelle eigene Zeile unter dem Eintrag: ganz entfernen, im Eintrag nur leeren
+  if(box?.closest(".pick-row")) box.closest(".pick-row").remove();
+  else if(box){ box.hidden = true; box.replaceChildren(); }
+  document.querySelectorAll(".picking").forEach(s => s.classList.remove("picking"));
   pickUrls.forEach(u => URL.revokeObjectURL(u));
   pickUrls = [];
 }
 
-function openPicker(cat, e, pos, label){
+// mark: markierter Bildplatz; pickerBox(): Platz für die Vorschläge (Tabelle), sonst #picker unter den 4 Bildern des Eintrags
+function openPicker(cat, e, pos, label, mark, pickerBox){
   closePicker();
-  const box = $("picker");
+  const box = pickerBox ? pickerBox() : $("picker");
   const old = e.images.find(i => i.position === pos);
   const used = usedFiles(e);
-  document.querySelector(`.slot[data-pos="${pos}"]`)?.classList.add("picking");
+  (mark || document.querySelector(`.slot[data-pos="${pos}"]`))?.classList.add("picking");
   box.hidden = false;
   box.innerHTML = `<h4>Bild ${pos} · ${esc(label)}: anderes Bild wählen</h4>
-    <p class="hint">Oben siehst du alle 4 Bilder des Eintrags (Bild ${pos} ist markiert). Klick auf einen Vorschlag ersetzt Bild ${pos}${
+    <p class="hint">Bild ${pos} von «${esc(e.name)}» ist markiert. Klick auf einen Vorschlag ersetzt es${
       slotReports(e, pos).length ? " und erledigt die Meldung" : ""}.</p>
     <div class="pick-list"></div>
     <p class="hint" id="pickMsg"></p>
@@ -1408,7 +1675,8 @@ function openPicker(cat, e, pos, label){
   };
   more.addEventListener("click", load);
   $("pickCancel").addEventListener("click", closePicker);
-  document.querySelector(".slots").scrollIntoView({ behavior:"smooth", block:"start" });
+  if(pickerBox) box.scrollIntoView({ behavior:"smooth", block:"nearest" });
+  else document.querySelector(".slots")?.scrollIntoView({ behavior:"smooth", block:"start" });
   load();
 }
 
@@ -1441,19 +1709,24 @@ function render(){
   closePicker();   // offene Bildauswahl verwerfen (Blob-Adressen freigeben)
   renderSidebar();
   const r = route();
-  const main = $("main");
-  // Knopf «Übersicht» nur zeigen, wenn nicht schon die Übersicht offen ist
-  $("toOverview").hidden = !(
-    (r.type === "k" && (r.id === "neu" || findCat(r.id))) ||
-    (r.type === "e" && ((r.id === "neu" && findCat(r.extra)) || findEntry(r.id))));
   if(r.type === "k" && r.id === "neu") return renderCategory(null);
-  if(r.type === "k" && findCat(r.id)) return renderCategory(findCat(r.id));
+  if(r.type === "k" && findCat(r.id)) return renderCatPage(findCat(r.id), r.extra || "pruefen");
   if(r.type === "e" && r.id === "neu" && findCat(r.extra)) return renderEntry(findCat(r.extra), null);
   if(r.type === "e" && findEntry(r.id)){ const { cat, entry } = findEntry(r.id); return renderEntry(cat, entry); }
+  if(r.type === "a" && r.id === "neu" && findCat(r.extra)) return renderTask(findCat(r.extra), null);
+  const task = r.type === "a" && tasks.find(x => x.id === r.id);
+  if(task && findCat(task.category_id)) return renderTask(findCat(task.category_id), task);
+  if(r.type === "werkzeuge") return renderTools();
+  renderTodo();
+}
+
+/* «Zu erledigen» (#/): nur was Arbeit braucht – Datenbank-Update, Meldungen, fehlende Bilder */
+function renderTodo(){
+  const main = $("main");
   const total = cats.reduce((s, c) => s + c.entries.length, 0);
+  const imgs = cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + e.images.length, 0), 0);
   const todo = cats.flatMap(c => c.entries.filter(e => openSlots(e).length).map(e => ({ cat:c, e })));
   const missing = todo.reduce((s, t) => s + openSlots(t.e).length, 0);
-  const empty = cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + (e.empty_slots || []).length, 0), 0);
   const reported = reports.filter(r => r.position > 0).map(r => {
     const f = findEntry(r.entry_id);
     return f && { r, cat:f.cat, e:f.entry, img:f.entry.images.find(i => i.position === r.position) };
@@ -1462,19 +1735,20 @@ function render(){
     const f = findEntry(r.entry_id);
     return f && { r, cat:f.cat, e:f.entry };
   }).filter(Boolean);
-  main.innerHTML = `<h2>Übersicht</h2>
-    ${schemaMissing() ? `<p class="warn"><b>Datenbank-Update fehlt:</b> Die Datenbank ist auf Version ${dbSchema || "14 oder älter"},
+  const nothing = !schemaMissing() && !reported.length && !textReported.length && !todo.length && !bulk;
+  main.innerHTML = `<h2>Zu erledigen</h2>
+    <p class="hint">${cats.length} Kategorien · ${total} Einträge · ${imgs} Bilder · ${tasks.length} Forscheraufträge.
+      Zum Prüfen einer Kategorie links die Kategorie wählen: Das Register «Prüfen» zeigt alle Einträge mit Text und Bildern.</p>
+    ${schemaMissing() ? `<p class="warn box"><b>Datenbank-Update fehlt:</b> Die Datenbank ist auf Version ${dbSchema || "14 oder älter"},
       diese Website braucht Version ${VERSION.schema}. Im Supabase-Dashboard unter «SQL Editor» die fehlenden Dateien
       bis <code>supabase/${String(VERSION.schema).padStart(3, "0")}_…</code> der Reihe nach ausführen.</p>` : ""}
-    <p>${cats.length} Kategorien, ${total} Einträge.</p>
-    <p class="hint">Links eine Kategorie wählen oder eine neue anlegen.</p>
-    <h3>Gemeldete Bilder${reported.length ? ` (${reported.length})` : ""}</h3>
-    ${reported.length ? `<p class="hint">Besucherinnen und Besucher können in der Grossansicht ein unpassendes Bild melden.
-      Ein neues Bild an diesem Platz oder «Bild entfernen» erledigt die Meldung automatisch.</p>
+    ${nothing ? `<p class="done-box">✓ Alles erledigt: keine Meldungen, keine fehlenden Bilder.</p>` : ""}
+    ${reported.length ? `<h3>Gemeldete Bilder (${reported.length})</h3>
+      <p class="hint">Ein neues Bild an diesem Platz oder «Bild entfernen» erledigt die Meldung automatisch.</p>
       <div class="reports">${reported.map(({ r, cat, e, img }, i) => `<div class="report-row">
         <div class="thumb">${img ? `<img data-ri="${i}" src="${esc(publicUrl(img.storage_path))}" alt="" loading="lazy">` : "kein eigenes Bild"}</div>
         <div>
-          <b><a href="#/e/${esc(e.id)}">${esc(e.name)}</a></b> <small>(${esc(cat.name)})</small><br>
+          <b><a href="#/e/${esc(e.id)}">${esc(e.name)}</a></b> <small>(<a href="#/k/${esc(cat.id)}">${esc(cat.name)}</a>)</small><br>
           Bild ${r.position} · ${esc((e.labels || cat.labels)[r.position - 1])}${img ? "" : " (Online-Ersatz von Wikimedia)"}
           ${reportStale(e, r) ? `<br><span class="hint">Inzwischen steht dort ein anderes Bild.</span>` : ""}
           <p class="hint">${esc(reportText(r))}</p>
@@ -1482,46 +1756,21 @@ function render(){
             ${img ? `<button type="button" class="ghost small" data-rother="${r.id}" title="Zum Eintrag wechseln und aus Vorschlägen von Wikimedia Commons wählen">Anderes Bild suchen</button>` : ""}
             <button type="button" class="ghost small" data-rdone="${r.id}">Erledigt</button>
           </div>
-        </div></div>`).join("")}</div>`
-    : `<p class="hint">Keine offenen Meldungen. Besucherinnen und Besucher können in der Grossansicht mit «Melden» auf ein unpassendes Bild hinweisen.</p>`}
-    <h3>Gemeldete Textfehler${textReported.length ? ` (${textReported.length})` : ""}</h3>
-    ${textReported.length ? `<p class="hint">Auf der Textseite der Grossansicht lässt sich ein Fehler in Beschreibung, Steckbrief
-      oder Verwechslungsgefahr melden. Die Meldenden sehen die Nummer der Meldung und können sie vorweisen.
-      Weitere Meldungen zum selben Eintrag zählen hoch und hängen ihren Text an.</p>
+        </div></div>`).join("")}</div>` : ""}
+    ${textReported.length ? `<h3>Gemeldete Textfehler (${textReported.length})</h3>
+      <p class="hint">Die Meldenden sehen die Nummer der Meldung und können sie vorweisen. Weitere Meldungen zum selben
+        Eintrag zählen hoch und hängen ihren Text an.</p>
       <div class="reports">${textReported.map(({ r, cat, e }) => `<div class="report-row text-row">
         <div>
           <b>Nr. ${r.id}</b> · <b><a href="#/e/${esc(e.id)}">${esc(e.name)}</a></b> <small>(${esc(cat.name)})</small>
           <p class="hint">${esc(reportText(r))}</p>
-          <div class="slot-actions">
-            <button type="button" class="ghost small" data-tdone="${r.id}">Erledigt</button>
-          </div>
-        </div></div>`).join("")}</div>`
-    : `<p class="hint">Keine offenen Meldungen. Auf der Textseite der Grossansicht lässt sich mit «Fehler im Text melden» auf einen Fehler hinweisen.</p>`}
-    <h3>Eigene Bilder</h3>
-    ${todo.length || bulk ? `
+          <div class="slot-actions"><button type="button" class="ghost small" data-tdone="${r.id}">Erledigt</button></div>
+        </div></div>`).join("")}</div>` : ""}
+    ${todo.length || bulk ? `<h3>Fehlende Bilder</h3>
       <p>Bei ${todo.length} ${todo.length === 1 ? "Eintrag" : "Einträgen"} ${missing === 1 ? "fehlt 1 Bild" : `fehlen insgesamt ${missing} Bilder`}.</p>
       <button id="importAll" ${bulk ? "disabled" : ""}>Fehlende Bilder von Wikimedia übernehmen</button>
-      <p class="hint" id="importMsg">Die Bilder werden nacheinander gesucht, verkleinert und gespeichert. Das dauert einige Minuten; die Seite dabei offen lassen.</p>`
-    : `<p class="hint">Es fehlen keine Bilder.</p>`}
-    ${empty ? `<p class="hint">${empty === 1 ? "1 Bildplatz ist" : `${empty} Bildplätze sind`} bewusst leer und ${empty === 1 ? "wird" : "werden"} nicht gefüllt
-      (im Eintrag mit «Wieder füllen lassen» änderbar).</p>` : ""}
-    ${bulkResult && !bulk ? `<p class="hint">${esc(bulkResult)}</p>` : ""}
-    <h3>Bilder aus Liste übernehmen</h3>
-    <p class="hint">Mehrere Bilder oder Tierstimmen auf einmal von Commons übernehmen oder entfernen. Eine Zeile pro Bild:
-      <code>Eintrag | Bildnummer | Commons-Adresse</code> oder <code>Eintrag | Bildnummer | entfernen</code>;
-      für eine Tierstimme <code>Eintrag | ton | Commons-Adresse</code> bzw. <code>… | ton | entfernen</code>
-      (statt «|» geht auch ein Tabulator oder «;»).</p>
-    <textarea id="batchList" placeholder="Steinmarder | 2 | https://commons.wikimedia.org/wiki/File:…"></textarea>
-    <p><button type="button" class="ghost" id="batchCheck">Liste prüfen</button></p>
-    <div id="batchResult"></div>
-    <h3>Sicherung</h3>
-    <p class="hint">Lädt alle Kategorien, Einträge und Bildangaben als Datei herunter (JSON). Die Bild- und Tondateien selbst
-      liegen im Supabase-Speicher, ihre Quellen auf Wikimedia Commons. Am besten regelmässig und vor grossen Änderungen sichern.</p>
-    <p><button type="button" class="ghost" id="backupBtn">Sicherung herunterladen</button></p>
-    <h3>Version</h3>
-    <p class="hint">Website ${esc(VERSION.app)} vom ${new Date(VERSION.datum + "T00:00").toLocaleDateString("de-CH", { day:"numeric", month:"long", year:"numeric" })}
-      · Datenbank ${dbSchema === 0 ? "14 oder älter" : dbSchema ?? "?"}
-      (benötigt ${VERSION.schema}) · Verlauf der Versionen: GitHub → Tags</p>`;
+      <p class="hint" id="importMsg">Die Bilder werden nacheinander gesucht, verkleinert und gespeichert. Das dauert einige Minuten; die Seite dabei offen lassen.</p>` : ""}
+    ${bulkResult && !bulk ? `<p class="hint">${esc(bulkResult)}</p>` : ""}`;
   showBulk();
   main.querySelectorAll("[data-ri]").forEach(el => applyFocus(el, reported[+el.dataset.ri].img));
   main.querySelectorAll("[data-rdone]").forEach(b => b.addEventListener("click", async () => {
@@ -1540,17 +1789,44 @@ function render(){
     location.hash = "#/e/" + e.id;
   }));
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
+}
+
+/* «Werkzeuge» (#/werkzeuge): selten gebraucht – Bilder aus Liste, Sicherung, Version */
+function renderTools(){
+  const empty = cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + (e.empty_slots || []).length, 0), 0);
+  $("main").innerHTML = `<h2>Werkzeuge</h2>
+    <details class="sec" open><summary>Bilder aus Liste übernehmen</summary>
+      <p class="hint">Mehrere Bilder oder Tierstimmen auf einmal von Commons übernehmen oder entfernen. Eine Zeile pro Bild:
+        <code>Eintrag | Bildnummer | Commons-Adresse</code> oder <code>Eintrag | Bildnummer | entfernen</code>;
+        für eine Tierstimme <code>Eintrag | ton | Commons-Adresse</code> bzw. <code>… | ton | entfernen</code>
+        (statt «|» geht auch ein Tabulator oder «;»).</p>
+      <textarea id="batchList" placeholder="Steinmarder | 2 | https://commons.wikimedia.org/wiki/File:…"></textarea>
+      <p><button type="button" class="ghost" id="batchCheck">Liste prüfen</button></p>
+      <div id="batchResult"></div>
+      ${empty ? `<p class="hint">${empty === 1 ? "1 Bildplatz ist" : `${empty} Bildplätze sind`} bewusst leer und
+        ${empty === 1 ? "wird" : "werden"} beim Übernehmen fehlender Bilder nicht gefüllt (im Eintrag änderbar).</p>` : ""}
+    </details>
+    <details class="sec" open><summary>Sicherung</summary>
+      <p class="hint">Lädt alle Kategorien, Einträge, Bildangaben und Forscheraufträge als Datei herunter (JSON). Die Bild- und
+        Tondateien selbst liegen im Supabase-Speicher, ihre Quellen auf Wikimedia Commons. Am besten regelmässig und vor
+        grossen Änderungen sichern.</p>
+      <p><button type="button" class="ghost" id="backupBtn">Sicherung herunterladen</button></p>
+    </details>
+    <details class="sec" open><summary>Version</summary>
+      <p class="hint">Website ${esc(VERSION.app)} vom ${new Date(VERSION.datum + "T00:00").toLocaleDateString("de-CH", { day:"numeric", month:"long", year:"numeric" })}
+        · Datenbank ${dbSchema === 0 ? "14 oder älter" : dbSchema ?? "?"}
+        (benötigt ${VERSION.schema}) · Verlauf der Versionen: GitHub → Tags</p>
+    </details>`;
   setupBatch();
   $("backupBtn").addEventListener("click", async ev => {
     ev.target.disabled = true;
     try{
       const n = await downloadBackup();
-      msg(`Sicherung erstellt: ${n.categories} Kategorien, ${n.entries} Einträge, ${n.images} Bilder.`);
+      msg(`Sicherung erstellt: ${n.categories} Kategorien, ${n.entries} Einträge, ${n.images} Bilder, ${n.tasks} Forscheraufträge.`);
     }catch(err){ msg("Sicherung fehlgeschlagen: " + err.message, true); }
     ev.target.disabled = false;
   });
 }
-
 /* ------------------------------------------------------------------
    BILDER AUS LISTE (Übersicht): mehrere Bilder auf einmal von Commons übernehmen oder entfernen.
    Zuerst prüfen (Tabelle mit Stand pro Zeile), dann ausführen. Zeilen laufen nacheinander.
@@ -1637,6 +1913,7 @@ async function start(session){
   $("loginView").hidden = !!session;
   $("mfaView").hidden = true;
   $("appView").hidden = true;
+  $("topnav").hidden = true;
   $("logout").hidden = !session;
   $("who").textContent = session ? session.user.email : "";
   if(!session) return;
@@ -1652,6 +1929,7 @@ async function start(session){
   try{
     await Promise.all([reload(), loadSchemaVersion()]);
     $("appView").hidden = false;
+    $("topnav").hidden = false;
     render();
   }catch(e){ msg("Daten konnten nicht geladen werden: " + e.message, true); }
 }

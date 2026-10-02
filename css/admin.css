@@ -73,7 +73,6 @@ button:disabled{opacity:.4;cursor:default}
 code{word-break:break-all}
 .slot-actions{display:flex;flex-wrap:wrap;gap:6px}
 button.small{padding:4px 10px;font-size:.78rem;margin-bottom:8px}
-#toOverview{margin-bottom:14px}
 aside h2 small{color:var(--muted);font-weight:400;font-size:.85rem}
 
 /* Bilder aus Liste (Übersicht) */
@@ -157,3 +156,67 @@ audio{display:block;width:100%;max-width:420px;margin:4px 0}
 .report-note{margin:0 0 8px;padding:6px 8px;border-radius:8px;border-left:4px solid var(--warn);background:var(--accent-soft);
   font-size:.78rem;color:var(--warn)}
 .report-note button{display:block;margin:6px 0 0}
+
+/* Neue Struktur (2.15.0): Hauptbereiche oben, Register pro Kategorie, aufklappbare Abschnitte, Prüf-Tabelle */
+.topnav{display:flex;gap:4px;flex-wrap:wrap}
+.topnav a{padding:6px 12px;border-radius:99px;color:var(--ink);text-decoration:none;font-weight:600}
+.topnav a:hover{background:var(--accent-soft)}
+.topnav a.active{background:var(--accent);color:var(--card)}
+.badge{display:inline-block;padding:0 7px;border-radius:99px;background:var(--accent-soft);color:var(--ink);font-size:.75rem;font-weight:600;line-height:1.6}
+.badge.warn{color:var(--warn)}
+.topnav a.active .badge{background:var(--card);color:var(--accent)}
+.box{padding:10px 12px;border:1px solid var(--warn);border-radius:10px}
+.done-box{padding:12px 14px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;margin:6px 0 14px;border-bottom:2px solid var(--line)}
+.tabs a{padding:8px 14px;margin-bottom:-2px;border-bottom:3px solid transparent;color:var(--muted);text-decoration:none;font-weight:600}
+.tabs a:hover{color:var(--accent)}
+.tabs a.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs small{font-weight:400;color:var(--muted)}
+details.sec{margin:0 0 10px;padding:0 12px;border:1px solid var(--line);border-radius:10px}
+details.sec > summary{padding:10px 0;font-weight:700;cursor:pointer;color:var(--accent)}
+details.sec[open] > summary{margin-bottom:6px;border-bottom:1px solid var(--line)}
+details.sec[open]{padding-bottom:10px}
+.actions.sticky{position:sticky;bottom:0;z-index:5;margin:0;padding:10px 0;background:var(--card);border-top:1px solid var(--line)}
+.list.tasks a{white-space:normal}
+
+/* Werkzeuge eines Bildplatzes (Tabelle und Eintrag) */
+.tools{display:flex;flex-wrap:wrap;gap:2px;margin:4px 0}
+.tool{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 4px;border:1px solid var(--line);border-radius:8px;
+  background:var(--card);color:var(--accent);font:inherit;font-size:.85rem;font-weight:600;line-height:1;cursor:pointer}
+.tool:hover,.tool:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+.tool.danger{color:var(--err)}
+.tool.danger:hover{border-color:var(--err)}
+label.tool{margin:0}
+.flag{margin:2px 0;font-size:.72rem;color:var(--warn)}
+.flag.plain{color:var(--muted)}
+.thumb img{cursor:zoom-in}
+details.src{margin-top:6px;font-size:.8rem}
+details.src summary{cursor:pointer;color:var(--muted)}
+details.src[open] summary{margin-bottom:6px}
+dialog.editor img.big{display:block;max-width:100%;max-height:70vh;margin:0 auto 10px;border-radius:8px}
+
+/* Register «Prüfen»: Tabelle mit Text und Bildern aller Einträge */
+.check-bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;margin-bottom:4px}
+.check-bar label{margin:0}
+.legend{margin-top:0}
+.check-wrap{overflow-x:auto}
+table.check{width:100%;min-width:900px;border-collapse:collapse;table-layout:fixed}
+table.check th{position:sticky;top:0;z-index:2;padding:6px;background:var(--card);border-bottom:2px solid var(--line);
+  text-align:left;font-size:.8rem;color:var(--muted)}
+table.check th:first-child{width:34%}
+table.check td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.check tr.off td{opacity:.6}
+table.check .thumb{margin:0}
+table.check .report-note{font-size:.72rem;margin:4px 0 0}
+table.check .report-note button{display:inline-block;margin:0 0 0 4px}
+.check-name{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-bottom:4px}
+.check-name a{color:var(--accent)}
+.check-name i{color:var(--muted);font-size:.85rem}
+.check-name .ext{margin-left:auto;text-decoration:none}
+.check-desc{margin:0 0 6px;font-size:.84rem}
+.check-facts{margin:0 0 4px;font-size:.76rem;color:var(--muted)}
+.check-facts b{color:var(--ink);font-weight:600}
+tr.pick-row td{padding:0 0 12px;border-bottom:1px solid var(--line)}
+tr.pick-row .picker{margin-top:6px}
+td.picking{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
+.panel .hint a,.panel p a{color:var(--accent)}

@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.14.2 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. Oktober 2026 · Version 2.15.0 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge
 
 ---
@@ -414,6 +414,26 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - Ebenfalls auf Wunsch des Users (2.14.2): Antworten als ganzer Satz gelten. Füllwörter wie «es ist ein» oder «ich glaube»
   werden übergangen, im Rest wird der Name gesucht; bei Zahlen genügt es, wenn die richtige Zahl im Satz steht.
 
+### 2. Oktober – Verwaltung neu gegliedert (Version 2.15.0)
+
+- Rückmeldung des Users: Die Verwaltung wirkte überladen und unübersichtlich. Sie ist jetzt in drei Bereiche gegliedert:
+  **Zu erledigen** (nur was Arbeit braucht: Datenbank-Update, gemeldete Bilder und Textfehler, fehlende Bilder; sonst
+  «Alles erledigt»), **Kategorien** (Seitenleiste, mit Zahl offener Meldungen) und **Werkzeuge** (Bilder aus Liste,
+  Sicherung, Version).
+- Jede Kategorie hat Register: **Prüfen**, **Einträge** (Reihenfolge, sichtbar, neu, QR-Codes), **Aufträge** und
+  **Einstellungen** (Name, Lernziel, Bildbeschriftungen, Titelbild, löschen).
+- **Prüfen** ist eine Tabelle, wie vom User gewünscht: pro Eintrag eine Zeile mit Name, Beschreibung, Steckbrief und
+  Verwechslungen, daneben die vier Bilder. Unter jedem Bild kleine Knöpfe: Vorschläge von Commons (öffnen sich als Zeile
+  direkt unter dem Eintrag), eigenes Bild hochladen, zuschneiden, Ausschnitt, entfernen; ein Klick aufs Bild zeigt es gross
+  mit Quelle. Meldungen, fehlende Quelle und zugeschnittene Bilder sind direkt markiert; ein Filter zeigt nur Einträge mit
+  Hinweisen. So lässt sich eine ganze Kategorie in einem Durchgang prüfen und korrigieren.
+- Der einzelne Eintrag ist in aufklappbare Abschnitte gegliedert (Text und Steckbrief, Bilder, Verwechslungsgefahr,
+  Tierstimme, Online-Ersatz, Direktlink); selten Gebrauchtes ist zugeklappt, «Speichern» steht immer sichtbar unten.
+  Jeder Bildplatz hat dieselben kleinen Knöpfe wie die Tabelle, Quelle und Dateiname sind aufklappbar.
+- **Forscheraufträge** lassen sich jetzt in der Verwaltung ansehen, bearbeiten, ein- und ausblenden, löschen und neu
+  anlegen (Art, Antwortform, Eintrag mit der Antwort, Frage, Vermutung, Antwortmöglichkeiten bzw. richtige Antwort,
+  Tipp, Erklärung oder Musterlösung). Die **Sicherung** enthält auch die Aufträge.
+
 ---
 
 ## Versionen
@@ -446,6 +466,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.14.0 | 2.10.2026 | Forscheraufträge: einmal pro Tag eine Alltagssituation, ein Rätsel, eine Rechenaufgabe oder eine Forscherfrage als Einstieg, nachforschen in der Kategorie, antworten mit Tipp, Lob und Erklärung; 25 Aufträge über alle Kategorien (Datenbank-Version 21) |
 | 2.14.1 | 2.10.2026 | Forscheraufträge: jederzeit mit × oder Esc unterbrechen (Vermutung und angefangene Antwort bleiben gespeichert), nach dem Lösen «Fertig für heute» neben «Nächster Auftrag» |
 | 2.14.2 | 2.10.2026 | Forscheraufträge: kurze Antworten auch als Satz («Ich glaube, es ist ein Taubenschwänzchen», «Es sind 30'000 Liter»); Füllwörter zählen nicht, wer mit «oder» mehrere Möglichkeiten nennt, rät |
+| 2.15.0 | 2.10.2026 | Verwaltung neu gegliedert: «Zu erledigen», Kategorien mit Registern (Prüfen, Einträge, Aufträge, Einstellungen), «Werkzeuge»; Prüf-Tabelle mit Text und allen Bildern einer Kategorie; Forscheraufträge in der Verwaltung pflegen; Sicherung mit Aufträgen |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
