@@ -4,8 +4,8 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.13.2 (Datenbank 20) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
-73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
+**Stand:** 2. Oktober 2026 · Version 2.14.0 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge
 
 ---
 
@@ -51,6 +51,12 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   - *Farbe als Leitsystem:* Lernen in Petrolblau, Spielen in Sonnengelb, alles andere in Grün, das Lernziel in Maigrün.
   - *Spiele:* **Memory** am Bildschirm (4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name), **Verwechslungs-Duell** (welches von zwei ähnlichen Bildern zeigt die gesuchte Art, danach der Unterschied) und **Steckbrief-Detektiv** (Hinweise nacheinander, wer früh richtig rät, bekommt mehr Punkte); jeweils für eine Kategorie oder alle gemischt.
     Am Schluss jedes Spiels eine **Rückmeldung**: ein Spruch passend zum Resultat (auch ermutigend), der **persönliche Rekord** und der Durchschnitt der letzten 10 Spiele (pro Spiel und Kategorie, nur auf dem Gerät), dazu die verwechselten Paare bzw. schwierigen Arten mit Link zur Karte; bei sehr gutem Resultat oder neuem Rekord kurz Konfetti.
+- **Forscheraufträge** als Einstieg: Beim ersten Öffnen am Tag erscheint eine Alltagssituation («Darf ich diesen Pilz essen?»),
+  ein Rätsel, eine Rechenaufgabe oder eine Forscherfrage. Bei manchen notiert man zuerst eine Vermutung. Ein Knopf führt in
+  die passende Kategorie, oben steht der Auftrag, bis er gelöst ist. Antworten durch Auswählen, Tippen (Name oder Zahl,
+  kleine Tippfehler erlaubt) oder in eigenen Worten mit Musterlösung und Selbsteinschätzung; bei einer falschen Antwort
+  hilft ein Tipp. Danach Lob, Erklärung, Vergleich mit der Vermutung und Link zum Eintrag. Menü → «Forscheraufträge»
+  zeigt alle Aufträge mit Stand und eigenen Antworten (nur auf dem Gerät); der tägliche Auftrag lässt sich abschalten.
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -386,6 +392,22 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   19. Jahrhunderts eingeschleppt), Hundsrose (Blütezeit Mai–Juni) und Alpenglühen (Bedeutung im engeren Sinn).
 - Die vollständige Prüfung der Inhalte durch Menschen anhand der Prüfliste steht noch aus.
 
+### 2. Oktober – Forscheraufträge als Einstieg (Version 2.14.0)
+
+- Idee des Users: die Seite stärker in den schulischen Zusammenhang rücken und mehr Lernangebot als Nachschlagewerk
+  sein; die Seite dient dabei als Spielwiese für Möglichkeiten, die später ins grosse Moodle-Projekt kommen sollen.
+- **Ablauf:** Frage (Alltagssituation, Rätsel, Rechenaufgabe oder Forscherfrage) → bei Bedarf Vermutung notieren →
+  in der Kategorie nachforschen (Band «Dein Forscherauftrag» im Kopf) → antworten → Lob, Erklärung und Vergleich mit der
+  Vermutung. Falsche Antworten führen zu einem Tipp statt nur zu «falsch»; «Lösung zeigen» ist danach jederzeit möglich.
+- **Drei Antwortformen**, die sich später in Moodle-Fragetypen übertragen lassen: Auswahl (Multiple Choice), kurze
+  Antwort (Name oder Zahl) und freie Antwort mit Musterlösung und Selbsteinschätzung («Ja, das hatte ich», «Teilweise»,
+  «Noch nicht»).
+- **Einmal pro Tag** beim Öffnen der Startseite (nicht bei Direktlinks und QR-Codes), nach der Einführung beim ersten
+  Besuch; abschaltbar im Fenster, auf der Seite «Forscheraufträge» und unter «Einstellungen».
+- **25 Aufträge** über alle 22 Kategorien, von Claude entworfen und so gewählt, dass die Antwort im Eintrag steht
+  (z. B. Kolibri im Garten = Taubenschwänzchen, Bärlauch und Herbstzeitlose, Blitz und Donner, Jet d'eau in einer Minute).
+- Antworten bleiben nur auf dem Gerät, wie Lernstand und Rekorde: kein Konto, keine persönlichen Daten in der Datenbank.
+
 ---
 
 ## Versionen
@@ -415,6 +437,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.13.0 | 2.10.2026 | Spielende mit Rückmeldung: Spruch nach Resultat, persönlicher Rekord und Durchschnitt, Paare bzw. Arten zum Nachschauen, Konfetti bei sehr gutem Resultat; Kategorie des Tages als erste Kachel der Startseite |
 | 2.13.1 | 2.10.2026 | Duell: Ändert sich die Zahl der Paare einer Kategorie, beginnt der Rekord neu, damit «x von n richtig» zum Rekord passt |
 | 2.13.2 | 2.10.2026 | Textkorrekturen aus der KI-Vorprüfung in 11 Einträgen, z. B. Bergahorn, Alpensteinbock, Kartoffelkäfer (Datenbank-Version 20) |
+| 2.14.0 | 2.10.2026 | Forscheraufträge: einmal pro Tag eine Alltagssituation, ein Rätsel, eine Rechenaufgabe oder eine Forscherfrage als Einstieg, nachforschen in der Kategorie, antworten mit Tipp, Lob und Erklärung; 25 Aufträge über alle Kategorien (Datenbank-Version 21) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -441,6 +464,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | QR-Codes nur in der Verwaltung | die Anzeige bleibt ohne Bibliothek; gedruckt wird ohnehin von der Lehrperson |
 | «Jetzt zu sehen» aus den Steckbriefen gelesen | keine neue Pflegearbeit; wer den Steckbrief pflegt, pflegt die Monatsliste mit |
 | Bildmeldungen in der Datenbank statt per Mail | eine Mail bräuchte einen eigenen Server bzw. Maildienst mit Schlüssel; so ist es kostenlos, funktioniert auch auf Schulgeräten ohne Mail-App, und die Meldungen stehen gleich neben den Werkzeugen zum Ersetzen |
+| Forscheraufträge mit Antworten nur auf dem Gerät, einmal pro Tag und abschaltbar | Einstieg über eine echte Frage weckt Neugier; ohne Konto und ohne persönliche Daten, kein Zwang |
 | Rekorde nur gegen sich selbst, keine Ranglisten, Konfetti nur bei echtem Erfolg | motivieren, ohne vom Lernen abzulenken oder schwächere Lernende blosszustellen; kein Konto nötig |
 | Kategorie des Tages = Kategorie der Entdeckung des Tages | ein gemeinsamer Tagesschwerpunkt statt zwei verschiedener Hinweise |
 
@@ -464,6 +488,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `018_textmeldungen.sql` | Meldungen zu Fehlern im Text (Platz 0 in `image_reports`, Funktion `report_text` mit Meldungsnummer) |
 | `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
 | `020_textkorrekturen.sql` | Textkorrekturen aus der KI-Vorprüfung (Prüfliste vom 30.9.2026) in 11 Einträgen, nur die betroffenen Stellen |
+| `021_auftraege.sql` | Tabelle `tasks` für Forscheraufträge (Frage, Art, Antwortform, Auswahl, Antwort, Tipp, Erklärung) und 25 Aufträge |
 
 ## Offen und geplant
 

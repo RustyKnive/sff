@@ -24,6 +24,7 @@
     <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="menu" id="menu" hidden>
       <a class="menu-item m-learn" href="#/lernapp">LernApp</a>
+      <a class="menu-item m-learn" href="#/auftraege">Forscheraufträge</a>
       <a class="menu-item m-play" href="#/spiele">Spiele</a>
       <a class="menu-item" href="#/jetzt">Jetzt zu sehen</a>
       <a class="menu-item" href="#/quiz">Quiz für die Klasse</a>
@@ -47,6 +48,8 @@
   </div>
   <!-- Leiste in einer Kategorie: Wege zu den Spielen mit dieser Kategorie (js/index.js showCatBar) -->
   <div class="cat-bar" id="catBar" hidden></div>
+  <!-- Offener Forscherauftrag (js/index.js showTaskBar), bleibt sichtbar, bis er gelöst ist -->
+  <div class="task-bar" id="taskBar" hidden></div>
   <!-- Hinweis der LernApp auf der Übersicht (js/index.js showLernBanner) -->
   <a class="lern-banner" id="lernBanner" href="#/lernapp" hidden></a>
   <!-- Entdeckung des Tages auf der Übersicht (js/index.js showDaily) -->
@@ -58,6 +61,10 @@
 <section class="page" id="page-lernapp" hidden>
   <div id="lern"></div>
   <p class="lern-more">Lieber spielerisch üben? <a href="#/spiele">Zu den Spielen: Memory, Verwechslungs-Duell und Steckbrief-Detektiv →</a></p>
+</section>
+<!-- Forscheraufträge (#/auftraege, js/index.js renderTasks) -->
+<section class="page" id="page-auftraege" hidden>
+  <div id="auftraege"></div>
 </section>
 <!-- Spiele (#/spiele, #/spiele/<memo|duel|detektiv> springt zum Spiel); zählen nicht für den Lernstand -->
 <section class="page" id="page-spiele" hidden>
@@ -226,6 +233,20 @@
         <li>Der Lernstand bleibt nur auf diesem Gerät gespeichert, es braucht kein Konto.</li>
       </ul>
     </details>
+    <details class="g-learn">
+      <summary>Forscheraufträge</summary>
+      <p>Beim ersten Öffnen am Tag erscheint ein <b>Forscherauftrag</b>: eine Alltagssituation («Darf ich diesen Pilz essen?»),
+        ein Rätsel, eine Rechenaufgabe oder eine Forscherfrage. Die Antwort steht in den Karten einer Kategorie.</p>
+      <ul>
+        <li><b>Vermuten:</b> Bei manchen Aufträgen notierst du zuerst, was du denkst. Am Schluss vergleichst du damit.</li>
+        <li><b>Nachforschen:</b> Der Knopf führt in die passende Kategorie. Oben steht dein Auftrag, bis du ihn gelöst hast.</li>
+        <li><b>Antworten:</b> auswählen, ein Wort oder eine Zahl tippen oder in eigenen Worten antworten und dann mit der
+          Musterlösung vergleichen. Stimmt es noch nicht, hilft ein Tipp weiter.</li>
+        <li><b>Weiterarbeiten:</b> Menü → «Forscheraufträge» zeigt alle Aufträge, was du gelöst hast und deine Antworten.
+          Dort und unter «Einstellungen» lässt sich der tägliche Auftrag abschalten.</li>
+        <li>Deine Antworten bleiben nur auf diesem Gerät gespeichert.</li>
+      </ul>
+    </details>
     <details class="g-play">
       <summary>Spiele</summary>
       <p>Knopf «Spielen» neben der Suche oder Menü → «Spiele». Aus einer Kategorie heraus ist sie schon gewählt. Die Spiele
@@ -309,6 +330,11 @@
     <span id="offlineMsg">Wird geprüft …</span>
   </div>
 
+  <h2>Forscheraufträge</h2>
+  <p>Beim ersten Öffnen am Tag erscheint ein Forscherauftrag: eine Frage aus dem Alltag, ein Rätsel oder eine Rechenaufgabe.
+    Alle Aufträge findest du auch im Menü unter «Forscheraufträge».</p>
+  <label class="task-daily"><input type="checkbox"> Jeden Tag beim Öffnen einen Auftrag zeigen</label>
+
   <h2>Version</h2>
   <p id="versionInfo"></p>
   <p class="lern-hint">Zeigt hier noch eine ältere Nummer als erwartet, die App einmal ganz schliessen und neu öffnen.</p>
@@ -362,6 +388,9 @@
     <button type="button" id="introNext" autofocus>Weiter</button>
   </div>
 </dialog>
+
+<!-- Forscherauftrag: Frage, Antwort und Lob (js/index.js taskOpen); Inhalt entsteht im Skript -->
+<dialog class="intro-dlg task-dlg" id="taskDlg" aria-labelledby="taskTitle"></dialog>
 
 <footer>
   Bilder: <a href="https://commons.wikimedia.org" target="_blank" rel="noopener">Wikimedia Commons</a>, Urheber und Lizenz unter <a href="#/copyright">Copyright</a>.

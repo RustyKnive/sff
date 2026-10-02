@@ -9,13 +9,15 @@ let CATS = [];
    Eintrag: n Name, s Untertitel, t Beschreibung, f Steckbrief [{k,v}], q Suchbegriffe,
    wp Wikipedia-Titel, lb eigene Bildbeschriftungen, img[0..3] eigene Bilder (oder null)
    Bild: src, page, file, fx/fy/z Ausschnitt für die 4:3-Kacheln (null = Mitte, nicht vergrössert),
-   edited zugeschnitten (Hinweis im Bildnachweis); cf Verwechslungsgefahr [{name, diff}], snd Tierstimme {src, page, file} */
+   edited zugeschnitten (Hinweis im Bildnachweis); cf Verwechslungsgefahr [{name, diff}], snd Tierstimme {src, page, file}
+   Forscheraufträge der Kategorie (021) in tasks, gleich mitgeladen, damit sie auch offline da sind */
 async function loadCats(){
   const select = "id,name,description,goal,latin,labels,cover_entry_id,"
     + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
-    + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited))";
+    + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited)),"
+    + "tasks(id,entry_id,kind,question,guess,answer_type,choices,answer,hint,explanation,sort)";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
-    + "&order=sort.asc,name.asc&entries.order=sort.asc,name.asc";
+    + "&order=sort.asc,name.asc&entries.order=sort.asc,name.asc&tasks.order=sort.asc";
   const r = await fetch(url, { headers:{ apikey:CFG.key } });
   if(!r.ok) throw new Error("HTTP " + r.status);
   const rows = await r.json();
@@ -33,7 +35,9 @@ async function loadCats(){
         return i ? { src:publicUrl(i.storage_path), page:i.source_page, file:i.source_file,
           fx:i.thumb_x, fy:i.thumb_y, z:i.thumb_zoom, edited:i.edited } : null;
       })
-    }))
+    })),
+    tasks:(c.tasks || []).map(t => ({ id:t.id, entry:t.entry_id, kind:t.kind, q:t.question, guess:t.guess, type:t.answer_type,
+      choices:Array.isArray(t.choices) ? t.choices : [], answer:t.answer || "", hint:t.hint || "", expl:t.explanation || "", sort:t.sort }))
   }));
 }
 
@@ -607,6 +611,7 @@ function buildOverview(){
 // Seiten aus dem Menü (stehen in index.html); gehen vor gleichnamigen Kategorien
 const PAGES = {
   lernapp:{ title:"LernApp", intro:"Namen zu Bildern lernen, mit dem Leitner-System." },
+  auftraege:{ title:"Forscheraufträge", intro:"Alltagssituationen, Rätsel und Rechenaufgaben: in den Karten nachforschen und lösen." },
   spiele:{ title:"Spiele", intro:"Memory, Verwechslungs-Duell und Steckbrief-Detektiv: dasselbe Wissen spielerisch üben." },
   quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
@@ -1691,7 +1696,7 @@ const cardOf = (cat, item) => cardsOf(cat)[cat.items.indexOf(item)];
 // Ansicht vorbereiten: Lightbox zu, Hinweise der Übersicht weg, Menüseiten ausblenden
 function resetView(pageId){
   if(lightbox.open) lightbox.close();
-  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily"), catBar]) if(el) el.hidden = true;
+  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily"), catBar, taskBar]) if(el) el.hidden = true;
   quickLearn.hidden = false;
   closeHelp();
   grid.replaceChildren();
@@ -1700,7 +1705,7 @@ function resetView(pageId){
   grid.hidden = !!pageId;
   searchRow.hidden = !!pageId;   // Suche, «Lernen» und «Drucken» nur auf Übersicht, Kategorien und «Jetzt zu sehen»
   // Farb-Leitsystem: Bereichsfarbe für Seitentitel (css/index.css, body[data-area])
-  const area = { lernapp:"learn", spiele:"play" }[pageId];
+  const area = { lernapp:"learn", auftraege:"learn", spiele:"play" }[pageId];
   if(area) document.body.dataset.area = area; else delete document.body.dataset.area;
 }
 function setHead(title, intro, sub = true){
@@ -1835,7 +1840,8 @@ function render(){
       if(game?.classList.contains("game")) game.scrollIntoView();
     }
     if(pageId === "quiz") fillQuizSelect();
-    if(pageId === "einstellungen") showVersion();
+    if(pageId === "einstellungen"){ showVersion(); taskDailyBoxes(); }
+    if(pageId === "auftraege") renderTasks();
     lastCat = null;
     return;
   }
@@ -1851,6 +1857,7 @@ function render(){
     showCatProgress();
     showLernBanner();
     showDaily();
+    showTaskBar();
     return;
   }
   // Lernziel der Kategorie (019); ohne Lernziel ein kurzer Bedienhinweis
@@ -1859,6 +1866,7 @@ function render(){
   if(cat.goal){ introEl.innerHTML = `<b>Lernziel:</b> ${esc(cat.goal)}`; introEl.classList.add("goal"); }
   grid.append(...cardsOf(cat));
   showCatBar(cat);
+  showTaskBar();
   // Direktlink auf einen Eintrag (#/kategorie/eintrag): Karte zeigen und gross öffnen
   const item = second && cat.items.find(it => slugify(it.n) === second);
   if(item){
@@ -1868,6 +1876,318 @@ function render(){
     setTimeout(() => card.classList.remove("focus"), 3000);
     openLightbox(cat, item, 0);
   }
+}
+
+/* ------------------------------------------------------------------
+   FORSCHERAUFTRÄGE (021, seit 2.14.0): eine Alltagssituation, ein Rätsel, eine Rechenaufgabe oder eine Forscherfrage,
+   deren Antwort in einem Eintrag steht. Ablauf: Frage (bei Bedarf zuerst eine Vermutung notieren) → in der Kategorie
+   nachforschen → antworten (Auswahl, kurze Antwort oder freie Antwort mit Musterlösung) → Lob, Erklärung, Vergleich mit
+   der Vermutung. Einmal pro Tag beim Öffnen der Startseite (abschaltbar), sonst über das Band im Kopf (#taskBar)
+   und die Seite «Forscheraufträge» (#/auftraege). Nur auf diesem Gerät gespeichert, in localStorage «sff-auftraege»:
+   { off, shown:"JJJJ-MM-TT", active:id, log:{ id:{ guess, answer, tries, ok, self, done } } }
+------------------------------------------------------------------- */
+const TASK_KEY = "sff-auftraege";
+const TASK_ART = { situation:"Alltagssituation", raetsel:"Rätsel", rechnen:"Rechenaufgabe", frage:"Forscherfrage" };
+const TASK_LOB = {
+  first:["Volltreffer! Gleich beim ersten Versuch.", "Hervorragend, du hast genau hingeschaut!", "Echte Forscherarbeit, bravo!"],
+  later:["Geschafft! Dranbleiben hat sich gelohnt.", "Richtig! Mit dem Tipp hast du es herausgefunden.", "Gut gemacht: Aus Fehlern lernt man am meisten."],
+  shown:["Kein Problem, jetzt weisst du es. Lies die Erklärung in Ruhe durch."],
+  ja:["Super, deine Antwort trifft den Kern!"],
+  teils:["Gut überlegt! Ergänze, was dir noch gefehlt hat."],
+  nein:["Gut, dass du es versucht hast. Jetzt weisst du mehr als vorher."]
+};
+const taskBar = document.getElementById("taskBar");
+const taskDlg = document.getElementById("taskDlg");
+let taskStore = taskLoad();
+let taskCur = null;   // Auftrag im Fenster
+
+function taskLoad(){
+  try{
+    const s = JSON.parse(localStorage.getItem(TASK_KEY));
+    if(s && typeof s === "object") return { off:!!s.off, shown:s.shown || "", active:s.active || null, log:s.log || {} };
+  }catch(e){}
+  return { off:false, shown:"", active:null, log:{} };
+}
+function taskSave(){ try{ localStorage.setItem(TASK_KEY, JSON.stringify(taskStore)); }catch(e){} }
+const todayKey = () => new Date().toLocaleDateString("sv");   // JJJJ-MM-TT in Ortszeit
+const pick = list => list[Math.floor(Math.random() * list.length)];
+// Alle Aufträge mit Kategorie und Eintrag, in der Reihenfolge von sort
+const allTasks = () => CATS.flatMap(cat => cat.tasks.map(t => ({ ...t, cat, item:cat.items.find(it => it.id === t.entry) || null })))
+  .sort((a, b) => a.sort - b.sort || a.id.localeCompare(b.id));
+const taskLog = id => taskStore.log[id] || (taskStore.log[id] = { guess:"", answer:"", tries:0, ok:null, self:"", done:"" });
+const taskDone = t => !!taskStore.log[t.id]?.done;
+// Offener Auftrag zuerst, sonst der nächste noch nicht gelöste
+function taskNext(){
+  const list = allTasks();
+  return list.find(t => t.id === taskStore.active && !taskDone(t)) || list.find(t => !taskDone(t)) || null;
+}
+const taskActive = () => allTasks().find(t => t.id === taskStore.active && !taskDone(t)) || null;
+
+// Kurze Antwort prüfen: nur Zahlen → Zahlenvergleich («30 000», «30'000 Liter»), sonst wie in der LernApp (Tippfehler erlaubt)
+const taskNumber = s => { const m = String(s).replace(/[\s'’]/g, "").replace(",", ".").match(/-?\d+(\.\d+)?/); return m ? parseFloat(m[0]) : null; };
+function taskCheck(t, input){
+  const variants = t.answer.split("|").map(s => s.trim()).filter(Boolean);
+  if(variants.length && variants.every(v => /^-?\d+([.,]\d+)?$/.test(v))){
+    const n = taskNumber(input);
+    return n !== null && variants.some(v => taskNumber(v) === n) ? "exact" : false;
+  }
+  const a = input.trim().replace(/^(der|die|das|ein|eine|es ist|das ist)\s+/i, "");
+  let best = false;
+  for(const v of variants){
+    const m = lernMatch(a, v);
+    if(m === "exact") return "exact";
+    if(m) best = m;
+  }
+  return best;
+}
+
+// Band im Kopf (Übersicht und Kategorien): der offene Auftrag bleibt sichtbar, bis er gelöst ist
+function showTaskBar(){
+  const t = taskActive();
+  if(!t){ taskBar.hidden = true; return; }
+  const short = t.q.length > 110 ? t.q.slice(0, 108).replace(/\s+\S*$/, "") + " …" : t.q;
+  const here = lastCat === t.cat.id;
+  taskBar.innerHTML = `<span class="task-bar-label">🔍 Dein Forscherauftrag</span>
+    <span class="task-bar-q">${esc(short)}</span>
+    ${here ? "" : `<a class="chip" href="#/${esc(t.cat.id)}">Nachforschen: ${esc(t.cat.name)}</a>`}
+    <button type="button" class="task-bar-go">Antworten</button>`;
+  taskBar.querySelector(".task-bar-go").addEventListener("click", () => taskOpen(t, "answer"));
+  taskBar.hidden = false;
+}
+
+function taskHead(t){
+  return `<p class="intro-kicker">🔍 Forscherauftrag · ${TASK_ART[t.kind] || "Auftrag"} · ${esc(t.cat.name)}</p>`;
+}
+function taskOpen(t, view, auto = false){
+  taskCur = t;
+  if(view === "done") taskShowDone(t);
+  else if(view === "answer") taskShowAnswer(t);
+  else taskShowStart(t, auto);
+  if(!taskDlg.open) taskDlg.showModal();
+}
+// In die Kategorie wechseln (auch wenn man schon dort ist: neu zeichnen, damit das Band erscheint)
+function taskGoTo(t){
+  taskStore.active = t.id;
+  taskSave();
+  taskDlg.close();
+  const target = "#/" + t.cat.id;
+  if(location.hash === target) render(); else location.hash = target;
+}
+function taskGuessField(t){
+  const box = taskDlg.querySelector("#taskGuess");
+  if(box) box.addEventListener("input", () => { taskLog(t.id).guess = box.value.trim(); taskSave(); });
+}
+
+// 1. Frage, Vermutung, Weg in die Kategorie
+function taskShowStart(t, auto){
+  const log = taskLog(t.id);
+  taskDlg.innerHTML = `${taskHead(t)}
+    <h2 id="taskTitle">${log.guess || taskStore.active === t.id ? "Dein offener Auftrag" : "Dein Forscherauftrag"}</h2>
+    <p class="task-q">${esc(t.q)}</p>
+    ${t.guess ? `<label class="task-label" for="taskGuess">Was vermutest du? Notiere es kurz, bevor du nachforschst.</label>
+      <textarea id="taskGuess" rows="2" maxlength="300" placeholder="Ich glaube …">${esc(log.guess)}</textarea>` : ""}
+    <p class="task-tip">Die Antwort findest du in der Kategorie «${esc(t.cat.name)}»: Schau dir die Karten an und lies die Steckbriefe.</p>
+    ${auto ? `<label class="intro-keep"><input type="checkbox" id="taskOff"> Nicht mehr jeden Tag einen Auftrag zeigen</label>` : ""}
+    <div class="intro-nav">
+      <button type="button" class="ghost task-later">Später</button>
+      <button type="button" class="ghost task-now">Gleich antworten</button>
+      <button type="button" class="task-go">Nachforschen: ${esc(t.cat.name)} →</button>
+    </div>`;
+  taskGuessField(t);
+  const off = taskDlg.querySelector("#taskOff");
+  if(off) off.addEventListener("change", () => { taskStore.off = off.checked; taskSave(); });
+  taskDlg.querySelector(".task-later").addEventListener("click", () => {
+    taskStore.active = t.id;   // bleibt als offener Auftrag im Band und in der Liste
+    taskSave();
+    taskDlg.close();
+    showTaskBarIfVisible();
+  });
+  taskDlg.querySelector(".task-now").addEventListener("click", () => { taskStore.active = t.id; taskSave(); taskShowAnswer(t); });
+  taskDlg.querySelector(".task-go").addEventListener("click", () => taskGoTo(t));
+  taskDlg.querySelector(".task-go").focus();
+}
+
+// 2. Antworten: Auswahl, kurze Antwort oder freie Antwort; falsch → Tipp, danach «Lösung zeigen»
+function taskShowAnswer(t){
+  const log = taskLog(t.id);
+  taskDlg.innerHTML = `${taskHead(t)}
+    <h2 id="taskTitle">Deine Antwort</h2>
+    <p class="task-q">${esc(t.q)}</p>
+    ${log.guess ? `<p class="task-guess"><b>Deine Vermutung:</b> ${esc(log.guess)}</p>` : ""}
+    <div class="task-answer"></div>
+    <p class="task-hint" hidden></p>
+    <div class="intro-nav">
+      <button type="button" class="ghost task-close">Schliessen</button>
+      <button type="button" class="ghost task-solve" hidden>Lösung zeigen</button>
+      <button type="button" class="ghost task-look">Nachforschen: ${esc(t.cat.name)}</button>
+    </div>`;
+  const box = taskDlg.querySelector(".task-answer");
+  const hint = taskDlg.querySelector(".task-hint");
+  const solve = taskDlg.querySelector(".task-solve");
+  const wrong = text => {
+    log.tries++;
+    taskSave();
+    hint.innerHTML = `<b>${esc(text)}</b>${t.hint ? " Tipp: " + esc(t.hint) : ""}`;
+    hint.hidden = false;
+    solve.hidden = false;
+  };
+  taskDlg.querySelector(".task-close").addEventListener("click", () => { taskDlg.close(); showTaskBarIfVisible(); });
+  taskDlg.querySelector(".task-look").addEventListener("click", () => taskGoTo(t));
+  solve.addEventListener("click", () => taskFinish(t, { ok:false }));
+
+  if(t.type === "choice"){
+    box.innerHTML = `<div class="task-choices">${shuffled(t.choices).map(c => `<button type="button">${esc(c)}</button>`).join("")}</div>`;
+    box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      if(b.textContent === t.answer){
+        b.classList.add("right");
+        log.answer = b.textContent;
+        setTimeout(() => taskFinish(t, { ok:true }), 500);
+      }else{
+        b.classList.add("wrong");
+        b.disabled = true;
+        wrong("Das stimmt noch nicht.");
+      }
+    }));
+    box.querySelector("button").focus();
+  }else if(t.type === "text"){
+    box.innerHTML = `<form class="task-form"><input type="text" autocomplete="off" aria-label="Deine Antwort" placeholder="Deine Antwort"
+      value="${esc(log.answer)}"><button type="submit">Prüfen</button></form>`;
+    const input = box.querySelector("input");
+    box.querySelector("form").addEventListener("submit", e => {
+      e.preventDefault();
+      if(!input.value.trim()){ input.focus(); return; }
+      log.answer = input.value.trim();
+      const m = taskCheck(t, input.value);
+      if(m) taskFinish(t, { ok:true, typo:m === "typo" });
+      else { wrong("Noch nicht ganz."); input.select(); }
+    });
+    input.focus();
+  }else{
+    box.innerHTML = `<label class="task-label" for="taskFree">Schreib deine Antwort in eigenen Worten:</label>
+      <textarea id="taskFree" rows="4" maxlength="800">${esc(log.answer)}</textarea>
+      <div class="task-form"><button type="button" class="task-show">Musterlösung zeigen</button></div>`;
+    const area = box.querySelector("textarea");
+    area.addEventListener("input", () => { log.answer = area.value.trim(); taskSave(); });
+    box.querySelector(".task-show").addEventListener("click", () => {
+      if(area.value.trim().length < 3){
+        hint.innerHTML = "<b>Schreib zuerst auf, was du herausgefunden hast.</b> Danach vergleichst du mit der Musterlösung.";
+        hint.hidden = false;
+        area.focus();
+        return;
+      }
+      log.answer = area.value.trim();
+      taskSave();
+      hint.hidden = true;
+      area.readOnly = true;
+      box.querySelector(".task-form").innerHTML = `<div class="task-expl"><b>Musterlösung</b><p>${esc(t.expl)}</p></div>
+        <p class="task-label">Vergleiche: Steht das Wichtigste auch in deiner Antwort?</p>
+        <div class="task-self">
+          <button type="button" data-self="ja">Ja, das hatte ich</button>
+          <button type="button" data-self="teils" class="ghost">Teilweise</button>
+          <button type="button" data-self="nein" class="ghost">Noch nicht</button>
+        </div>`;
+      box.querySelectorAll("[data-self]").forEach(b => b.addEventListener("click", () => taskFinish(t, { ok:b.dataset.self !== "nein", self:b.dataset.self })));
+    });
+    area.focus();
+  }
+}
+
+// 3. Abschluss: speichern, Lob, Erklärung, Vergleich mit der Vermutung
+function taskFinish(t, { ok, typo = false, self = "" }){
+  const log = taskLog(t.id);
+  log.ok = ok;
+  log.self = self;
+  log.typo = typo;
+  log.done = todayKey();
+  if(taskStore.active === t.id) taskStore.active = null;
+  taskSave();
+  taskShowDone(t);
+  if(ok && !self && log.tries === 0) confetti();
+  showTaskBarIfVisible();
+}
+function taskShowDone(t){
+  const log = taskLog(t.id);
+  const lob = log.self ? pick(TASK_LOB[log.self]) : !log.ok ? pick(TASK_LOB.shown) : pick(log.tries ? TASK_LOB.later : TASK_LOB.first);
+  const list = allTasks(), solved = list.filter(taskDone).length;
+  const next = list.find(x => !taskDone(x) && x.id !== t.id);
+  const shownAnswer = t.type === "text" ? t.answer.split("|")[0] : t.type === "choice" ? t.answer : "";
+  taskDlg.innerHTML = `${taskHead(t)}
+    <h2 id="taskTitle" class="task-praise">${esc(lob)}</h2>
+    <p class="task-q">${esc(t.q)}</p>
+    ${log.answer ? `<p class="task-mine"><b>Deine Antwort:</b> ${esc(log.answer)}${log.typo ? ` <small>(kleiner Tippfehler, gemeint ist «${esc(shownAnswer)}»)</small>` : ""}</p>` : ""}
+    ${!log.ok && shownAnswer ? `<p class="task-mine"><b>Richtig ist:</b> ${esc(shownAnswer)}</p>` : ""}
+    ${log.guess ? `<p class="task-guess"><b>Deine Vermutung vorher:</b> ${esc(log.guess)}<br><small>Lag sie richtig, oder hast du etwas dazugelernt?</small></p>` : ""}
+    <div class="task-expl"><b>${t.type === "free" ? "Musterlösung" : "Erklärung"}</b><p>${esc(t.expl)}</p></div>
+    ${t.item ? `<p class="task-link"><a href="${esc(entryLink(t.cat, t.item))}">Zum Eintrag «${esc(t.item.n)}» →</a></p>` : ""}
+    <p class="task-tip">${solved} von ${list.length} Forscheraufträgen gelöst.</p>
+    <div class="intro-nav">
+      <button type="button" class="ghost task-all">Alle Aufträge</button>
+      <button type="button" class="ghost task-again">Nochmals lösen</button>
+      ${next ? `<button type="button" class="task-next">Nächster Auftrag</button>` : `<button type="button" class="task-close">Fertig</button>`}
+    </div>`;
+  taskDlg.querySelector(".task-all").addEventListener("click", () => { taskDlg.close(); location.hash = "#/auftraege"; });
+  taskDlg.querySelector(".task-again").addEventListener("click", () => {
+    taskStore.log[t.id] = { guess:"", answer:"", tries:0, ok:null, self:"", done:"" };
+    taskSave();
+    taskShowStart(t, false);
+  });
+  taskDlg.querySelector(".task-next")?.addEventListener("click", () => taskShowStart(next, false));
+  taskDlg.querySelector(".task-close")?.addEventListener("click", () => taskDlg.close());
+  taskDlg.querySelector(".intro-nav button:last-child").focus();
+}
+// Links im Fenster (zum Eintrag) schliessen es; danach Band und Liste nachführen
+taskDlg.addEventListener("click", e => { if(e.target.closest("a[href^='#']")) taskDlg.close(); });
+taskDlg.addEventListener("close", () => { showTaskBarIfVisible(); if(location.hash === "#/auftraege") renderTasks(); });
+function showTaskBarIfVisible(){
+  const id = location.hash.replace(/^#\/?/, "");
+  if(!id || CATS.some(c => c.id === id.split("/")[0])) showTaskBar(); else taskBar.hidden = true;
+}
+
+// Einmal pro Tag beim Öffnen der Startseite (nicht bei Direktlinks), solange nicht abgeschaltet
+function taskAuto(){
+  if(taskStore.off || taskStore.shown === todayKey() || taskDlg.open) return;
+  const t = taskNext();
+  if(!t) return;
+  taskStore.shown = todayKey();
+  taskSave();
+  taskOpen(t, "start", true);
+}
+
+// Einstellung «jeden Tag zeigen» (Einstellungen und Seite Forscheraufträge)
+function taskDailyBoxes(){
+  document.querySelectorAll(".task-daily input").forEach(box => {
+    box.checked = !taskStore.off;
+    box.onchange = () => { taskStore.off = !box.checked; taskSave(); taskDailyBoxes(); };
+  });
+}
+
+// Seite «Forscheraufträge»: Fortschritt, Einstellung, alle Aufträge mit Stand
+function renderTasks(){
+  const el = document.getElementById("auftraege");
+  const list = allTasks();
+  if(!list.length){ el.innerHTML = `<p>Noch keine Forscheraufträge vorhanden.</p>`; return; }
+  const solved = list.filter(taskDone).length;
+  el.innerHTML = `<p>Jeder Auftrag beginnt mit einer Frage aus dem Alltag, einem Rätsel oder einer Rechenaufgabe.
+      Die Antwort findest du in den Karten der Kategorie. Deine Antworten bleiben auf diesem Gerät gespeichert.</p>
+    <div class="lern-stats"><span><b>${solved}</b>von ${list.length} gelöst</span></div>
+    <div class="lern-bar"><i></i></div>
+    <label class="task-daily"><input type="checkbox"> Jeden Tag beim Öffnen einen Auftrag zeigen</label>
+    <ul class="task-list">${list.map(t => {
+      const log = taskStore.log[t.id], done = taskDone(t), open = !done && taskStore.active === t.id;
+      const date = done ? new Date(log.done + "T00:00").toLocaleDateString("de-CH") : "";
+      return `<li class="task-row${done ? " done" : open ? " active" : ""}">
+        <span class="task-state" aria-label="${done ? "gelöst" : open ? "in Arbeit" : "offen"}">${done ? "✓" : open ? "🔍" : ""}</span>
+        <div><small>${TASK_ART[t.kind] || ""} · ${esc(t.cat.name)}</small><p>${esc(t.q)}</p>
+          ${done ? `<small>Gelöst am ${date}${log.answer ? " · Deine Antwort: " + esc(log.answer.length > 80 ? log.answer.slice(0, 78) + " …" : log.answer) : ""}</small>` : ""}</div>
+        <button type="button" class="${done ? "ghost" : ""}" data-task="${esc(t.id)}">${done ? "Ansehen" : open ? "Weiterarbeiten" : "Starten"}</button>
+      </li>`;
+    }).join("")}</ul>`;
+  el.querySelector(".lern-bar i").style.width = Math.round(solved / list.length * 100) + "%";
+  taskDailyBoxes();
+  el.querySelectorAll("[data-task]").forEach(b => b.addEventListener("click", () => {
+    const t = list.find(x => x.id === b.dataset.task);
+    taskOpen(t, taskDone(t) ? "done" : "start");
+  }));
 }
 
 /* ------------------------------------------------------------------
@@ -2210,8 +2530,11 @@ loadCats().then(cats => {
   lastData = JSON.stringify(cats);
   window.addEventListener("hashchange", () => { searchEl.value = ""; render(); });
   render();
-  // Einführung nur auf der Startseite, nicht bei Direktlinks (z. B. über einen QR-Code)
-  if(!location.hash.replace(/^#\/?/, "") && !introSeen()) openIntro();
+  // Einführung nur auf der Startseite, nicht bei Direktlinks (z. B. über einen QR-Code); danach der Forscherauftrag des Tages
+  if(!location.hash.replace(/^#\/?/, "")){
+    if(!introSeen()){ openIntro(); introDlg.addEventListener("close", taskAuto, { once:true }); }
+    else taskAuto();
+  }
   setupOffline().catch(() => {
     document.getElementById("offlineMsg").textContent = "Der Offline-Speicher ist in diesem Browser nicht verfügbar (z. B. im privaten Fenster).";
   });

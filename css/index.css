@@ -535,3 +535,53 @@ ul.game-review li{margin:4px 0}
 .cat.today{box-shadow:0 0 0 3px var(--accent),var(--shadow)}
 .cat .cat-day{display:inline-block;margin-bottom:6px;padding:2px 10px;border-radius:99px;background:#2f6b3a;color:#fff;
   font-size:.75rem;font-style:normal;font-weight:700;letter-spacing:.02em}
+
+/* Forscheraufträge (021, js/index.js): gehören zum Lernen, darum Petrolblau */
+#page-auftraege,.task-dlg{--accent:var(--learn);--accent-soft:var(--learn-soft)}
+.task-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:12px -54px 0 0;padding:10px 14px;border-radius:12px;
+  background:var(--learn-soft);box-shadow:inset 4px 0 0 var(--learn)}
+.task-bar-label{font-weight:700;color:var(--learn);white-space:nowrap}
+.task-bar-q{flex:1 1 260px;min-width:0}
+.task-bar .chip{background:var(--card);color:var(--learn)}
+.task-bar .chip:hover{background:var(--learn);color:var(--card)}
+.task-bar-go{padding:6px 16px;border:none;border-radius:99px;background:var(--learn);color:var(--card);font:inherit;font-weight:600;cursor:pointer}
+.task-dlg{width:min(600px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto}
+.task-dlg .task-q{font-size:1.08rem}
+.task-label{display:block;margin:0 0 6px;font-weight:600}
+.task-dlg textarea,.task-form input{display:block;box-sizing:border-box;width:100%;margin:0 0 .8rem;padding:10px 14px;border:1.5px solid var(--accent);
+  border-radius:12px;background:var(--card);color:var(--ink);font:inherit;resize:vertical}
+.task-dlg .task-tip{color:var(--muted);font-size:.9rem}
+.task-dlg .task-guess,.task-dlg .task-mine{padding:8px 12px;border-radius:10px;background:var(--accent-soft)}
+.task-dlg .task-guess small,.task-dlg .task-mine small{color:var(--muted)}
+.task-dlg .task-hint{padding:8px 12px;border-radius:10px;background:var(--goal-bg);box-shadow:inset 4px 0 0 var(--goal-line)}
+.task-expl{margin:0 0 .8rem;padding:10px 14px;border-radius:12px;background:var(--accent-soft);box-shadow:inset 4px 0 0 var(--accent)}
+.task-expl b{color:var(--accent)}
+.task-dlg .task-expl p{margin:.3rem 0 0}
+.task-choices{display:grid;gap:8px;margin:0 0 .8rem}
+.task-choices button{padding:10px 14px;border:none;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--accent);
+  color:var(--ink);text-align:left;font:inherit;cursor:pointer}
+.task-choices button:hover:not(:disabled){background:var(--accent-soft)}
+.task-choices button.right{background:var(--accent);color:var(--card)}
+.task-choices button.wrong{box-shadow:inset 0 0 0 2px var(--muted);color:var(--muted);text-decoration:line-through;cursor:default}
+.task-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start;margin:0 0 .8rem}
+.task-form input{flex:1 1 200px;width:auto;margin:0;border-radius:99px}
+.task-form button,.task-self button{padding:9px 18px;border:none;border-radius:99px;background:var(--accent);color:var(--card);font:inherit;font-weight:600;cursor:pointer}
+.task-self{display:flex;flex-wrap:wrap;gap:8px}
+.task-self button.ghost{background:transparent;color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.task-form .task-expl{flex:1 1 100%}
+.task-form .task-label{flex:1 1 100%;margin:0}
+.task-dlg .task-praise{font-size:1.4rem}
+.task-link a{font-weight:600;color:var(--accent)}
+.intro-nav button.task-later{box-shadow:none;padding-left:4px;padding-right:4px;color:var(--muted)}
+.intro-nav .task-now,.intro-nav .task-look,.intro-nav .task-next,.intro-nav button.task-close:last-child{margin-left:auto}
+.task-daily{display:flex;align-items:center;gap:8px;margin:8px 0}
+.task-daily input{accent-color:var(--accent);width:18px;height:18px}
+.task-list{display:grid;gap:8px;margin:16px 0;padding:0;list-style:none}
+.task-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:var(--card)}
+.task-row.active{box-shadow:inset 4px 0 0 var(--learn)}
+.task-row > div{flex:1;min-width:0}
+.task-row p{margin:2px 0}
+.task-row small{color:var(--muted)}
+.task-state{flex:0 0 28px;display:grid;place-items:center;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700}
+.task-row.done .task-state{background:var(--accent);color:var(--card)}
+@media (max-width:560px){ .task-bar-label{flex-basis:100%} .task-row{flex-wrap:wrap} .task-row > div{flex-basis:calc(100% - 40px)} .task-row button{margin-left:40px} }
