@@ -573,7 +573,14 @@ ul.game-review li{margin:4px 0}
 .task-dlg .task-praise{font-size:1.4rem}
 .task-link a{font-weight:600;color:var(--accent)}
 .intro-nav button.task-later{box-shadow:none;padding-left:4px;padding-right:4px;color:var(--muted)}
-.intro-nav .task-now,.intro-nav .task-look,.intro-nav .task-next,.intro-nav button.task-close:last-child{margin-left:auto}
+.intro-nav .task-now,.intro-nav .task-look,.intro-nav .task-next,.intro-nav .task-done,.intro-nav button.task-close:last-child{margin-left:auto}
+.intro-nav .task-done + .task-next{margin-left:0}
+/* Unterbrechen: × oben rechts in jedem Auftragsfenster */
+.task-dlg{position:fixed}
+.task-dlg .intro-kicker{padding-right:40px}
+.task-x{position:absolute;top:10px;right:10px;width:38px;height:38px;padding:0;border:none;border-radius:50%;background:transparent;
+  color:var(--muted);font:inherit;font-size:1.6rem;line-height:1;cursor:pointer}
+.task-x:hover,.task-x:focus-visible{background:var(--accent-soft);color:var(--accent)}
 .task-daily{display:flex;align-items:center;gap:8px;margin:8px 0}
 .task-daily input{accent-color:var(--accent);width:18px;height:18px}
 .task-list{display:grid;gap:8px;margin:16px 0;padding:0;list-style:none}

@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.14.0 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. Oktober 2026 · Version 2.14.1 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge
 
 ---
@@ -57,6 +57,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   kleine Tippfehler erlaubt) oder in eigenen Worten mit Musterlösung und Selbsteinschätzung; bei einer falschen Antwort
   hilft ein Tipp. Danach Lob, Erklärung, Vergleich mit der Vermutung und Link zum Eintrag. Menü → «Forscheraufträge»
   zeigt alle Aufträge mit Stand und eigenen Antworten (nur auf dem Gerät); der tägliche Auftrag lässt sich abschalten.
+  Mit × oder Esc lässt sich jederzeit unterbrechen, nach einem gelösten Auftrag beendet «Fertig für heute».
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -407,6 +408,9 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - **25 Aufträge** über alle 22 Kategorien, von Claude entworfen und so gewählt, dass die Antwort im Eintrag steht
   (z. B. Kolibri im Garten = Taubenschwänzchen, Bärlauch und Herbstzeitlose, Blitz und Donner, Jet d'eau in einer Minute).
 - Antworten bleiben nur auf dem Gerät, wie Lernstand und Rekorde: kein Konto, keine persönlichen Daten in der Datenbank.
+- Wunsch des Users nach dem ersten Ausprobieren (2.14.1): jederzeit unterbrechen können und nach dem ersten gelösten
+  Auftrag aussteigen können. Darum ein × in jedem Fenster (auch Esc), das den Stand samt angefangener Antwort speichert,
+  und «Fertig für heute» neben «Nächster Auftrag»; «Nochmals lösen» nur noch beim Ansehen aus der Liste.
 
 ---
 
@@ -438,6 +442,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.13.1 | 2.10.2026 | Duell: Ändert sich die Zahl der Paare einer Kategorie, beginnt der Rekord neu, damit «x von n richtig» zum Rekord passt |
 | 2.13.2 | 2.10.2026 | Textkorrekturen aus der KI-Vorprüfung in 11 Einträgen, z. B. Bergahorn, Alpensteinbock, Kartoffelkäfer (Datenbank-Version 20) |
 | 2.14.0 | 2.10.2026 | Forscheraufträge: einmal pro Tag eine Alltagssituation, ein Rätsel, eine Rechenaufgabe oder eine Forscherfrage als Einstieg, nachforschen in der Kategorie, antworten mit Tipp, Lob und Erklärung; 25 Aufträge über alle Kategorien (Datenbank-Version 21) |
+| 2.14.1 | 2.10.2026 | Forscheraufträge: jederzeit mit × oder Esc unterbrechen (Vermutung und angefangene Antwort bleiben gespeichert), nach dem Lösen «Fertig für heute» neben «Nächster Auftrag» |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 

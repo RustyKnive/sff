@@ -1956,15 +1956,26 @@ function showTaskBar(){
 }
 
 function taskHead(t){
-  return `<p class="intro-kicker">🔍 Forscherauftrag · ${TASK_ART[t.kind] || "Auftrag"} · ${esc(t.cat.name)}</p>`;
+  return `<button type="button" class="task-x" aria-label="Unterbrechen" title="Unterbrechen: Der Auftrag bleibt gespeichert">×</button>
+    <p class="intro-kicker">🔍 Forscherauftrag · ${TASK_ART[t.kind] || "Auftrag"} · ${esc(t.cat.name)}</p>`;
 }
 function taskOpen(t, view, auto = false){
   taskCur = t;
-  if(view === "done") taskShowDone(t);
+  if(view === "done") taskShowDone(t, true);
   else if(view === "answer") taskShowAnswer(t);
   else taskShowStart(t, auto);
-  if(!taskDlg.open) taskDlg.showModal();
+  if(!taskDlg.open){ taskDlg.showModal(); taskFocusEl?.focus(); }
 }
+// Fokus auf den wichtigsten Knopf bzw. das Eingabefeld (nach showModal nochmals, das sonst das × fokussiert)
+let taskFocusEl = null;
+const taskFocus = el => { taskFocusEl = el; el?.focus(); };
+// Unterbrechen (× oder Esc): Der Auftrag bleibt mit Vermutung und Antwort gespeichert und als offener Auftrag im Band
+function taskInterrupt(){
+  if(taskCur && !taskDone(taskCur)){ taskStore.active = taskCur.id; taskSave(); }
+  showTaskBarIfVisible();
+}
+taskDlg.addEventListener("cancel", taskInterrupt);
+taskDlg.addEventListener("click", e => { if(e.target.closest(".task-x")){ taskInterrupt(); taskDlg.close(); } });
 // In die Kategorie wechseln (auch wenn man schon dort ist: neu zeichnen, damit das Band erscheint)
 function taskGoTo(t){
   taskStore.active = t.id;
@@ -2004,7 +2015,7 @@ function taskShowStart(t, auto){
   });
   taskDlg.querySelector(".task-now").addEventListener("click", () => { taskStore.active = t.id; taskSave(); taskShowAnswer(t); });
   taskDlg.querySelector(".task-go").addEventListener("click", () => taskGoTo(t));
-  taskDlg.querySelector(".task-go").focus();
+  taskFocus(taskDlg.querySelector(".task-go"));
 }
 
 // 2. Antworten: Auswahl, kurze Antwort oder freie Antwort; falsch → Tipp, danach «Lösung zeigen»
@@ -2048,11 +2059,12 @@ function taskShowAnswer(t){
         wrong("Das stimmt noch nicht.");
       }
     }));
-    box.querySelector("button").focus();
+    taskFocus(box.querySelector("button"));
   }else if(t.type === "text"){
     box.innerHTML = `<form class="task-form"><input type="text" autocomplete="off" aria-label="Deine Antwort" placeholder="Deine Antwort"
       value="${esc(log.answer)}"><button type="submit">Prüfen</button></form>`;
     const input = box.querySelector("input");
+    input.addEventListener("input", () => { log.answer = input.value.trim(); taskSave(); });   // bleibt beim Unterbrechen erhalten
     box.querySelector("form").addEventListener("submit", e => {
       e.preventDefault();
       if(!input.value.trim()){ input.focus(); return; }
@@ -2061,7 +2073,7 @@ function taskShowAnswer(t){
       if(m) taskFinish(t, { ok:true, typo:m === "typo" });
       else { wrong("Noch nicht ganz."); input.select(); }
     });
-    input.focus();
+    taskFocus(input);
   }else{
     box.innerHTML = `<label class="task-label" for="taskFree">Schreib deine Antwort in eigenen Worten:</label>
       <textarea id="taskFree" rows="4" maxlength="800">${esc(log.answer)}</textarea>
@@ -2088,7 +2100,7 @@ function taskShowAnswer(t){
         </div>`;
       box.querySelectorAll("[data-self]").forEach(b => b.addEventListener("click", () => taskFinish(t, { ok:b.dataset.self !== "nein", self:b.dataset.self })));
     });
-    area.focus();
+    taskFocus(area);
   }
 }
 
@@ -2101,11 +2113,12 @@ function taskFinish(t, { ok, typo = false, self = "" }){
   log.done = todayKey();
   if(taskStore.active === t.id) taskStore.active = null;
   taskSave();
-  taskShowDone(t);
+  taskShowDone(t, false);
   if(ok && !self && log.tries === 0) confetti();
   showTaskBarIfVisible();
 }
-function taskShowDone(t){
+// review: aus der Liste geöffnet (dann «Nochmals lösen»), sonst gerade gelöst (dann «Fertig für heute» oder «Nächster Auftrag»)
+function taskShowDone(t, review){
   const log = taskLog(t.id);
   const lob = log.self ? pick(TASK_LOB[log.self]) : !log.ok ? pick(TASK_LOB.shown) : pick(log.tries ? TASK_LOB.later : TASK_LOB.first);
   const list = allTasks(), solved = list.filter(taskDone).length;
@@ -2119,21 +2132,23 @@ function taskShowDone(t){
     ${log.guess ? `<p class="task-guess"><b>Deine Vermutung vorher:</b> ${esc(log.guess)}<br><small>Lag sie richtig, oder hast du etwas dazugelernt?</small></p>` : ""}
     <div class="task-expl"><b>${t.type === "free" ? "Musterlösung" : "Erklärung"}</b><p>${esc(t.expl)}</p></div>
     ${t.item ? `<p class="task-link"><a href="${esc(entryLink(t.cat, t.item))}">Zum Eintrag «${esc(t.item.n)}» →</a></p>` : ""}
-    <p class="task-tip">${solved} von ${list.length} Forscheraufträgen gelöst.</p>
+    <p class="task-tip">${solved} von ${list.length} Forscheraufträgen gelöst.${!review && next && !taskStore.off ? " Morgen wartet der nächste Auftrag auf dich." : ""}</p>
     <div class="intro-nav">
       <button type="button" class="ghost task-all">Alle Aufträge</button>
-      <button type="button" class="ghost task-again">Nochmals lösen</button>
-      ${next ? `<button type="button" class="task-next">Nächster Auftrag</button>` : `<button type="button" class="task-close">Fertig</button>`}
+      ${review ? `<button type="button" class="ghost task-again">Nochmals lösen</button>` : ""}
+      ${review || !next ? `<button type="button" class="task-close">${review ? "Schliessen" : "Fertig"}</button>`
+        : `<button type="button" class="ghost task-done">Fertig für heute</button><button type="button" class="task-next">Nächster Auftrag</button>`}
     </div>`;
   taskDlg.querySelector(".task-all").addEventListener("click", () => { taskDlg.close(); location.hash = "#/auftraege"; });
-  taskDlg.querySelector(".task-again").addEventListener("click", () => {
+  taskDlg.querySelector(".task-again")?.addEventListener("click", () => {
     taskStore.log[t.id] = { guess:"", answer:"", tries:0, ok:null, self:"", done:"" };
     taskSave();
     taskShowStart(t, false);
   });
   taskDlg.querySelector(".task-next")?.addEventListener("click", () => taskShowStart(next, false));
   taskDlg.querySelector(".task-close")?.addEventListener("click", () => taskDlg.close());
-  taskDlg.querySelector(".intro-nav button:last-child").focus();
+  taskDlg.querySelector(".task-done")?.addEventListener("click", () => taskDlg.close());
+  taskFocus(taskDlg.querySelector(".intro-nav button:last-child"));
 }
 // Links im Fenster (zum Eintrag) schliessen es; danach Band und Liste nachführen
 taskDlg.addEventListener("click", e => { if(e.target.closest("a[href^='#']")) taskDlg.close(); });
