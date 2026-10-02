@@ -1335,14 +1335,18 @@ function fillGameSelects(){
 }
 
 /* Spielende (alle drei Spiele): Spruch nach Resultat, persönlicher Rekord mit Durchschnitt, Konfetti bei echtem Erfolg.
-   Rekorde in localStorage «sff-rekorde»: { "<spiel>|<kategorie>": { best, last:[letzte Resultate] } }, nur auf diesem Gerät */
+   Rekorde in localStorage «sff-rekorde»: { "<spiel>|<kategorie>": { best, last:[letzte Resultate], of } }, nur auf diesem Gerät.
+   of = Anzahl Fragen (Duell «x von n»): ändert sie sich, beginnt eine neue Rekordreihe, sonst passte «von n» nicht zum Rekord */
 const REKORD_KEY = "sff-rekorde";
 const REKORD_LETZTE = 10;   // Durchschnitt über die letzten 10 Spiele
 const SPIEL_NAME = { memo:"Memory", duel:"Duell", det:"Detektiv" };
-function gameRecord(game, catId, value, lowerWins){
+function gameRecord(game, catId, value, lowerWins, of){
   let all = {};
   try{ all = JSON.parse(localStorage.getItem(REKORD_KEY)) || {}; }catch{}
-  const key = game + "|" + catId, r = all[key] || { best:null, last:[] };
+  const key = game + "|" + catId;
+  let r = all[key] || { best:null, last:[] };
+  if(of !== undefined && r.of !== undefined && r.of !== of) r = { best:null, last:[] };
+  if(of !== undefined) r.of = of;
   const isNew = r.best !== null && (lowerWins ? value < r.best : value > r.best);
   if(r.best === null || isNew) r.best = value;
   r.last = [...r.last, value].slice(-REKORD_LETZTE);
@@ -1520,7 +1524,7 @@ function duelShow(){
     const say = right === n ? "Perfekt! Dich legt keine Verwechslung herein."
       : right >= n * .7 ? "Stark! Nur noch wenige Stolpersteine."
       : "Gut geübt – genau dafür ist das Duell da.";
-    const rec = gameRecord("duel", cat, right, false);
+    const rec = gameRecord("duel", cat, right, false, n);
     duelBoard.innerHTML = `<div class="lern-done"><h3>${say}</h3>
       <p>${right} von ${n} richtig erkannt.</p>
       ${recordHtml("duel", cat, rec, x => `${x} von ${n} richtig`, `mit ${right} von ${n}`)}

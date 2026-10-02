@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.13.0 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. Oktober 2026 · Version 2.13.1 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
 
 ---
@@ -404,6 +404,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.11.2 | 30.9.2026 | Memory: lange Namen (z. B. Alpenschneehuhn) werden kleiner gesetzt statt mitten im Wort umgebrochen |
 | 2.12.0 | 30.9.2026 | Farbe als Leitsystem: Lernen Petrolblau, Spielen Sonnengelb, Grundfarbe Grün |
 | 2.13.0 | 2.10.2026 | Spielende mit Rückmeldung: Spruch nach Resultat, persönlicher Rekord und Durchschnitt, Paare bzw. Arten zum Nachschauen, Konfetti bei sehr gutem Resultat; Kategorie des Tages als erste Kachel der Startseite |
+| 2.13.1 | 2.10.2026 | Duell: Ändert sich die Zahl der Paare einer Kategorie, beginnt der Rekord neu, damit «x von n richtig» zum Rekord passt |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
