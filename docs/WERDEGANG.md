@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.15.0 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. Oktober 2026 · Version 2.16.0 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge
 
 ---
@@ -433,6 +433,10 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - **Forscheraufträge** lassen sich jetzt in der Verwaltung ansehen, bearbeiten, ein- und ausblenden, löschen und neu
   anlegen (Art, Antwortform, Eintrag mit der Antwort, Frage, Vermutung, Antwortmöglichkeiten bzw. richtige Antwort,
   Tipp, Erklärung oder Musterlösung). Die **Sicherung** enthält auch die Aufträge.
+- Ebenfalls auf Wunsch des Users (2.16.0): eine **Übersicht** mit den wichtigsten Kennzahlen als Startseite der Verwaltung,
+  von überall erreichbar (oben «Übersicht» oder Klick auf den Titel). Kacheln für Kategorien, Einträge, eigene Bilder,
+  fehlende Bilder, Bilder ohne Quelle, offene Meldungen, Tierstimmen, Verwechslungshinweise, Lernziele, Forscheraufträge und
+  Version (Warnfarbe, wo etwas zu tun ist), darunter eine Tabelle pro Kategorie mit Totalzeile.
 
 ---
 
@@ -467,6 +471,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.14.1 | 2.10.2026 | Forscheraufträge: jederzeit mit × oder Esc unterbrechen (Vermutung und angefangene Antwort bleiben gespeichert), nach dem Lösen «Fertig für heute» neben «Nächster Auftrag» |
 | 2.14.2 | 2.10.2026 | Forscheraufträge: kurze Antworten auch als Satz («Ich glaube, es ist ein Taubenschwänzchen», «Es sind 30'000 Liter»); Füllwörter zählen nicht, wer mit «oder» mehrere Möglichkeiten nennt, rät |
 | 2.15.0 | 2.10.2026 | Verwaltung neu gegliedert: «Zu erledigen», Kategorien mit Registern (Prüfen, Einträge, Aufträge, Einstellungen), «Werkzeuge»; Prüf-Tabelle mit Text und allen Bildern einer Kategorie; Forscheraufträge in der Verwaltung pflegen; Sicherung mit Aufträgen |
+| 2.16.0 | 2.10.2026 | Verwaltung: «Übersicht» mit den wichtigsten Kennzahlen als Startseite, oben in der Navigation und über den Titel von überall erreichbar; «Zu erledigen» unter eigener Adresse |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -520,6 +525,16 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `021_auftraege.sql` | Tabelle `tasks` für Forscheraufträge (Frage, Art, Antwortform, Auswahl, Antwort, Tipp, Erklärung) und 25 Aufträge |
 
 ## Offen und geplant
+
+- **Noch von Hand zu prüfen** (offener Auftrag vom 2. Oktober 2026): Diese Abläufe liessen sich automatisch nicht testen,
+  weil sie die Anmeldung mit zweitem Faktor brauchen oder im Testbrowser nicht auslösen. Nach dem Prüfen hier abhaken.
+  - [ ] Verwaltung, Register «Prüfen»: Bild über ↻ durch einen Vorschlag ersetzen (z. B. Eierschwamm, Bild 4 zeigt ein Zelt)
+  - [ ] Verwaltung, Register «Prüfen»: eigenes Bild hochladen (⬆), zuschneiden (✂), Ausschnitt (◎), entfernen (✕), Meldung «erledigt»
+  - [ ] Verwaltung, Eintrag: Text ändern und speichern, Quelle nachtragen, «Bild von dieser Quelle übernehmen»
+  - [ ] Verwaltung, Register «Einträge»: Reihenfolge ändern, ein- und ausblenden
+  - [ ] Verwaltung, Register «Aufträge»: Auftrag bearbeiten und speichern, neu anlegen, ein- und ausblenden, löschen
+  - [ ] Verwaltung, Werkzeuge: «Sicherung herunterladen» (die Datei enthält auch die Forscheraufträge)
+  - [ ] Seite: Beim allerersten Besuch erscheint nach dem Schliessen der Einführung der erste Forscherauftrag
 
 - Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).

@@ -220,3 +220,22 @@ tr.pick-row td{padding:0 0 12px;border-bottom:1px solid var(--line)}
 tr.pick-row .picker{margin-top:6px}
 td.picking{background:var(--accent-soft);box-shadow:inset 0 0 0 2px var(--accent)}
 .panel .hint a,.panel p a{color:var(--accent)}
+
+/* Übersicht (#/, renderDashboard): Kennzahlen als Kacheln und Tabelle pro Kategorie */
+header h1 a{color:inherit;text-decoration:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:0 0 16px}
+.kpi{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;color:var(--ink);text-decoration:none}
+a.kpi:hover{border-color:var(--accent);background:var(--accent-soft)}
+.kpi b{font-size:1.6rem;line-height:1.1;color:var(--accent)}
+.kpi span{font-weight:600}
+.kpi small{color:var(--muted);font-size:.78rem}
+.kpi.warn{border-color:var(--warn)}
+.kpi.warn b{color:var(--warn)}
+table.overview{width:100%;min-width:720px;border-collapse:collapse;font-size:.9rem}
+table.overview th,table.overview td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}
+table.overview th{font-size:.8rem;color:var(--muted)}
+table.overview .num,table.overview th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+table.overview td.warn,table.overview .warn{color:var(--warn);font-weight:600}
+table.overview tr.off td{opacity:.6}
+table.overview tfoot td{font-weight:700;border-top:2px solid var(--line);border-bottom:none}
+table.overview a{color:var(--accent);font-weight:600}

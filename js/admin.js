@@ -156,7 +156,7 @@ function renderSidebar(){
     </li>`;
   }).join("");
   // Hauptbereiche oben: aktiven markieren, Zahl der offenen Punkte bei «Zu erledigen»
-  const nav = r.type === "werkzeuge" ? "tools" : !r.type ? "todo" : "";
+  const nav = !r.type ? "home" : r.type === "erledigen" ? "todo" : r.type === "werkzeuge" ? "tools" : "";
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("active", a.dataset.nav === nav));
   const open = todoCount();
   $("todoCount").textContent = open;
@@ -1717,10 +1717,69 @@ function render(){
   const task = r.type === "a" && tasks.find(x => x.id === r.id);
   if(task && findCat(task.category_id)) return renderTask(findCat(task.category_id), task);
   if(r.type === "werkzeuge") return renderTools();
-  renderTodo();
+  if(r.type === "erledigen") return renderTodo();
+  renderDashboard();
 }
 
-/* «Zu erledigen» (#/): nur was Arbeit braucht – Datenbank-Update, Meldungen, fehlende Bilder */
+/* «Übersicht» (#/, Startseite der Verwaltung, oben in der Navigation und über den Titel von überall erreichbar):
+   die wichtigsten Kennzahlen der ganzen Seite und pro Kategorie */
+function renderDashboard(){
+  const all = cats.flatMap(c => c.entries.map(e => ({ c, e })));
+  const imgs = all.flatMap(({ e }) => e.images);
+  const shown = all.filter(({ c, e }) => c.visible && e.visible).length;
+  const hiddenCats = cats.filter(c => !c.visible).length;
+  const missing = all.reduce((s, { e }) => s + openSlots(e).length, 0);
+  const empty = all.reduce((s, { e }) => s + (e.empty_slots || []).length, 0);
+  const noSource = i => !i.source_page && !i.source_file;
+  const ki = imgs.filter(i => /KI-generiert/i.test(i.source_file || "")).length;
+  const rImg = reports.filter(r => r.position > 0).length, rTxt = reports.filter(r => r.position === 0).length;
+  const goals = cats.filter(c => (c.goal || "").trim()).length;
+  const sounds = c => c.entries.filter(e => e.sound_path).length;
+  const tile = (n, label, sub = "", href = "", warn = false) => `<${href ? `a href="${href}"` : "div"} class="kpi${warn ? " warn" : ""}">
+    <b>${n}</b><span>${label}</span>${sub ? `<small>${sub}</small>` : ""}</${href ? "a" : "div"}>`;
+  const row = c => {
+    const n = c.entries.length, ids = new Set(c.entries.map(e => e.id));
+    const im = c.entries.reduce((s, e) => s + e.images.length, 0);
+    const miss = c.entries.reduce((s, e) => s + openSlots(e).length, 0);
+    const ns = c.entries.reduce((s, e) => s + e.images.filter(noSource).length, 0);
+    const rep = reports.filter(r => ids.has(r.entry_id)).length;
+    const cell = (v, warn) => `<td class="num${v && warn ? " warn" : ""}">${v || "–"}</td>`;
+    return `<tr class="${c.visible ? "" : "off"}">
+      <td><a href="#/k/${esc(c.id)}">${esc(c.name)}</a>${c.visible ? "" : ` <span class="badge">ausgeblendet</span>`}</td>
+      <td class="num">${n}</td><td class="num">${im}/${n * 4}</td>${cell(miss, true)}${cell(ns, true)}${cell(rep, true)}
+      ${cell(sounds(c))}${cell(tasks.filter(x => x.category_id === c.id).length)}
+      <td class="num">${(c.goal || "").trim() ? "✓" : `<span class="warn">fehlt</span>`}</td></tr>`;
+  };
+  $("main").innerHTML = `<h2>Übersicht</h2>
+    ${schemaMissing() ? `<p class="warn box"><b>Datenbank-Update fehlt:</b> Details unter <a href="#/erledigen">Zu erledigen</a>.</p>` : ""}
+    <div class="kpis">
+      ${tile(cats.length, "Kategorien", hiddenCats ? `${hiddenCats} ausgeblendet` : "alle sichtbar")}
+      ${tile(all.length, "Einträge", `${shown} auf der Seite sichtbar`)}
+      ${tile(imgs.length, "eigene Bilder", `${ki} KI-Infografiken · ${imgs.filter(i => i.edited).length} zugeschnitten`)}
+      ${tile(missing, "fehlende Bilder", empty ? `${empty} Plätze bewusst leer` : "", missing ? "#/erledigen" : "", missing > 0)}
+      ${tile(imgs.filter(noSource).length, "Bilder ohne Quelle", "gelten als eigenes Foto")}
+      ${tile(rImg + rTxt, "offene Meldungen", `${rImg} Bilder · ${rTxt} Texte`, "#/erledigen", rImg + rTxt > 0)}
+      ${tile(all.filter(({ e }) => e.sound_path).length, "Tierstimmen")}
+      ${tile(all.reduce((s, { e }) => s + (e.confusions || []).length, 0), "Verwechslungshinweise")}
+      ${tile(`${goals}/${cats.length}`, "Lernziele", goals < cats.length ? `${cats.length - goals} fehlen` : "alle gesetzt", "", goals < cats.length)}
+      ${tile(tasks.length, "Forscheraufträge", `${tasks.filter(x => x.visible).length} sichtbar`)}
+      ${tile(esc(VERSION.app), "Website", `Datenbank ${dbSchema ?? "?"}${schemaMissing() ? ` (benötigt ${VERSION.schema})` : ""}`, "#/werkzeuge", schemaMissing())}
+    </div>
+    <h3>Pro Kategorie</h3>
+    <div class="check-wrap"><table class="overview">
+      <thead><tr><th>Kategorie</th><th>Einträge</th><th>Bilder</th><th>fehlen</th><th>ohne Quelle</th><th>Meldungen</th>
+        <th>Stimmen</th><th>Aufträge</th><th>Lernziel</th></tr></thead>
+      <tbody>${cats.map(row).join("")}</tbody>
+      <tfoot><tr><td>Total</td><td class="num">${all.length}</td><td class="num">${imgs.length}/${all.length * 4}</td>
+        <td class="num">${missing || "–"}</td><td class="num">${imgs.filter(noSource).length || "–"}</td><td class="num">${reports.length || "–"}</td>
+        <td class="num">${cats.reduce((s, c) => s + sounds(c), 0)}</td><td class="num">${tasks.length}</td>
+        <td class="num">${goals}/${cats.length}</td></tr></tfoot>
+    </table></div>
+    <p class="hint">Ein Klick auf eine Kategorie öffnet sie im Register «Prüfen». Die Übersicht ist über «Übersicht» oben oder
+      den Titel von jeder Seite aus erreichbar.</p>`;
+}
+
+/* «Zu erledigen» (#/erledigen): nur was Arbeit braucht – Datenbank-Update, Meldungen, fehlende Bilder */
 function renderTodo(){
   const main = $("main");
   const total = cats.reduce((s, c) => s + c.entries.length, 0);
