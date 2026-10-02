@@ -590,7 +590,7 @@ function buildOverview(){
     b.innerHTML = `<img alt=""><div class="status"><div class="spinner"></div></div>
       <span class="count">${cat.items.length} ${cat.items.length === 1 ? "Eintrag" : "Einträge"}</span>
       <span class="cat-prog" hidden></span>
-      <div class="cap"><strong>${esc(cat.name)}</strong><span>${esc(cat.desc)}</span></div>`;
+      <div class="cap"><em class="cat-day" hidden>Kategorie des Tages</em><strong>${esc(cat.name)}</strong><span>${esc(cat.desc)}</span></div>`;
     b.addEventListener("click", () => { location.hash = "#/" + cat.id; });
     const img = b.querySelector("img");
     const status = b.querySelector(".status");
@@ -1315,6 +1315,7 @@ const MEMO_ZEIT = 1200;    // so lange bleiben zwei falsche Karten offen (Millis
 const memoSel = document.getElementById("memoCat");
 const memoGrid = document.getElementById("memoGrid");
 const memoStatus = document.getElementById("memoStatus");
+const memoEnd = document.getElementById("memoEnd");
 let memo = null;           // { pairs:[{cat,item}], cards:[{pair, kind}], open:[i], found, moves, lock }
 let lastMemoCat = null;
 
@@ -1333,9 +1334,57 @@ function fillGameSelects(){
   fillGameSelect(detSel, CATS.filter(c => c.items.length > 1), lastDetCat);
 }
 
+/* Spielende (alle drei Spiele): Spruch nach Resultat, persönlicher Rekord mit Durchschnitt, Konfetti bei echtem Erfolg.
+   Rekorde in localStorage «sff-rekorde»: { "<spiel>|<kategorie>": { best, last:[letzte Resultate] } }, nur auf diesem Gerät */
+const REKORD_KEY = "sff-rekorde";
+const REKORD_LETZTE = 10;   // Durchschnitt über die letzten 10 Spiele
+const SPIEL_NAME = { memo:"Memory", duel:"Duell", det:"Detektiv" };
+function gameRecord(game, catId, value, lowerWins){
+  let all = {};
+  try{ all = JSON.parse(localStorage.getItem(REKORD_KEY)) || {}; }catch{}
+  const key = game + "|" + catId, r = all[key] || { best:null, last:[] };
+  const isNew = r.best !== null && (lowerWins ? value < r.best : value > r.best);
+  if(r.best === null || isNew) r.best = value;
+  r.last = [...r.last, value].slice(-REKORD_LETZTE);
+  all[key] = r;
+  try{ localStorage.setItem(REKORD_KEY, JSON.stringify(all)); }catch{}
+  return { best:r.best, avg:r.last.reduce((s, v) => s + v, 0) / r.last.length, count:r.last.length, isNew };
+}
+const zahl = x => String(Math.round(x * 10) / 10).replace(".", ",");
+// Rekordzeile; unit(x) = «11 Züge», newText = «in 11 Zügen» bzw. «mit 9 von 10»
+function recordHtml(game, catId, rec, unit, newText){
+  const where = catId === "*" ? "alle Kategorien" : CATS.find(c => c.id === catId)?.name || "";
+  return (rec.isNew ? `<p class="game-record new">Neuer Rekord: ${SPIEL_NAME[game]} ${esc(where)} ${newText}!</p>` : "")
+    + `<p class="game-record">Rekord: ${unit(rec.best)}`
+    + (rec.count > 1 ? ` · Durchschnitt: ${zahl(rec.avg)} (letzte ${rec.count} Spiele)` : " · erstes Spiel mit dieser Auswahl")
+    + `</p>`;
+}
+// Liste zum Nachschauen: Einträge mit Link zur Karte
+const gameLink = ({ cat, item }) => `<a href="${esc(entryLink(cat, item))}">${esc(item.n)}</a>`;
+
+// Konfetti in Sonnengelb, etwa 1,5 Sekunden, ohne Ton; nicht bei «Bewegung reduzieren»
+function confetti(){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const box = document.createElement("div");
+  box.className = "confetti";
+  box.setAttribute("aria-hidden", "true");
+  for(let i = 0; i < 60; i++){
+    const s = document.createElement("span");
+    s.className = "c" + (i % 3);
+    s.style.setProperty("--x", (Math.random() * 100).toFixed(1) + "vw");
+    s.style.setProperty("--dx", ((Math.random() - .5) * 30).toFixed(1) + "vw");
+    s.style.setProperty("--r", Math.round((Math.random() - .5) * 1440) + "deg");
+    s.style.setProperty("--d", Math.round(Math.random() * 350) + "ms");
+    box.append(s);
+  }
+  document.body.append(box);
+  setTimeout(() => box.remove(), 2000);
+}
+
 function memoStart(){
   const id = memoSel.value;
   lastMemoCat = id;
+  memoEnd.hidden = true;
   // Zufällige Einträge, jeder Name nur einmal (sonst gäbe es zwei gleiche Namenskarten)
   const names = new Set();
   const pairs = shuffled(CATS.filter(c => id === "*" || c.id === id).flatMap(cat => cat.items.map(item => ({ cat, item }))))
@@ -1373,6 +1422,22 @@ function memoShowStatus(){
     : `${memo.found} von ${n} Paaren gefunden · ${memo.moves} ${memo.moves === 1 ? "Zug" : "Züge"}`;
 }
 
+// Auswertung: Spruch nach Zügen pro Paar (bestenfalls 1), Rekord pro Kategorie (weniger Züge = besser), die Paare zum Nachschauen
+function memoFinish(){
+  const n = memo.pairs.length, moves = memo.moves, cat = lastMemoCat;
+  const top = moves <= n * 1.5;
+  const say = top ? "Hervorragend! Kaum ein Zug zu viel."
+    : moves <= n * 2.25 ? "Stark! Du merkst dir Bilder und Namen schon gut."
+    : "Gut geübt – mit jedem Spiel prägen sich die Bilder besser ein.";
+  const rec = gameRecord("memo", cat, moves, true);
+  const zuege = x => `${x} ${x === 1 ? "Zug" : "Züge"}`;
+  memoEnd.innerHTML = `<div class="lern-done"><h3>${say}</h3>
+    ${recordHtml("memo", cat, rec, zuege, `in ${zuege(moves).replace("Züge", "Zügen")}`)}
+    <p class="game-review"><b>Die Paare zum Nachschauen:</b> ${memo.pairs.map(gameLink).join(" · ")}</p></div>`;
+  memoEnd.hidden = false;
+  if(top || rec.isNew) confetti();
+}
+
 // Beschriftung für Screenreader: offen zeigt sie den Inhalt, verdeckt nur die Nummer
 function memoLabel(b, open){
   const i = +b.dataset.i, c = memo.cards[i];
@@ -1395,6 +1460,7 @@ memoGrid.addEventListener("click", e => {
     memo.found++;
     for(const el of [x, y]){ el.classList.add("found"); memoLabel(el, true); }
     memoShowStatus();
+    if(memo.found === memo.pairs.length) memoFinish();
     return;
   }
   memo.lock = true;
@@ -1419,7 +1485,7 @@ function gameImage(img, { cat, item }){
 const DUELL_RUNDE = 10;    // Paare pro Duell
 const duelSel = document.getElementById("duelCat");
 const duelBoard = document.getElementById("duelBoard");
-let duel = null;           // { list:[{a, b, diff}], i, right }
+let duel = null;           // { list:[{a, b, diff}], i, right, missed:[Paare mit falscher Antwort] }
 let lastDuelCat = null;
 
 // Alle Paare, bei denen beide Einträge sichtbar sind; jedes Paar nur einmal (gleicher Unterschied in beide Richtungen)
@@ -1441,7 +1507,7 @@ function duelStart(){
   lastDuelCat = id;
   const list = shuffled(duelPairs().filter(p => id === "*" || p.a.cat.id === id || p.b.cat.id === id)).slice(0, DUELL_RUNDE);
   if(!list.length) return;
-  duel = { list, i:0, right:0 };
+  duel = { list, i:0, right:0, missed:[] };
   document.getElementById("duelStart").textContent = "Neues Duell";
   duelShow();
 }
@@ -1449,8 +1515,18 @@ function duelStart(){
 function duelShow(){
   const { list, i } = duel;
   if(i >= list.length){
-    duelBoard.innerHTML = `<div class="lern-done"><h3>Duell beendet</h3>
-      <p>${duel.right} von ${list.length} richtig erkannt.${duel.right === list.length ? " Perfekt!" : ""}</p></div>`;
+    // Auswertung: Spruch, Rekord (mehr richtig = besser), verwechselte Paare mit Unterschied und Links
+    const n = list.length, right = duel.right, cat = lastDuelCat;
+    const say = right === n ? "Perfekt! Dich legt keine Verwechslung herein."
+      : right >= n * .7 ? "Stark! Nur noch wenige Stolpersteine."
+      : "Gut geübt – genau dafür ist das Duell da.";
+    const rec = gameRecord("duel", cat, right, false);
+    duelBoard.innerHTML = `<div class="lern-done"><h3>${say}</h3>
+      <p>${right} von ${n} richtig erkannt.</p>
+      ${recordHtml("duel", cat, rec, x => `${x} von ${n} richtig`, `mit ${right} von ${n}`)}
+      ${duel.missed.length ? `<p class="game-review"><b>Diese Paare nochmals anschauen:</b></p><ul class="game-review">${duel.missed.map(p =>
+        `<li>${gameLink(p.a)} oder ${gameLink(p.b)}: ${esc(p.diff)}</li>`).join("")}</ul>` : ""}</div>`;
+    if(right === n || rec.isNew) confetti();
     return;
   }
   const pair = list[i];
@@ -1470,7 +1546,7 @@ function duelShow(){
     const b = e.target.closest(".duel-pic");
     if(!b || duel.list[duel.i] !== pair || b.disabled) return;
     const ok = sides[+b.dataset.k] === asked;
-    if(ok) duel.right++;
+    if(ok) duel.right++; else duel.missed.push(pair);
     pics.forEach((p, k) => {
       p.disabled = true;
       p.querySelector(".duel-name").hidden = false;
@@ -1495,7 +1571,7 @@ document.getElementById("duelStart").addEventListener("click", duelStart);
 const DETEKTIV_FAELLE = 5;   // Fälle pro Spiel
 const detSel = document.getElementById("detCat");
 const detBoard = document.getElementById("detBoard");
-let det = null;              // { list:[{cat,item}], pool, i, points, shown, penalty, done }
+let det = null;              // { list:[{cat,item}], pool, i, points, shown, penalty, done, wrong, hard:[schwierige Fälle] }
 let lastDetCat = null;
 
 // Namen im Text abdecken: jedes Wort, das einen Teil des Namens (oder des Untertitels) enthält, wird zu «…»;
@@ -1519,7 +1595,7 @@ function detStart(){
   lastDetCat = id;
   const pool = CATS.filter(c => id === "*" || c.id === id).flatMap(cat => cat.items.map(item => ({ cat, item })));
   if(pool.length < 2) return;
-  det = { list:shuffled(pool).slice(0, DETEKTIV_FAELLE), pool, i:0, points:0 };
+  det = { list:shuffled(pool).slice(0, DETEKTIV_FAELLE), pool, i:0, points:0, hard:[] };
   document.getElementById("detStart").textContent = "Neues Spiel";
   detCase();
 }
@@ -1528,12 +1604,23 @@ function detCase(){
   const { list, i } = det;
   if(i >= list.length){
     const max = list.reduce((s, p) => s + detHints(p).length, 0);
-    detBoard.innerHTML = `<div class="lern-done"><h3>Alle Fälle gelöst</h3>
-      <p>${det.points} von ${max} möglichen Punkten.</p></div>`;
+    // Auswertung: Spruch nach Anteil der Punkte, Rekord (mehr Punkte = besser), schwierige Fälle mit Link
+    const pts = det.points, cat = lastDetCat;
+    const say = pts >= max * .8 ? "Meisterhaft ermittelt! Dir reichen wenige Hinweise."
+      : pts >= max * .5 ? "Stark ermittelt! Mit etwas Übung reichen bald noch weniger Hinweise."
+      : "Gut ermittelt – jeder gelöste Fall schärft den Blick fürs Wesentliche.";
+    const rec = gameRecord("det", cat, pts, false);
+    const punkte = x => `${x} ${x === 1 ? "Punkt" : "Punkte"}`;
+    detBoard.innerHTML = `<div class="lern-done"><h3>${say}</h3>
+      <p>Alle Fälle gelöst: ${pts} von ${max} möglichen Punkten.</p>
+      ${recordHtml("det", cat, rec, punkte, `mit ${pts === 1 ? "1 Punkt" : pts + " Punkten"}`)}
+      ${det.hard.length ? `<p class="game-review"><b>Diese Arten waren schwierig, schau sie dir nochmals an:</b>
+        ${det.hard.map(gameLink).join(" · ")}</p>` : ""}</div>`;
+    if(pts >= max * .8 || rec.isNew) confetti();
     return;
   }
   const cur = list[i], hints = detHints(cur);
-  Object.assign(det, { shown:1, penalty:0, done:false });
+  Object.assign(det, { shown:1, penalty:0, done:false, wrong:false });
   detBoard.innerHTML = `
     <p class="game-head" id="detHead"></p>
     <ol class="det-hints">${hints.map((h, k) => `<li${k ? " hidden" : ""}>${h.image
@@ -1566,6 +1653,7 @@ function detCase(){
     if(b.dataset.name !== cur.item.n){
       b.disabled = true;
       b.classList.add("wrong");
+      det.wrong = true;
       if(!reveal()) det.penalty++;   // alle Hinweise schon offen: falsche Antwort kostet trotzdem
       head();
       return;
@@ -1573,6 +1661,8 @@ function detCase(){
     det.done = true;
     const got = worth();
     det.points += got;
+    // Schwierig: falsch geraten oder weniger als die Hälfte der möglichen Punkte
+    if(det.wrong || got < hints.length / 2) det.hard.push(cur);
     while(reveal());
     b.classList.add("right");
     detBoard.querySelectorAll("#detChoices button").forEach(x => { x.disabled = true; });
@@ -1750,7 +1840,10 @@ function render(){
   if(!cat){
     setHead("Natur und Schweiz by toj-apps", "", false);
     if(!overviewCards) overviewCards = buildOverview();
-    grid.append(...overviewCards);
+    // Kategorie des Tages (dieselbe wie bei der Entdeckung des Tages) steht zuerst und trägt ein Schild
+    const di = CATS.some(c => c.items.length) ? CATS.indexOf(dailyPick(dayNumber()).cat) : -1;
+    overviewCards.forEach((b, i) => { b.querySelector(".cat-day").hidden = i !== di; b.classList.toggle("today", i === di); });
+    grid.append(...(di < 0 ? overviewCards : [overviewCards[di], ...overviewCards.filter((_, i) => i !== di)]));
     showCatProgress();
     showLernBanner();
     showDaily();
@@ -1961,12 +2054,16 @@ function dailyPick(day){
   const cat = cats[ci];
   return { cat, item:cat.items[mix32(day * 2) % cat.items.length] };
 }
+// Heutiger Tag als Zahl (Tage seit 1970, nach Ortsdatum)
+function dayNumber(){
+  const d = new Date();
+  return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+}
 let dailyExtra = null;   // «Noch eine»: zufälliger anderer Eintrag, gilt bis zum Neuladen
 function showDaily(){
   const el = document.getElementById("daily");
   if(!el || !CATS.some(c => c.items.length)) return;
-  const d = new Date();
-  const today = dailyPick(Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5));
+  const today = dailyPick(dayNumber());
   const { cat, item } = dailyExtra || today;
   const link = document.getElementById("dailyLink");
   link.href = entryLink(cat, item);

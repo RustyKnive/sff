@@ -1,19 +1,10 @@
-| 2.12.0 | 30.9.2026 | Farbe als Leitsystem: Lernen Petrolblau, Spielen Sonnengelb, Grundfarbe Grün |
-| 2.11.2 | 30.9.2026 | Memory: lange Namen (z. B. Alpenschneehuhn) werden kleiner gesetzt statt mitten im Wort umgebrochen |
-| 2.11.1 | 30.9.2026 | Feld mit dem Lernziel so breit wie Suchzeile und Karten (Computer und Handy) und in eigenem, frischem Grün mit Strich links, damit es auffällt |
-| 2.11.0 | 30.9.2026 | Lernziel oben in jeder Kategorie, 37 weitere Verwechslungspaare (Datenbank-Version 19) |
-| `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
-| 2.10.0 | 30.9.2026 | Lernfortschritt auf den Kacheln der Startseite: Ring mit «6/16» bzw. «✓ gelernt» über alle Lernsessions |
-| 2.9.0 | 30.9.2026 | Besser zurechtfinden: Einführung beim ersten Besuch, «Hilfe» im Menü, «?»-Erklärungen, Spiele auf eigener Seite mit Knopf «Spielen» und Wegen aus jeder Kategorie |
-| 2.8.0 | 30.9.2026 | Zwei neue Spiele am Ende der LernApp: Verwechslungs-Duell (zwei ähnliche Arten, danach der Unterschied) und Steckbrief-Detektiv (Hinweise nacheinander, Punkte fürs frühe Erraten) |
-| 2.7.0 | 30.9.2026 | Memory am Bildschirm am Ende der LernApp: 4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name |
 # Natur und Schweiz – Werdegang der Website
 
 Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amphibien oder Berge mit Einträgen,
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 30. September 2026 · Version 2.12.0 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. Oktober 2026 · Version 2.13.0 (Datenbank 19) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten
 
 ---
@@ -24,6 +15,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
 
 - **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge), bei Kategorien in einer Lernsession mit **Lernfortschritt** (Ring und «6/16», ganz gelernt «✓ gelernt»), und der **Entdeckung des Tages**
   (jeden Tag ein anderer Eintrag aus wechselnden Kategorien, für alle gleich; «Noch eine» zeigt einen weiteren zufälligen Eintrag).
+  Die Kategorie dieser Entdeckung ist die **Kategorie des Tages**: Sie steht an diesem Tag als erste Kachel, mit dem Schild «Kategorie des Tages».
 - **Suche** über alle Kategorien: deutscher Name, lateinischer Name oder Kategorie, ohne Rücksicht auf Umlaute und Grossschreibung.
 - **Knöpfe «Lernen», «Spielen» und «Drucken»** gleich neben der Suche (Übersicht und Kategorien): führen direkt zur LernApp, zu den Spielen und zum PDF-Druck, damit man diese auch ohne Menü findet. Ein «?» daneben erklärt kurz, was die Seite kann.
 - **Einführung beim ersten Besuch:** vier kurze Schritte (Ansehen – Lernen – Spielen – Womit beginnen?), überspringbar, erscheint danach nicht mehr von selbst.
@@ -58,6 +50,7 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
     Ein «?» erklärt den Karteikasten mit seinen fünf Fächern.
   - *Farbe als Leitsystem:* Lernen in Petrolblau, Spielen in Sonnengelb, alles andere in Grün, das Lernziel in Maigrün.
   - *Spiele:* **Memory** am Bildschirm (4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name), **Verwechslungs-Duell** (welches von zwei ähnlichen Bildern zeigt die gesuchte Art, danach der Unterschied) und **Steckbrief-Detektiv** (Hinweise nacheinander, wer früh richtig rät, bekommt mehr Punkte); jeweils für eine Kategorie oder alle gemischt.
+    Am Schluss jedes Spiels eine **Rückmeldung**: ein Spruch passend zum Resultat (auch ermutigend), der **persönliche Rekord** und der Durchschnitt der letzten 10 Spiele (pro Spiel und Kategorie, nur auf dem Gerät), dazu die verwechselten Paare bzw. schwierigen Arten mit Link zur Karte; bei sehr gutem Resultat oder neuem Rekord kurz Konfetti.
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -368,6 +361,22 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   und am Grün gewesen. Sonnengelb trägt dunkle Schrift, damit sie gut lesbar bleibt; alle Farben erfüllen die übliche
   Norm für Lesbarkeit (WCAG AA), auch im Dunkelmodus.
 
+### 2. Oktober – Belohnung am Spielende und Kategorie des Tages (Version 2.13.0)
+
+- **Rückmeldung am Schluss jedes Spiels:** ein Spruch, der zum Resultat passt und auch bei einem schwachen Resultat
+  ermutigt (z. B. im Duell «Perfekt! Dich legt keine Verwechslung herein.», «Stark! Nur noch wenige Stolpersteine.»,
+  «Gut geübt – genau dafür ist das Duell da.»).
+- **Persönlicher Rekord und Durchschnitt** pro Spiel und Kategorie, z. B. «Rekord: 11 Züge · Durchschnitt: 14,3
+  (letzte 10 Spiele)». Ein neuer Rekord wird eigens gemeldet («Neuer Rekord: Memory Vögel in 11 Zügen!»). Gemessen wird
+  nur gegen sich selbst, gespeichert nur auf dem Gerät.
+- **Rückmeldung mit Inhalt:** Das Duell zeigt die verwechselten Paare mit dem Unterschied, der Detektiv die Arten, die
+  schwierig waren (falsch geraten oder weniger als die Hälfte der Punkte), das Memory die Paare des Spiels, jeweils mit
+  Link zur Karte. So führt das Spielende zurück zum Lernen (Rückmeldung zur Aufgabe, Hattie 2009).
+- **Konfetti** in Sonnengelb, etwa 1,5 Sekunden, ohne Ton, nur bei sehr gutem Resultat oder neuem Rekord; wer in den
+  Einstellungen des Geräts «Bewegung reduzieren» gewählt hat, sieht keines.
+- **Kategorie des Tages:** Die Kategorie der Entdeckung des Tages steht jeden Tag als erste Kachel auf der Startseite,
+  mit Schild und Rahmen. Sie wechselt täglich und ist nie dieselbe wie am Vortag; alle sehen am selben Tag dieselbe.
+
 ---
 
 ## Versionen
@@ -386,6 +395,15 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.6.0 | 30.9.2026 | Fehler im Text melden: Knopf auf der Textseite, Meldungsnummer für die Meldenden, Liste «Gemeldete Textfehler» in der Verwaltung (Datenbank-Version 18) |
 | 2.6.1 | 30.9.2026 | LernApp: Einzahl bei «1 neuer Begriff wartet noch» und «1 weiterer neuer Begriff» |
 | 2.6.2 | 30.9.2026 | Knopf «Lernen» neben der Suche entfällt, solange auf der Übersicht der Lernhinweis erscheint (er führt selbst zur LernApp) |
+| 2.7.0 | 30.9.2026 | Memory am Bildschirm am Ende der LernApp: 4 × 4 Karten, bis zu 8 zufällige Paare aus Bild und Name |
+| 2.8.0 | 30.9.2026 | Zwei neue Spiele am Ende der LernApp: Verwechslungs-Duell (zwei ähnliche Arten, danach der Unterschied) und Steckbrief-Detektiv (Hinweise nacheinander, Punkte fürs frühe Erraten) |
+| 2.9.0 | 30.9.2026 | Besser zurechtfinden: Einführung beim ersten Besuch, «Hilfe» im Menü, «?»-Erklärungen, Spiele auf eigener Seite mit Knopf «Spielen» und Wegen aus jeder Kategorie |
+| 2.10.0 | 30.9.2026 | Lernfortschritt auf den Kacheln der Startseite: Ring mit «6/16» bzw. «✓ gelernt» über alle Lernsessions |
+| 2.11.0 | 30.9.2026 | Lernziel oben in jeder Kategorie, 37 weitere Verwechslungspaare (Datenbank-Version 19) |
+| 2.11.1 | 30.9.2026 | Feld mit dem Lernziel so breit wie Suchzeile und Karten (Computer und Handy) und in eigenem, frischem Grün mit Strich links, damit es auffällt |
+| 2.11.2 | 30.9.2026 | Memory: lange Namen (z. B. Alpenschneehuhn) werden kleiner gesetzt statt mitten im Wort umgebrochen |
+| 2.12.0 | 30.9.2026 | Farbe als Leitsystem: Lernen Petrolblau, Spielen Sonnengelb, Grundfarbe Grün |
+| 2.13.0 | 2.10.2026 | Spielende mit Rückmeldung: Spruch nach Resultat, persönlicher Rekord und Durchschnitt, Paare bzw. Arten zum Nachschauen, Konfetti bei sehr gutem Resultat; Kategorie des Tages als erste Kachel der Startseite |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -412,6 +430,8 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | QR-Codes nur in der Verwaltung | die Anzeige bleibt ohne Bibliothek; gedruckt wird ohnehin von der Lehrperson |
 | «Jetzt zu sehen» aus den Steckbriefen gelesen | keine neue Pflegearbeit; wer den Steckbrief pflegt, pflegt die Monatsliste mit |
 | Bildmeldungen in der Datenbank statt per Mail | eine Mail bräuchte einen eigenen Server bzw. Maildienst mit Schlüssel; so ist es kostenlos, funktioniert auch auf Schulgeräten ohne Mail-App, und die Meldungen stehen gleich neben den Werkzeugen zum Ersetzen |
+| Rekorde nur gegen sich selbst, keine Ranglisten, Konfetti nur bei echtem Erfolg | motivieren, ohne vom Lernen abzulenken oder schwächere Lernende blosszustellen; kein Konto nötig |
+| Kategorie des Tages = Kategorie der Entdeckung des Tages | ein gemeinsamer Tagesschwerpunkt statt zwei verschiedener Hinweise |
 
 ## Änderungen an der Datenbank
 
@@ -431,6 +451,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `016_bildmeldungen.sql` | Meldungen zu unpassenden Bildern (Tabelle `image_reports`, Funktion zum Melden ohne Anmeldung) |
 | `017_ki_bilder.sql` | Kennzeichnung der 19 mit ChatGPT erzeugten Infografiken (Wetterphänomene) |
 | `018_textmeldungen.sql` | Meldungen zu Fehlern im Text (Platz 0 in `image_reports`, Funktion `report_text` mit Meldungsnummer) |
+| `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
 
 ## Offen und geplant
 

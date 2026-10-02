@@ -71,6 +71,7 @@
     </div>
     <p class="memo-status" id="memoStatus" aria-live="polite" hidden></p>
     <div class="memo-grid" id="memoGrid" hidden></div>
+    <div class="game-board" id="memoEnd" aria-live="polite" hidden></div>
   </div>
   <!-- Verwechslungs-Duell (js/index.js duelStart): zwei ähnliche Arten, welches Bild zeigt die gesuchte? -->
   <div class="game" id="duel">
@@ -198,7 +199,8 @@
     <details>
       <summary>Entdeckung des Tages</summary>
       <p>Auf der Startseite steht jeden Tag ein anderer Eintrag, am selben Tag für alle gleich. «Noch eine» zeigt einen
-        weiteren zufälligen Eintrag.</p>
+        weiteren zufälligen Eintrag. Seine Kategorie ist die <b>Kategorie des Tages</b>: Sie steht an diesem Tag als erste
+        Kachel auf der Startseite, mit dem Schild «Kategorie des Tages».</p>
     </details>
     <details>
       <summary>Jetzt zu sehen</summary>
@@ -237,6 +239,9 @@
         <li><b>Steckbrief-Detektiv:</b> Zuerst erscheint nur eine Steckbrief-Zeile, dann weitere, die Beschreibung (ohne Namen)
           und zuletzt das Bild. Wähle den Namen aus vier Vorschlägen. Je früher du richtig rätst, desto mehr Punkte;
           «Nächster Hinweis» und falsche Antworten kosten je einen Punkt. Ein Spiel hat 5 Fälle.</li>
+        <li><b>Am Schluss</b> jedes Spiels steht eine Rückmeldung: wie gut es lief, dein <b>Rekord</b> und der Durchschnitt
+          deiner letzten 10 Spiele (pro Spiel und Kategorie, nur auf diesem Gerät). Darunter die Paare oder Arten, die du dir
+          nochmals anschauen solltest, mit Link zur Karte. Bei einem sehr guten Resultat oder einem neuen Rekord gibt es Konfetti.</li>
       </ul>
     </details>
     <details>

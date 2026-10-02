@@ -516,3 +516,22 @@ body[data-area="play"] #title::after{background:var(--play)}
 /* Memory-Rückseiten: grosse Flächen, darum eine eigene, ruhigere Füllung */
 #page-spiele .memo-back{background:var(--play-card)}
 #page-spiele .memo-back::after{color:var(--on-play-card)}
+/* Spielende: Spruch, Rekord, Liste zum Nachschauen (js/index.js recordHtml) */
+.game-record{margin:6px 0 0;color:var(--muted);font-size:.92rem}
+.game-record.new{color:var(--play-ink);font-weight:700;font-size:1rem}
+.game-review{margin:12px 0 0}
+ul.game-review{padding-left:20px}
+ul.game-review li{margin:4px 0}
+#page-spiele .lern-done{box-shadow:inset 4px 0 0 var(--play)}
+/* Konfetti in Sonnengelb bei echtem Erfolg (js/index.js confetti), etwa 1,5 s, nicht bei «Bewegung reduzieren» */
+.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50}
+.confetti span{position:absolute;top:-16px;left:var(--x);width:9px;height:14px;border-radius:2px;background:var(--play);
+  animation:konfetti 1.5s cubic-bezier(.3,.6,.6,1) var(--d) both}
+.confetti span.c1{background:var(--play-ink);width:7px;height:7px;border-radius:50%}
+.confetti span.c2{background:var(--play-card);opacity:.75;height:9px}
+@keyframes konfetti{to{transform:translate(var(--dx),105vh) rotate(var(--r));opacity:.4}}
+@media (prefers-reduced-motion: reduce){ .confetti{display:none} }
+/* Kategorie des Tages: steht zuerst auf der Übersicht, mit Schild (feste Farben, weil es auf dem Bild liegt) */
+.cat.today{box-shadow:0 0 0 3px var(--accent),var(--shadow)}
+.cat .cat-day{display:inline-block;margin-bottom:6px;padding:2px 10px;border-radius:99px;background:#2f6b3a;color:#fff;
+  font-size:.75rem;font-style:normal;font-weight:700;letter-spacing:.02em}
