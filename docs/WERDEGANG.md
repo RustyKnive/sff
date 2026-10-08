@@ -4,8 +4,9 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.21.0 (Datenbank 27) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
-73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 49 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen)
+**Stand:** 8. Oktober 2026 · Version 2.22.0 (Datenbank 27) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
+Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe)
 
 ---
 
@@ -64,6 +65,9 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   Quiz und Drucken. Auf der Textseite steht bei manchen Einträgen «Im Kanton Glarus: …». Ein Eintrag kann zu mehreren Kantonen gehören.
   Direkter Einstieg über **je-net.ch/sff/glarus**; die Wahl bleibt auf dem Gerät gespeichert, bis man eine andere trifft.
   Führt ein Direktlink (z. B. QR-Code) zu einem Eintrag ausserhalb des Kantons, zeigt die Seite dafür kurz die ganze Schweiz.
+- **Anleitung für Lehrpersonen:** Unter Menü → Hilfe zwei PDFs, getrennt für Mittelstufe und Oberstufe: wie man mit der App
+  im Unterricht arbeitet, zu jeder Möglichkeit Einsatz, Tipp für die Stufe und Lernziele mit Bezug zum Lehrplan 21, dazu eine
+  4-Wochen-Sequenz, Ideen, Differenzierung, die 25 Kategorien mit Lernzielen und häufige Fragen.
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -537,6 +541,19 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - **Neue Abzeichen:** Entdecker (angesehene Karten), Unterwegs in der Schweiz (besuchte Kantone), Pfadfinder (geschaffte Themenpfade).
 - Mit Testdaten im Testbrowser geprüft; die Häkchen nach dem Schliessen einer Karte nur im echten Browser prüfbar.
 
+### 8. Oktober – Anleitung für Lehrpersonen (Version 2.22.0)
+
+- Pendenz auf Wunsch des Users: **Anleitung für Lehrpersonen als PDF**, eine Fassung für die **Mittelstufe** (3.–6. Klasse,
+  Zyklus 2) und eine für die **Oberstufe** (7.–9. Klasse, Zyklus 3), je 20 Seiten. Zu jeder Möglichkeit (Karten, LernApp,
+  Forscheraufträge, Spiele, Themenpfade, Jahreskalender, Zeitstrahl, Kantone, Abstimmung, Quiz, Drucken, Abzeichen, Melden):
+  wo man sie findet, Sozialform und Zeit, ein Tipp für die Stufe und die **Lernziele** («Die Schülerinnen und Schüler können …»)
+  mit den Kompetenzbereichen des Lehrplans 21 (Mittelstufe NMG, Oberstufe NT, RZG, WAH). Dazu die erste Lektion,
+  eine 4-Wochen-Sequenz («Tiere und Pflanzen im Glarnerland» bzw. «Klima, Wasser und Wald im Wandel»), Differenzieren,
+  Beurteilen, die 25 Kategorien mit ihren Lernzielen und häufige Fragen (Lernstand pro Gerät, Datenschutz).
+- Mit Bildschirmfotos der Seite und QR-Codes zur ganzen Schweiz und zu Glarus auf der Titelseite.
+- Zu finden unter Menü → Hilfe (oben und im Abschnitt «Für Lehrpersonen»). Die Zuordnung zum Lehrplan 21 ist eine Orientierung
+  auf Ebene der Kompetenzbereiche; die genauen Kompetenzstufen bitte im Lehrplan nachschlagen.
+
 ---
 
 ## Versionen
@@ -577,6 +594,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.19.0 | 8.10.2026 | Kantone Graubünden, St. Gallen, Zürich und Tessin mit Kantonszeichen und vorgeschlagenen Einträgen; 24 neue Forscheraufträge (8 für Glarus, je 4 für die neuen Kantone) (Datenbank-Version 25) |
 | 2.20.0 | 8.10.2026 | Menü in Gruppen (Lernen, Spielen, Entdecken, Für den Unterricht); neu Vorlesen, Jahreskalender mit Gedenktagen und Bräuchen, Zeitstrahl, Kantone vergleichen, Abzeichen und leichte LernApp |
 | 2.21.0 | 8.10.2026 | Einfach lesen (Kurzfassung in einfacher Sprache für alle 421 Einträge), Themenpfade mit «Klimawandel in der Schweiz» (11 Karten, 6 Aufträge), Abstimmung spielen (Landsgemeinde schätzen, Volk und Stände), neue Abzeichen Entdecker, Unterwegs und Pfadfinder (Datenbank-Version 27) |
+| 2.22.0 | 8.10.2026 | Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) mit Lernzielen zu jeder Möglichkeit, verlinkt unter Hilfe |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -663,6 +681,6 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
   - [x] **Abzeichen «Entdecker»** (2.21.0): angesehene Karten zählen (heute zählt nur, was die LernApp, Aufträge und Spiele speichern).
   - [ ] **Vorlesen in LernApp und Aufträgen:** Frage bzw. Merksatz vorlesen lassen.
   - [ ] **Themenpfade in der Verwaltung bearbeiten:** heute nur per SQL (Tabelle `paths`); weitere Pfade, z. B. Wald, Wasser, Glarnerland.
-  - [ ] **PDF-Anleitung für Lehrpersonen** (gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
+  - [x] **PDF-Anleitung für Lehrpersonen** (2.22.0, gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
 - Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).

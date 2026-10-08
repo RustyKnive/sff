@@ -1,0 +1,81 @@
+/* Anleitung für Lehrpersonen (Druckvorlage für die PDFs, nicht Teil der Website).
+   Eine Quelle für beide Stufen: body.ms zeigt nur .ms, body.os nur .os (siehe anleitung.html). */
+@page{size:A4;margin:18mm 18mm 18mm 20mm;
+  @bottom-center{content:counter(page);font:9pt "Segoe UI",system-ui,sans-serif;color:#666}
+  @top-right{content:"Natur und Schweiz · Anleitung für Lehrpersonen";font:8pt "Segoe UI",system-ui,sans-serif;color:#999}}
+@page :first{@bottom-center{content:none}@top-right{content:none}}
+
+:root{--acc:#2f6b3a;--soft:#e4ede2;--muted:#555;--learn:#1f5f7a;--learn-soft:#e1edf2;--play:#f2c230;--play-ink:#7a5a00;
+  --play-soft:#fbf1cf;--goal:#5f8f1f;--goal-soft:#eef5df;--line:#cfd8cc}
+html{font:10.2pt/1.5 "Segoe UI",system-ui,-apple-system,sans-serif;color:#1d241f}
+body{margin:0}
+body.ms .os,body.os .ms{display:none!important}
+p,li{orphans:3;widows:3}
+h1,h2,h3,h4{color:var(--acc);line-height:1.25;break-after:avoid}
+h2{font-size:16pt;margin:0 0 4mm;padding-bottom:2mm;border-bottom:.4mm solid var(--acc);break-before:page}
+h3{font-size:12.5pt;margin:7mm 0 2mm;display:flex;align-items:center;gap:2.5mm}
+h3 .tag{font-size:7.5pt;font-weight:600;letter-spacing:.04em;text-transform:uppercase;border-radius:1mm;padding:.4mm 1.6mm;
+  background:var(--soft);color:var(--acc)}
+h3 .tag.learn{background:var(--learn-soft);color:var(--learn)}
+h3 .tag.play{background:var(--play-soft);color:var(--play-ink)}
+h4{font-size:10.2pt;margin:3mm 0 1mm;color:#1d241f}
+p{margin:0 0 2.5mm}
+ul,ol{margin:0 0 3mm;padding-left:6mm}
+li{margin-bottom:.8mm}
+a{color:var(--acc)}
+b{font-weight:600}
+.weg{color:var(--muted);font-size:9pt}
+
+table{width:100%;border-collapse:collapse;margin:2mm 0 4mm;font-size:9pt}
+th,td{text-align:left;vertical-align:top;padding:1.3mm 2mm;border-bottom:.2mm solid var(--line)}
+th{background:var(--soft);font-weight:600}
+tr{break-inside:avoid}
+td.lp{white-space:nowrap;color:var(--muted)}
+
+figure{margin:3mm 0 4mm;break-inside:avoid}
+figure img{display:block;max-width:100%;margin:0 auto;border:.2mm solid var(--line);border-radius:1.5mm}
+figure.w70 img{width:70%}
+figure.w55 img{width:55%}
+figure.w45 img{width:45%}
+figure.pair{display:flex;flex-wrap:wrap;gap:4mm;justify-content:center;align-items:flex-start}
+figure.pair figcaption{flex-basis:100%;margin-top:0}
+figure.pair img{width:40%;margin:0}
+figure.pair.small img{width:36%}
+figure.pair.tiny img{width:30%}
+figcaption{font-size:8.3pt;color:var(--muted);margin-top:1.5mm;text-align:center}
+
+/* Ein Baustein pro Möglichkeit */
+.feature{break-inside:auto}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:5mm;align-items:start}
+.box{border-radius:1.5mm;padding:2.6mm 3.5mm;margin:2.5mm 0 3.5mm;break-inside:avoid}
+.box > :last-child{margin-bottom:0}
+.box h4{margin-top:0}
+.ziele{background:var(--goal-soft);border-left:1.2mm solid var(--goal)}
+.ziele h4{color:#3e6413}
+.ziele ul{padding-left:5mm}
+.tipp{background:var(--soft);border-left:1.2mm solid var(--acc)}
+.achtung{background:#fff4dc;border-left:1.2mm solid #c28a00}
+.meta{display:flex;flex-wrap:wrap;gap:1.5mm 5mm;font-size:8.6pt;color:var(--muted);margin:-1mm 0 2.5mm}
+.meta b{color:#1d241f;font-weight:600}
+
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin:3mm 0 5mm}
+.kpi div{background:var(--soft);border-radius:2mm;padding:2.5mm;text-align:center}
+.kpi b{display:block;font-size:17pt;color:var(--acc)}
+.kpi span{font-size:8.3pt;color:var(--muted)}
+
+/* Titelseite */
+.title{height:255mm;display:flex;flex-direction:column}
+.title .top{font-size:9.5pt;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.title h1{font-size:30pt;margin:22mm 0 3mm}
+.title .sub{font-size:14pt;color:#333;margin:0 0 3mm}
+.title .stufe{display:inline-block;align-self:flex-start;font-size:12pt;font-weight:600;color:#fff;background:var(--acc);
+  border-radius:1.5mm;padding:1.5mm 4mm;margin:0 0 9mm}
+.title img.bild{width:100%;height:82mm;object-fit:cover;object-position:top;border-radius:2mm;border:.2mm solid var(--line)}
+.title .qrs{display:flex;gap:10mm;margin-top:auto;align-items:flex-end}
+.title .qr{text-align:center;font-size:8.5pt;color:var(--muted)}
+.title .qr svg{display:block;width:30mm;height:30mm;margin:0 auto 1mm}
+.title .qr b{color:#1d241f}
+.title .fuss{margin-left:auto;text-align:right;font-size:8.5pt;color:var(--muted)}
+
+.toc{columns:2;column-gap:8mm;padding-left:5mm}
+.toc li{break-inside:avoid}

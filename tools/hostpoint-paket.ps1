@@ -8,6 +8,6 @@ New-Item -ItemType Directory $ziel | Out-Null
 foreach ($f in "index.html", "admin.html", "config.js", "sw.js", "manifest.webmanifest", ".htaccess") {
   Copy-Item -LiteralPath (Join-Path $repo $f) $ziel
 }
-foreach ($d in "css", "js", "icons") { Copy-Item -Recurse (Join-Path $repo $d) $ziel }
+foreach ($d in "css", "js", "icons", "anleitung") { Copy-Item -Recurse (Join-Path $repo $d) $ziel }
 $n = (Get-ChildItem -Recurse -File -Force $ziel).Count
 Write-Output "$n Dateien in $ziel"

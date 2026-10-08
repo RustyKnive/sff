@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<title>Natur und Schweiz – Anleitung für Lehrpersonen</title>
+<!-- Druckvorlage für die beiden PDFs (tools/anleitung-pdf.ps1). anleitung.html#ms = Mittelstufe, #os = Oberstufe.
+     Blöcke mit class="ms" bzw. "os" erscheinen nur in der jeweiligen Fassung. Nicht Teil der Website. -->
+<link rel="stylesheet" href="anleitung.css">
+<script src="../../js/lib/qrcode-1.4.4.js"></script>
+</head>
+<body>
+
+<!-- ===================== Titelseite ===================== -->
+<section class="title">
+  <div class="top">Natur und Schweiz · je-net.ch/sff</div>
+  <h1>Anleitung für Lehrpersonen</h1>
+  <p class="sub">Wie Sie mit der App im Unterricht arbeiten, mit den Lernzielen zu jeder Möglichkeit</p>
+  <span class="stufe ms">Mittelstufe · 3. bis 6. Klasse · Zyklus 2</span>
+  <span class="stufe os">Oberstufe · 7. bis 9. Klasse · Zyklus 3</span>
+  <img class="bild" src="bilder/startseite.jpg" alt="Startseite von Natur und Schweiz">
+  <div class="qrs">
+    <div class="qr"><span data-qr="https://je-net.ch/sff/"></span><b>je-net.ch/sff</b><br>ganze Schweiz</div>
+    <div class="qr"><span data-qr="https://je-net.ch/sff/glarus"></span><b>je-net.ch/sff/glarus</b><br>Kanton Glarus</div>
+    <div class="fuss">Stand: Version 2.21.0, Oktober 2026<br>Natur und Schweiz by toj-apps</div>
+  </div>
+</section>
+
+<!-- ===================== 1 Auf einen Blick ===================== -->
+<h2>1 · Auf einen Blick</h2>
+<p><b>Natur und Schweiz</b> ist eine Lern- und Nachschlageseite über Pflanzen, Tiere, Landschaften, Geschichte und Politik der
+Schweiz. Jeder Eintrag hat bis zu vier Bilder und einen Steckbrief. Darum herum gibt es Werkzeuge zum Lernen, Spielen,
+Entdecken und für den Unterricht mit der ganzen Klasse.</p>
+<div class="kpi">
+  <div><b>25</b><span>Kategorien</span></div>
+  <div><b>420</b><span>Einträge mit Bildern und Steckbrief</span></div>
+  <div><b>54</b><span>Forscheraufträge</span></div>
+  <div><b>5</b><span>Kantone mit eigenem Bereich</span></div>
+</div>
+
+<h4>Was es braucht</h4>
+<ul>
+  <li><b>Ein Gerät mit Browser:</b> Tablet, Laptop, Handy oder der Computer am Beamer. Adresse <b>je-net.ch/sff</b>, für das Glarnerland
+    direkt <b>je-net.ch/sff/glarus</b>.</li>
+  <li><b>Kein Konto, keine Anmeldung, keine Kosten.</b> Die Lernenden geben nirgends ihren Namen ein.</li>
+  <li><b>Offline:</b> Die Seite lässt sich wie eine App installieren und läuft dann auch ohne Internet (Menü → Einstellungen).</li>
+</ul>
+
+<h4>Wichtig zu wissen</h4>
+<div class="box achtung">
+  <p><b>Der Lernstand bleibt auf dem Gerät.</b> LernApp, gelöste Forscheraufträge, Spielrekorde und Abzeichen werden nur im
+  Browser des Geräts gespeichert, nicht auf einem Server. Das schützt die Daten der Lernenden, hat aber Folgen:</p>
+  <ul>
+    <li>Arbeiten mehrere Kinder abwechselnd am selben Gerät, teilen sie sich den Lernstand.
+      <span class="ms">Für die LernApp darum wenn möglich immer dasselbe Gerät pro Kind oder pro Lerngruppe einteilen.</span>
+      <span class="os">Für die LernApp darum wenn möglich das persönliche Gerät oder das eigene Handy nutzen lassen.</span></li>
+    <li>Wer die Browserdaten löscht oder das Gerät wechselt, beginnt von vorne.</li>
+    <li>Sie sehen den Stand der Lernenden nicht aus der Ferne. Lassen Sie sich die Seite «Abzeichen» oder die Auswertung
+      einer LernApp-Runde zeigen.</li>
+  </ul>
+</div>
+
+<h4>Inhalt</h4>
+<ol class="toc">
+  <li>Auf einen Blick</li>
+  <li>So arbeiten Sie mit der App</li>
+  <li>Karten und Steckbriefe</li>
+  <li>LernApp</li>
+  <li>Forscheraufträge</li>
+  <li>Spiele</li>
+  <li>Themenpfade</li>
+  <li>Jahreskalender und Zeitstrahl</li>
+  <li>Kantone und Kantone vergleichen</li>
+  <li>Abstimmung spielen</li>
+  <li>Quiz für die Klasse</li>
+  <li>Drucken: Steckbriefe, Arbeitsblatt, Memory</li>
+  <li>Abzeichen und Fehler melden</li>
+  <li>Unterrichtsvorschläge</li>
+  <li>Die 25 Kategorien mit Lernzielen</li>
+  <li>Praktisches und häufige Fragen</li>
+</ol>
+
+<!-- ===================== 2 So arbeiten Sie ===================== -->
+<h2>2 · So arbeiten Sie mit der App</h2>
+<p>Die App folgt einem einfachen Weg, den auch die Einführung beim ersten Besuch zeigt:</p>
+<table>
+  <tr><th>Schritt</th><th>Was die Lernenden tun</th><th>Womit</th></tr>
+  <tr><td><b>1 Ansehen</b></td><td>Eine Kategorie öffnen, Karten durchblättern, Steckbriefe lesen, Stimmen anhören</td><td>Karten, Suche</td></tr>
+  <tr><td><b>2 Lernen</b></td><td>Namen zu Bildern lernen, jeden Tag ein paar Minuten</td><td>LernApp</td></tr>
+  <tr><td><b>3 Spielen</b></td><td>Dasselbe Wissen spielerisch üben und kontrollieren</td><td>Memory, Duell, Detektiv</td></tr>
+  <tr><td><b>4 Anwenden</b></td><td>Fragen aus dem Alltag beantworten, Zusammenhänge erkennen</td><td>Forscheraufträge, Themenpfade</td></tr>
+</table>
+<p>Dazu kommen Werkzeuge für die <b>ganze Klasse</b>: das Quiz am Beamer, die Abstimmung, gedruckte Arbeitsblätter und Memorys.
+Die Farben in der App helfen bei der Orientierung: <b style="color:#1f5f7a">Lernen ist Petrolblau</b>, <b style="color:#7a5a00">Spielen
+Sonnengelb</b>, alles andere Grün. Das <b style="color:#3e6413">Lernziel</b> steht in jeder Kategorie oben in einem hellgrünen Feld.</p>
+
+<h4>Die Menüführung</h4>
+<p>Oben rechts öffnet sich das Menü mit vier Gruppen: <b>Lernen</b> (LernApp, Forscheraufträge, Abzeichen), <b>Spielen</b> (Spiele),
+<b>Entdecken</b> (Jahreskalender, Themenpfade, Zeitstrahl, Kantone vergleichen) und <b>Für den Unterricht</b> (Quiz, Abstimmung
+spielen, PDF drucken). Darunter klein: Hilfe, Einstellungen, Admin und Copyright. Neben dem Suchfeld führen drei Knöpfe direkt zu
+Lernen, Spielen und Drucken.</p>
+
+<h4>Die erste Lektion (45 Minuten)</h4>
+<ol class="ms">
+  <li><b>Einstieg am Beamer (10 Min.):</b> Quiz für die Klasse mit einer Kategorie, die alle kennen, z. B. Säugetiere oder Bäume.
+    Die Klasse ruft die Namen.</li>
+  <li><b>Erkunden (15 Min.):</b> Zu zweit am Tablet die Seite öffnen (QR-Code auf der Titelseite) und frei in den Kategorien
+    blättern. Auftrag: «Sucht drei Tiere oder Pflanzen, die ihr schon draussen gesehen habt.»</li>
+  <li><b>Lernen ausprobieren (10 Min.):</b> In der LernApp eine Lernsession mit einer Kategorie anlegen, Häkchen bei
+    <i>Leicht</i> setzen und die erste Runde lösen.</li>
+  <li><b>Austausch (10 Min.):</b> Was habt ihr Neues entdeckt? Was war schwierig zu unterscheiden?</li>
+</ol>
+<ol class="os">
+  <li><b>Einstieg (5 Min.):</b> Einen Forscherauftrag am Beamer zeigen, die Klasse notiert ihre Vermutung.</li>
+  <li><b>Nachforschen (15 Min.):</b> Allein oder zu zweit die Antwort in den Karten suchen, im Steckbrief belegen und den Auftrag
+    lösen. Wer fertig ist, löst einen weiteren.</li>
+  <li><b>Lernsession anlegen (15 Min.):</b> In der LernApp eine Session mit den Kategorien der kommenden Wochen anlegen und die erste
+    Runde zu 15 Fragen lösen. Abmachung: jeden Tag eine Runde.</li>
+  <li><b>Auswertung (10 Min.):</b> Vergleich von Vermutung und Lösung, Steckbrief-Detektiv als Abschluss am Beamer.</li>
+</ol>
+
+<!-- ===================== 3 Karten ===================== -->
+<h2>3 · Karten und Steckbriefe</h2>
+<div class="meta"><span><b>Wo:</b> Startseite → Kategorie</span><span><b>Sozialform:</b> allein, zu zweit, Klasse am Beamer</span>
+  <span><b>Zeit:</b> beliebig</span></div>
+<p>Jede Kategorie zeigt ihre Einträge als Karten. Eine Karte hat bis zu vier Bilder (z. B. beim Baum: Wuchs, Blatt, Frucht, Rinde)
+und als letzte Seite den Text. Ein Tipp öffnet die Karte gross, Bilder lassen sich vergrössern.</p>
+<figure class="pair"><img src="bilder/kanton.jpg" alt=""><img src="bilder/textseite.jpg" alt="">
+  <figcaption>Startseite im Kanton Glarus und Textseite einer Karte mit Steckbrief, «Nicht verwechseln mit …», «Einfach lesen» und
+  «Vorlesen»</figcaption></figure>
+<ul>
+  <li><b>Steckbrief:</b> 3 bis 4 Zeilen mit den wichtigsten Merkmalen (Grösse, Lebensraum, Blütezeit …).</li>
+  <li><b>Nicht verwechseln mit …:</b> Bei 73 Paaren ähnlicher Arten steht der wichtigste Unterschied, z. B. Bärlauch und
+    Herbstzeitlose, Reh und Rothirsch, Fichte und Weisstanne.</li>
+  <li><b>Stimme anhören:</b> Bei vielen Vögeln, Säugetieren und Amphibien spielt eine Aufnahme den Ruf ab.</li>
+  <li><b>Einfach lesen:</b> Zu allen Einträgen gibt es eine Kurzfassung in einfacher Sprache. Ein Tipp auf den Knopf tauscht alle
+    Texte; die Wahl bleibt gespeichert (auch unter Einstellungen).</li>
+  <li><b>Vorlesen:</b> Liest Name, Beschreibung und Steckbrief mit der Stimme des Geräts vor.</li>
+  <li><b>Suche:</b> Das Suchfeld findet Einträge in allen Kategorien, auch über den lateinischen Namen.</li>
+  <li><b>Entdeckung des Tages:</b> Auf der Startseite steht jeden Tag ein anderer Eintrag, am selben Tag für alle gleich. Gut als
+    kurzes Morgenritual.</li>
+</ul>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Schalten Sie für schwächere Lesende und Kinder mit Deutsch als Zweitsprache
+«Einfach lesen» ein und lassen Sie die Texte vorlesen. Die Kinder können so selbstständig nachschlagen.</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Die Verwechslungshinweise eignen sich für Bestimmungsübungen: Lernende
+formulieren selbst ein Merkmal, an dem man zwei Arten sicher unterscheidet, und prüfen es danach am Hinweis in der App.</p></div>
+<div class="box ziele ms">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>häufige Pflanzen, Tiere und Landschaften ihrer Umgebung an Bildern wiedererkennen und benennen.</li>
+    <li>aus einem Steckbrief einfache Merkmale herauslesen (Grösse, Lebensraum, Nahrung) und wiedergeben.</li>
+    <li>zwei ähnliche Arten an einem Merkmal unterscheiden und wissen, welche Pflanzen und Pilze giftig sind.</li>
+    <li>in der App selbstständig etwas nachschlagen (Kategorie wählen, suchen, blättern).</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NMG.2 (Tiere, Pflanzen und Lebensräume), NMG.1 (Gesundheit: Giftpflanzen, Pilze), D.2 (Lesen), MI.1 (Medien)</p>
+</div>
+<div class="box ziele os">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>einheimische Arten an typischen Merkmalen bestimmen und einer Gruppe (z. B. Amphibien, Reptilien, Nadelbäume) zuordnen.</li>
+    <li>Merkmale aus Bild und Steckbrief verknüpfen und daraus Aussagen über Lebensraum und Lebensweise ableiten.</li>
+    <li>Verwechslungsgefahren begründen und Sicherheitsregeln ableiten (Giftpflanzen, Pilzkontrolle, Giftschlangen).</li>
+    <li>Bildquellen und Lizenzen erkennen (Knopf «Quelle») und Angaben kritisch prüfen.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NT.9 (Ökosysteme erkunden), NT.1 (Naturwissenschaften verstehen), MI.1 (Medien)</p>
+</div>
+
+<!-- ===================== 4 LernApp ===================== -->
+<h2>4 · LernApp</h2>
+<div class="meta"><span><b>Wo:</b> Knopf «Lernen» oder Menü → LernApp</span><span><b>Sozialform:</b> allein</span>
+  <span><b>Zeit:</b> 5 bis 10 Minuten pro Tag</span></div>
+<div class="cols">
+  <div>
+    <p>Die LernApp zeigt die Bilder eines Eintrags, die Lernenden nennen den Namen. Wiederholt wird nach dem
+    <b>Leitner-System</b> mit 5 Fächern: Was man richtig weiss, kommt nach 1, 3, 7 und 30 Tagen wieder, was man nicht weiss, bald
+    nochmals.</p>
+    <ul>
+      <li><b>Lernsession:</b> Kategorien und Farbe wählen. Mehrere Sessions nebeneinander sind möglich, z. B. «Prüfung Vögel» und
+        «Repetition».</li>
+      <li><b>Portionen:</b> höchstens 10 neue Begriffe pro Tag, Runden zu 15 Fragen, danach eine Auswertung.</li>
+      <li><b>Antworten:</b> Neue Begriffe aus 4 Namen wählen, ab Fach 2 selbst tippen. Kleine Tippfehler zählen als richtig.
+        «Tipp» zeigt den ersten Buchstaben.</li>
+      <li><b>Merksatz:</b> Nach jeder Antwort steht ein Satz zum Eintrag.</li>
+      <li><b>Leicht:</b> Immer aus 4 Namen wählen statt tippen.</li>
+      <li><b>Fortschritt:</b> Ring auf jeder Kachel der Startseite (z. B. 6/16), Serie der Tage in Folge.</li>
+    </ul>
+  </div>
+  <figure><img src="bilder/m-lernapp.jpg" alt="" style="width:62%"><figcaption>LernApp auf dem Handy: Karteikasten und Frage
+    mit 4 Namen</figcaption></figure>
+</div>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Beim Anlegen der Session <b>«Leicht»</b> ankreuzen: Die Kinder wählen dann
+immer aus 4 Namen und müssen keine schwierigen Namen wie «Gemeine Pestwurz» schreiben. Eine oder zwei Kategorien pro Session
+genügen. Fester Platz im Wochenplan: «Jeden Tag eine LernApp-Runde».</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Vor einer Lernkontrolle eine Session nur mit den geprüften Kategorien anlegen
+lassen. Die Lernenden sehen selbst, was sie schon im Langzeitgedächtnis haben (Fach 5). Gut für selbstorganisiertes Lernen: Ziel
+setzen («bis Freitag alle Vögel in Fach 3»), Fortschritt am Ring prüfen.</p></div>
+<div class="box ziele ms">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>die Namen der Arten einer Kategorie an Bildern sicher zuordnen.</li>
+    <li>regelmässig in kleinen Portionen üben und am Karteikasten erkennen, was sie schon können.</li>
+    <li>nach einer falschen Antwort den Merksatz lesen und sich den Unterschied merken.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NMG.2 (Vielfalt der Lebewesen wahrnehmen und ordnen); überfachlich: Selbstständigkeit, Lernen lernen</p>
+</div>
+<div class="box ziele os">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>die Namen der Arten mehrerer Kategorien an verschiedenen Bildern (Ganzes, Detail, Jungtier, Spur) sicher und richtig
+      geschrieben nennen.</li>
+    <li>ihr Lernen mit dem Leitner-System selbst planen, ein Ziel setzen und den Fortschritt überprüfen.</li>
+    <li>erklären, warum verteiltes Wiederholen besser wirkt als einmaliges Pauken.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NT.9 (Ökosysteme: Arten kennen); überfachlich: Selbstreflexion, Selbstständigkeit, Lernstrategien</p>
+</div>
+
+<!-- ===================== 5 Forscheraufträge ===================== -->
+<h2>5 · Forscheraufträge</h2>
+<div class="meta"><span><b>Wo:</b> erscheint einmal am Tag beim Öffnen; alle unter Menü → Forscheraufträge</span>
+  <span><b>Sozialform:</b> allein, zu zweit, Klasse</span><span><b>Zeit:</b> 5 bis 15 Minuten pro Auftrag</span></div>
+<p>54 Aufträge in vier Arten, die Antwort steht immer in den Karten einer Kategorie:</p>
+<ul>
+  <li><b>Alltagssituation:</b> «Beim Waldspaziergang findest du einen schönen Pilz … Darf ich ihn essen?»</li>
+  <li><b>Rätsel:</b> «Ich bin der häufigste Ahorn der Schweiz … Wer bin ich?»</li>
+  <li><b>Rechenaufgabe:</b> «Nach 9 Sekunden hörst du den Donner. Wie viele Kilometer ist das Gewitter entfernt?»</li>
+  <li><b>Forscherfrage:</b> offene Frage, die Lernenden antworten in eigenen Worten und vergleichen mit einer Musterlösung.</li>
+</ul>
+<p>Ablauf: Frage lesen → <b>Vermutung notieren</b> → «Nachforschen» führt in die passende Kategorie → antworten (auswählen,
+Wort oder Zahl, gern als Satz) → Erklärung und Vergleich mit der Vermutung. Ein Tipp hilft, wenn es nicht gleich stimmt. Unterbrechen
+ist jederzeit möglich, die angefangene Antwort bleibt gespeichert.</p>
+<figure class="pair tiny"><img src="bilder/auftrag-start.jpg" alt=""><img src="bilder/auftrag-geloest.jpg" alt="">
+  <figcaption>Forscherauftrag mit Vermutung und nach dem Lösen mit Erklärung</figcaption></figure>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Den Auftrag des Tages gemeinsam am Beamer lesen, alle schreiben ihre Vermutung
+auf ein Kärtchen. Am Ende der Woche lösen Zweiergruppen je einen Auftrag und stellen ihn der Klasse vor. Die Rechenaufgaben passen
+gut in die Mathematik (Grössen, Masseinheiten).</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Die Forscherfragen eignen sich als schriftliche Kurzarbeit: Antwort in eigenen
+Worten, danach Selbsteinschätzung mit der Musterlösung («richtig», «teilweise», «noch nicht»). Lernende können eigene Aufträge
+nach dem gleichen Muster erfinden; die Lehrperson nimmt gute in der Verwaltung auf.</p></div>
+<div class="box ziele ms">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>zu einer Frage eine Vermutung äussern und sie nach dem Nachforschen überprüfen.</li>
+    <li>eine Information gezielt in Bild und Steckbrief suchen und als Antwort wiedergeben.</li>
+    <li>eine einfache Rechnung mit Grössen aus dem Alltag lösen (Zeit, Strecke, Menge).</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NMG.2, NMG.4 (Phänomene erforschen), MA.1 (Zahl und Variable), MA.3 (Grössen); überfachlich: Informationen nutzen</p>
+</div>
+<div class="box ziele os">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>eine Hypothese formulieren, Informationen dazu beschaffen und die Hypothese begründet bestätigen oder verwerfen.</li>
+    <li>naturwissenschaftliche Sachverhalte in eigenen Worten erklären und mit einer Musterlösung selbst beurteilen.</li>
+    <li>Sachrechnungen mit Grössen und Einheiten lösen (Geschwindigkeit, Volumen, Mengen) und das Ergebnis plausibilisieren.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NT.1 (Naturwissenschaften verstehen), NT.9, RZG.1, MA.1 und MA.3; überfachlich: Informationen nutzen, Selbstreflexion</p>
+</div>
+
+<!-- ===================== 6 Spiele ===================== -->
+<h2>6 · Spiele</h2>
+<div class="meta"><span><b>Wo:</b> Knopf «Spielen» oder Menü → Spiele; aus einer Kategorie heraus schon vorgewählt</span>
+  <span><b>Sozialform:</b> allein, zu zweit, Klasse am Beamer</span><span><b>Zeit:</b> 3 bis 10 Minuten</span></div>
+<p>Drei Spiele üben dasselbe Wissen wie die LernApp auf andere Art. Am Schluss steht eine Rückmeldung mit Rekord und Durchschnitt
+und eine Liste der Karten, die man sich nochmals anschauen sollte. Die Spiele zählen nicht für den Lernstand.</p>
+<figure class="pair small"><img src="bilder/spiel-duell.jpg" alt=""><img src="bilder/spiel-detektiv.jpg" alt="">
+  <figcaption>Verwechslungs-Duell (Aspisviper oder Vipernatter?) und Steckbrief-Detektiv</figcaption></figure>
+<table>
+  <tr><th>Spiel</th><th>So geht es</th><th class="ms">Lernziel Mittelstufe</th><th class="os">Lernziel Oberstufe</th></tr>
+  <tr><td><b>Memory</b></td><td>8 Paare aus Bild und Name finden</td>
+    <td class="ms">Bild und Name einander zuordnen und sich die Arten einprägen</td>
+    <td class="os">Arten rasch wiedererkennen, auch gemischt aus allen Kategorien</td></tr>
+  <tr><td><b>Verwechslungs-Duell</b></td><td>Zwei ähnliche Arten nebeneinander, die gesuchte antippen, danach den Unterschied lesen
+    (bis 10 Paare)</td>
+    <td class="ms">zwei ähnliche Arten an einem sichtbaren Merkmal unterscheiden</td>
+    <td class="os">Bestimmungsmerkmale vergleichen und den Unterschied in eigenen Worten begründen</td></tr>
+  <tr><td><b>Steckbrief-Detektiv</b></td><td>Erst eine Steckbrief-Zeile, dann weitere Hinweise, die Beschreibung und zuletzt das Bild;
+    je früher richtig, desto mehr Punkte (5 Fälle)</td>
+    <td class="ms">aus mehreren Hinweisen schrittweise auf eine Art schliessen</td>
+    <td class="os">aus Merkmalen logisch auf eine Art schliessen und entscheiden, wann die Hinweise genügen</td></tr>
+</table>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Steckbrief-Detektiv am Beamer mit der ganzen Klasse spielen: Nach jedem
+Hinweis stimmen alle per Handzeichen ab. Memory eignet sich als Belohnung nach der LernApp oder zu zweit am Tablet.</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Das Verwechslungs-Duell vor einer Exkursion spielen (Pilze, Giftpflanzen,
+Reptilien). Danach notieren die Lernenden die drei Paare, die sie am häufigsten verwechselt haben, mit dem Unterschied.</p></div>
+<p class="weg">Lehrplan 21: <span class="ms">NMG.2 (Vielfalt wahrnehmen, beschreiben, ordnen); überfachlich: Kooperation, mit
+Erfolg und Misserfolg umgehen</span><span class="os">NT.9 (Ökosysteme erkunden, Arten bestimmen); überfachlich: Ausdauer,
+Selbstreflexion</span></p>
+
+<!-- ===================== 7 Themenpfade ===================== -->
+<h2>7 · Themenpfade</h2>
+<div class="meta"><span><b>Wo:</b> Menü → Themenpfade</span><span><b>Sozialform:</b> allein, zu zweit</span>
+  <span><b>Zeit:</b> 1 bis 2 Lektionen</span></div>
+<div class="cols">
+  <div>
+    <p>Ein Themenpfad führt Schritt für Schritt durch ein Thema, quer durch die Kategorien. Jeder Schritt ist eine Karte mit einer
+    Frage zum Nachdenken; danach steht ein Häkchen. Am Schluss warten Forscheraufträge. Geschafft ist der Pfad, wenn alle Karten
+    angesehen und alle Aufträge gelöst sind.</p>
+    <p>Heute gibt es den Pfad <b>«Klimawandel in der Schweiz»</b> mit 11 Karten und 6 Aufträgen: Hitzewelle, Aletsch-, Morteratsch-
+    und Rhonegletscher, Glärnisch, Bachforelle, Äsche, Fichte, Buchdrucker, Starkregen und Schneehase. Weitere Pfade (Wald, Wasser,
+    Glarnerland) sind geplant.</p>
+  </div>
+  <figure><img src="bilder/themenpfad.jpg" alt=""><figcaption>Themenpfad «Klimawandel in der Schweiz»</figcaption></figure>
+</div>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Den Pfad zu zweit gehen und zu jeder Frage einen Satz ins Heft schreiben.
+Der Schritt «Glärnisch» zeigt den Klimawandel vor der eigenen Haustür. Zum Abschluss ein Plakat: «Was der Klimawandel für Tiere und
+Pflanzen bedeutet».</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Den Pfad als Einstieg in eine Sequenz zu Klima und Klimawandel nutzen. Die
+Lernenden ordnen die Folgen in Kategorien (Gletscher, Gewässer, Wald, Tiere) und stellen Ursache-Wirkungs-Ketten auf, z. B.
+Trockenheit → geschwächte Fichten → Buchdrucker.</p></div>
+<div class="box ziele ms">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>an Beispielen aus der Schweiz beschreiben, wie sich Gletscher, Gewässer und Wälder durch wärmere Sommer verändern.</li>
+    <li>erklären, warum Tiere wie Bachforelle oder Schneehase unter Hitze und wenig Schnee leiden.</li>
+    <li>Veränderungen in ihrer Umgebung (Glärnischfirn) mit dem Klimawandel in Verbindung bringen.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NMG.2 (Einflüsse des Menschen auf die Natur), NMG.4 (Wetter, Phänomene), NMG.8 (Räume)</p>
+</div>
+<div class="box ziele os">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>Folgen des Klimawandels in der Schweiz an Gletschern, Gewässern, Wald und Tierwelt beschreiben und mit Zahlen belegen.</li>
+    <li>Ursache-Wirkungs-Zusammenhänge darstellen (Temperatur → Wassertemperatur → Sauerstoff → Fische).</li>
+    <li>Massnahmen wie das Abdecken von Gletschern beurteilen und ihre Grenzen begründen.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NT.9 (Ökosysteme), RZG.1 (Wetter und Klima, natürliche Grundlagen), RZG.3 (Mensch-Umwelt-Beziehungen); BNE</p>
+</div>
+
+<!-- ===================== 8 Jahreskalender und Zeitstrahl ===================== -->
+<h2>8 · Jahreskalender und Zeitstrahl</h2>
+<h3>Jahreskalender <span class="tag">Entdecken</span></h3>
+<div class="meta"><span><b>Wo:</b> Menü → Jahreskalender</span><span><b>Zeit:</b> 5 bis 20 Minuten</span></div>
+<p>Zeigt für jeden Monat Gedenktage, Termine und Bräuche (z. B. Fridolinstag, Näfelser Fahrt, Landsgemeinde) und was laut Steckbrief
+gerade blüht, fliegt, wächst oder laicht. Mit ‹ und › blättert man durch die Monate.</p>
+<figure class="w55"><img src="bilder/jahreskalender.jpg" alt=""><figcaption>Jahreskalender im Oktober</figcaption></figure>
+<div class="box ziele">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul class="ms">
+    <li>sagen, welche Pflanzen und Tiere sie im laufenden Monat draussen beobachten können.</li>
+    <li>Bräuche und Gedenktage des Kantons dem richtigen Monat zuordnen.</li>
+  </ul>
+  <ul class="os">
+    <li>den Jahreslauf von Pflanzen und Tieren (Blüte, Flugzeit, Laichzeit) beschreiben und für eine Exkursion nutzen.</li>
+    <li>Bräuche und Gedenktage historisch einordnen und ihre Bedeutung für die Region erklären.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: <span class="ms">NMG.2, NMG.9 (Zeit, Dauer und Wandel)</span><span class="os">NT.9, RZG.5 (Schweiz in Tradition und Wandel)</span></p>
+</div>
+
+<h3>Zeitstrahl <span class="tag">Entdecken</span></h3>
+<div class="meta"><span><b>Wo:</b> Menü → Zeitstrahl</span><span><b>Zeit:</b> 10 bis 45 Minuten</span></div>
+<p>Ordnet die Einträge aus Geschichte und Politik nach Jahr, vom Bundesbrief 1291 bis heute. Im Kanton erscheinen nur seine
+Ereignisse; in der ganzen Schweiz zeigt ein Kürzel (z. B. GL), zu welchem Kanton ein Ereignis gehört.</p>
+<figure class="w55"><img src="bilder/zeitstrahl.jpg" alt=""><figcaption>Zeitstrahl mit Ereignissen von 1291 bis heute</figcaption></figure>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Fünf Ereignisse auswählen und auf einer Wäscheleine im Schulzimmer in die
+richtige Reihenfolge bringen. Die Schlacht bei Näfels 1388 gehört zur Geschichte des eigenen Kantons.</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Epochen bilden lassen (Alte Eidgenossenschaft, Reformation, Helvetik,
+Bundesstaat) und begründen, welche Ereignisse eine Wende bedeuteten.</p></div>
+<div class="box ziele">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul class="ms">
+    <li>wichtige Ereignisse der Schweizer und Glarner Geschichte in die richtige Reihenfolge bringen.</li>
+    <li>zu einem Ereignis erzählen, was geschah und wer beteiligt war.</li>
+  </ul>
+  <ul class="os">
+    <li>Ereignisse der Schweizer Geschichte zeitlich einordnen und Epochen zuordnen.</li>
+    <li>Ursachen und Folgen wichtiger Ereignisse erklären und Bezüge zur Gegenwart herstellen.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: <span class="ms">NMG.9 (Zeit, Dauer und Wandel verstehen)</span><span class="os">RZG.5 (Schweiz in Tradition und Wandel), RZG.6 (Kontinuitäten und Umbrüche), RZG.7 (Geschichtskultur)</span></p>
+</div>
+
+<!-- ===================== 9 Kantone ===================== -->
+<h2>9 · Kantone und Kantone vergleichen</h2>
+<div class="meta"><span><b>Wo:</b> oben über dem Titel «Ganze Schweiz ▾»; Menü → Kantone vergleichen</span>
+  <span><b>Zeit:</b> beliebig</span></div>
+<p>Oben links wählt man, ob die Seite die ganze Schweiz zeigt oder nur einen Kanton: Glarus, Graubünden, St. Gallen, Zürich oder
+Tessin. Im Kanton erscheinen nur die Einträge, die dort wichtig sind, in den Farben des Kantons. Alles funktioniert gleich: Suche,
+LernApp, Aufträge, Spiele, Quiz und Drucken nehmen dann nur diese Einträge. Auf der Textseite steht bei vielen Einträgen, was sie im
+Kanton besonders macht. Der Kanton Glarus hat 101 Einträge in 24 Kategorien.</p>
+<p><b>Direkt einsteigen:</b> je-net.ch/sff/glarus (oder /graubuenden, /st-gallen, /zuerich, /tessin) öffnet gleich den Kanton. Die
+Wahl bleibt auf dem Gerät gespeichert.</p>
+<p><b>Kantone vergleichen</b> zeigt pro Kategorie, was zwei Kantone gemeinsam haben und was nur einer kennt, z. B. welche
+Reptilien es im Tessin gibt, aber nicht in Glarus.</p>
+<figure class="w70"><img src="bilder/vergleich.jpg" alt=""><figcaption>Kantone vergleichen: Glarus und Graubünden</figcaption></figure>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Für den Unterricht zum Kanton Glarus die Adresse je-net.ch/sff/glarus als
+QR-Code aufhängen. Die Kinder lernen so zuerst, was vor der Haustür lebt und steht. Später vergleichen sie mit einem Kanton, in dem
+sie schon in den Ferien waren.</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Gruppen untersuchen je einen Kanton und erklären die Unterschiede beim Vergleich
+mit Glarus: Höhenlage, Klima (Alpensüdseite), Gewässer, Geschichte. Ergebnis als kurze Präsentation.</p></div>
+<div class="box ziele ms">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>typische Pflanzen, Tiere, Berge, Gewässer und Bräuche ihres Kantons nennen und auf der Karte zeigen.</li>
+    <li>beim Vergleich zweier Kantone Gemeinsamkeiten und Unterschiede benennen.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NMG.8 (Menschen nutzen Räume, sich orientieren), NMG.2, NMG.9</p>
+</div>
+<div class="box ziele os">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>Natur- und Kulturraum eines Kantons beschreiben und mit einem anderen Kanton vergleichen.</li>
+    <li>Unterschiede in der Verbreitung von Arten mit Klima, Höhenlage und Lebensraum begründen.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: RZG.1 (natürliche Grundlagen), RZG.2 (Lebensweisen und Lebensräume), RZG.4 (sich in Räumen orientieren), NT.9</p>
+</div>
+
+<!-- ===================== 10 Abstimmung ===================== -->
+<h2>10 · Abstimmung spielen</h2>
+<div class="meta"><span><b>Wo:</b> Menü → Abstimmung spielen</span><span><b>Sozialform:</b> Klasse am Beamer</span>
+  <span><b>Zeit:</b> 15 bis 45 Minuten</span></div>
+<div class="cols">
+  <div>
+    <p><b>Landsgemeinde: Wer hat das Mehr?</b> Die Klasse wählt eine Frage (z. B. «Soll es auf dem Pausenplatz einen Trinkbrunnen
+    geben?»). Auf «Hände hoch!» erscheinen viele Hände für Ja und Nein. Wie der Landammann an der Glarner Landsgemeinde schätzt die
+    Klasse, welche Seite das Mehr hat; danach wird aufgelöst.</p>
+    <p><b>Volk und Stände:</b> Für jeden Kanton lässt sich der Ja-Anteil einstellen. Die Seite rechnet Volksmehr und Ständemehr
+    (23 Standesstimmen, sechs Kantone mit halber Stimme) und zeigt, wann eine Vorlage trotz Volks-Ja scheitert. Vorbereitete
+    Beispiele: «Stadt sagt Ja, Land sagt Nein», «Zufall», «Überall 50 %».</p>
+  </div>
+  <figure><img src="bilder/abstimmung.jpg" alt=""><figcaption>Landsgemeinde und Volk und Stände</figcaption></figure>
+</div>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Vor dem Besuch der Landsgemeinde: Die Klasse schätzt zuerst selbst, dann
+stimmt sie über eine echte Klassenfrage per Handzeichen ab. Gespräch: Ist Schätzen gerecht? Was macht man, wenn es knapp ist?</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Mit «Volk und Stände» eine echte Abstimmung nachstellen: Wie viele kleine
+Kantone braucht es, um eine Mehrheit des Volkes zu überstimmen? Diskussion über Föderalismus und Minderheitenschutz.</p></div>
+<div class="box ziele ms">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>erklären, wie an der Landsgemeinde abgestimmt wird und wer das Mehr feststellt.</li>
+    <li>bei einer Abstimmung in der Klasse mitmachen und ein Ergebnis akzeptieren, auch wenn es knapp ist.</li>
+  </ul>
+  <p class="weg">Lehrplan 21: NMG.10 (Gemeinschaft und Gesellschaft, Zusammenleben gestalten); überfachlich: Konfliktfähigkeit, Umgang mit Vielfalt</p>
+</div>
+<div class="box ziele os">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul>
+    <li>Volksmehr und Ständemehr unterscheiden und erklären, wann beide nötig sind.</li>
+    <li>an einem Beispiel berechnen, wie eine Vorlage am Ständemehr scheitern kann, und dies beurteilen.</li>
+    <li>Landsgemeinde und Urnenabstimmung vergleichen (Vor- und Nachteile).</li>
+  </ul>
+  <p class="weg">Lehrplan 21: RZG.8 (Demokratie und Menschenrechte verstehen), MA.1 (Prozent, Anteile)</p>
+</div>
+
+<!-- ===================== 11 Quiz ===================== -->
+<h2>11 · Quiz für die Klasse</h2>
+<div class="meta"><span><b>Wo:</b> Menü → Quiz für die Klasse</span><span><b>Sozialform:</b> Klasse am Beamer</span>
+  <span><b>Zeit:</b> 5 bis 15 Minuten</span></div>
+<figure class="w70"><img src="bilder/quiz.jpg" alt=""><figcaption>Quiz im Vollbild mit Lösung</figcaption></figure>
+<p>Kategorie (oder alle gemischt) und Anzahl Bilder wählen, «Quiz starten». Die Bilder eines Eintrags erscheinen bildschirmfüllend und
+wechseln alle 2 Sekunden, ohne Text. <b>Leertaste</b> oder <b>Enter</b> zeigt die Lösung, nochmals das nächste Bild, <b>←</b> geht
+zurück, <b>Esc</b> beendet. Ein Präsentations-Klicker funktioniert auch.</p>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> Als Einstieg in die Lektion oder als Abschluss am Freitag. Die Kinder flüstern
+die Lösung der Banknachbarin zu oder schreiben sie auf eine Wandtafel; nach der Lösung zählt jedes Kind seine Punkte selbst.</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Als kurze, nicht benotete Lernkontrolle: Die Lernenden notieren 10 Namen auf
+einem Zettel, danach Auflösung und Selbstkorrektur. Mit «alle gemischt» lässt sich das ganze Semester repetieren.</p></div>
+<div class="box ziele">
+  <h4>Lernziele</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul class="ms"><li>Arten an wechselnden Bildern rasch erkennen und benennen.</li>
+    <li>ihr Wissen ohne Hilfe abrufen und selbst überprüfen.</li></ul>
+  <ul class="os"><li>Arten an verschiedenen Ansichten (Ganzes, Detail, Lebensraum) sicher erkennen.</li>
+    <li>ihren Wissensstand selbst einschätzen und Lücken gezielt nacharbeiten.</li></ul>
+  <p class="weg">Lehrplan 21: <span class="ms">NMG.2</span><span class="os">NT.9</span>; überfachlich: Selbstreflexion</p>
+</div>
+
+<!-- ===================== 12 Drucken ===================== -->
+<h2>12 · Drucken: Steckbriefe, Arbeitsblatt, Memory</h2>
+<div class="meta"><span><b>Wo:</b> Knopf «Drucken» oder Menü → PDF drucken</span><span><b>Zeit:</b> Vorbereitung 2 Minuten</span></div>
+<p>Kategorie und Art wählen, bei Bedarf einzelne Einträge abwählen, «PDF erstellen». Im Druckfenster «Als PDF speichern» wählen oder
+direkt drucken. Im Kanton enthält der Druck nur die Einträge des Kantons.</p>
+<table>
+  <tr><th>Art</th><th>Inhalt</th><th>Einsatz</th></tr>
+  <tr><td><b>Übersicht</b></td><td>8 Steckbriefe pro A4-Seite mit Hauptbild, Beschreibung und Steckbrief</td>
+    <td>Lernblatt, Postenlauf, Bestimmungshilfe auf der Exkursion</td></tr>
+  <tr><td><b>Arbeitsblatt</b></td><td>Bilder mit Nummer und Linie zum Ausfüllen, am Schluss das Lösungsblatt</td>
+    <td>Lernkontrolle, Hausaufgabe, Stellvertretung</td></tr>
+  <tr><td><b>Memory</b></td><td>Bild- und Namenskarten zum Ausschneiden</td>
+    <td>Spiel in der Gruppe, Werkstatt, ohne Geräte</td></tr>
+</table>
+<figure class="w45"><img src="bilder/arbeitsblatt.jpg" alt=""><figcaption>Arbeitsblatt «Vögel»</figcaption></figure>
+<div class="box tipp"><p><b>QR-Codes für Posten:</b> In der Verwaltung lassen sich zu jedem Eintrag und für eine ganze Kategorie
+QR-Codes drucken. Aufgehängt im Schulhaus oder am Waldrand führen sie direkt zur Karte. So entsteht ein Postenlauf oder Lehrpfad.
+<span class="os">Lernende können die Posten selbst planen und beschriften.</span></p></div>
+<div class="box ziele">
+  <h4>Lernziele (je nach Einsatz)</h4>
+  <p>Die Schülerinnen und Schüler können …</p>
+  <ul class="ms"><li>Arten auf einem Arbeitsblatt ohne Hilfe benennen und mit dem Lösungsblatt selbst korrigieren.</li>
+    <li>mit gedruckten Steckbriefen draussen eine Pflanze oder ein Tier bestimmen.</li></ul>
+  <ul class="os"><li>Arten auf einem Arbeitsblatt richtig geschrieben benennen.</li>
+    <li>mit gedruckten Steckbriefen im Gelände Arten bestimmen und ihre Funde dokumentieren.</li></ul>
+  <p class="weg">Lehrplan 21: <span class="ms">NMG.2 (Lebensräume erkunden und dokumentieren)</span><span class="os">NT.9 (Ökosysteme erkunden)</span></p>
+</div>
+
+<!-- ===================== 13 Abzeichen und Melden ===================== -->
+<h2>13 · Abzeichen und Fehler melden</h2>
+<h3>Abzeichen <span class="tag learn">Lernen</span></h3>
+<div class="cols">
+  <div>
+    <p>Menü → Abzeichen zeigt, was jemand geschafft hat, in Bronze, Silber und Gold: richtige Begriffe in der LernApp, gelöste
+    Aufträge, gespielte Spiele, Tage in Folge, angesehene Karten (Entdecker), besuchte Kantone (Unterwegs), geschaffte Themenpfade
+    (Pfadfinder) und pro Kanton «Glarus-Kenner» usw. Es gibt keine Rangliste und keinen Vergleich mit anderen.</p>
+    <div class="box tipp"><p><b>Tipp:</b> Abzeichen eignen sich für ein Lerngespräch: «Zeig mir, was du diese Woche geschafft hast.
+    Welches Abzeichen willst du als nächstes?»</p></div>
+  </div>
+  <figure><img src="bilder/abzeichen.jpg" alt=""><figcaption>Abzeichen</figcaption></figure>
+</div>
+<p class="weg">Lernziel: Die Schülerinnen und Schüler können ihren Lernfortschritt beschreiben und sich ein nächstes Ziel setzen
+(überfachlich: Selbstreflexion, Selbstständigkeit).</p>
+
+<h3>Fehler melden <span class="tag">Mitdenken</span></h3>
+<p>Unter jedem Bild steht «Melden», unten auf der Textseite «Fehler im Text melden». Die Meldung geht an die Verwaltung, ohne Namen.
+Nach einer Textmeldung erhält man eine <b>Nummer</b>. Wer einen echten Fehler findet, zeigt der Lehrperson die Nummer; so lässt sich
+ein kleiner Preis vergeben, ohne dass Namen gespeichert werden.</p>
+<div class="box tipp ms"><p><b>Tipp Mittelstufe:</b> «Fehlerdetektive»: Wer einen Fehler findet und mit einem Buch oder einer
+anderen Quelle belegen kann, bekommt einen Stempel.</p></div>
+<div class="box tipp os"><p><b>Tipp Oberstufe:</b> Quellenkritik üben: Die Lernenden prüfen fünf Steckbriefe mit zwei unabhängigen
+Quellen (Bestimmungsbuch, Fachseite) und melden Abweichungen mit Beleg.</p></div>
+<p class="weg">Lernziel: Die Schülerinnen und Schüler können Informationen mit einer zweiten Quelle überprüfen und einen Fehler
+sachlich beschreiben. Lehrplan 21: MI.1 (Medien und Medienbeiträge prüfen<span class="ms">; auf Stufe Zyklus 2 einfach</span>).</p>
+
+<!-- ===================== 14 Unterrichtsvorschläge ===================== -->
+<h2>14 · Unterrichtsvorschläge</h2>
+
+<div class="ms">
+<h3>Sequenz: «Tiere und Pflanzen im Glarnerland» (4 Wochen)</h3>
+<table>
+  <tr><th>Woche</th><th>Im Unterricht</th><th>Mit der App</th></tr>
+  <tr><td>1</td><td>Einstieg: Was lebt bei uns? Kanton Glarus wählen, frei erkunden; jedes Kind wählt ein «Lieblingstier»</td>
+    <td>Quiz am Beamer, Karten, Einfach lesen</td></tr>
+  <tr><td>2</td><td>Säugetiere und Vögel: Steckbriefe lesen, Stimmen anhören, Verwechslungen (Reh oder Rothirsch?)</td>
+    <td>LernApp «Leicht», Memory</td></tr>
+  <tr><td>3</td><td>Bäume und Blumen: Waldgang mit gedruckten Steckbriefen, Blätter sammeln, Giftpflanzen besprechen</td>
+    <td>Druck «Übersicht», Jahreskalender</td></tr>
+  <tr><td>4</td><td>Abschluss: Kinder stellen ihr Lieblingstier vor, Arbeitsblatt als Lernkontrolle</td>
+    <td>Arbeitsblatt, Steckbrief-Detektiv, Abzeichen</td></tr>
+</table>
+<p class="weg">Lernziele der Sequenz: Die Schülerinnen und Schüler können 20 typische Tiere und Pflanzen des Glarnerlands erkennen,
+zu einem Tier einen kurzen Vortrag mit Steckbrief halten und drei Giftpflanzen sicher benennen. (NMG.2, NMG.8, D.3 Sprechen)</p>
+
+<h3>Weitere Ideen für die Mittelstufe</h3>
+<ul>
+  <li><b>Morgenritual:</b> Entdeckung des Tages vorlesen lassen, ein Kind erzählt am nächsten Tag etwas dazu.</li>
+  <li><b>Landsgemeinde-Projekt:</b> Abstimmung spielen, Politik-Karten «Landsgemeinde», Zeitstrahl «Näfelser Fahrt», eigene
+    Klassen-Landsgemeinde.</li>
+  <li><b>Postenlauf im Schulhaus:</b> QR-Codes einer Kategorie aufhängen, zu jedem Posten eine Frage aus dem Steckbrief.</li>
+  <li><b>Lesen fördern:</b> Einfach lesen und Vorlesen für Kinder mit Deutsch als Zweitsprache; danach den ausführlichen Text
+    mit einem Partnerkind lesen.</li>
+  <li><b>Klimawandel einfach:</b> Themenpfad zu zweit, danach ein gemeinsames Plakat.</li>
+</ul>
+</div>
+
+<div class="os">
+<h3>Sequenz: «Klima, Wasser und Wald im Wandel» (4 Wochen)</h3>
+<table>
+  <tr><th>Woche</th><th>Im Unterricht</th><th>Mit der App</th></tr>
+  <tr><td>1</td><td>Einstieg: Hypothesen zum Klimawandel in der Schweiz sammeln; Themenpfad gehen und Fragen beantworten</td>
+    <td>Themenpfad Klimawandel, Forscheraufträge</td></tr>
+  <tr><td>2</td><td>Gletscher und Gewässer: Zahlen zum Gletscherrückgang, Wassertemperatur und Fische; Ursache-Wirkungs-Ketten</td>
+    <td>Naturwunder, Fische, Wetterphänomene, Rechenaufträge</td></tr>
+  <tr><td>3</td><td>Wald unter Druck: Trockenheit, Fichte und Buchdrucker, neue Schädlinge; Exkursion in den Wald</td>
+    <td>Bäume, Schädlinge, Druck «Übersicht», Duell</td></tr>
+  <tr><td>4</td><td>Massnahmen beurteilen, Präsentation der Gruppen, Lernkontrolle</td>
+    <td>Forscherfragen mit Musterlösung, Quiz, Arbeitsblatt</td></tr>
+</table>
+<p class="weg">Lernziele der Sequenz: Die Schülerinnen und Schüler können Folgen des Klimawandels in der Schweiz mit Beispielen und
+Zahlen belegen, Ursache-Wirkungs-Ketten darstellen und Massnahmen begründet beurteilen. (NT.9, RZG.1, RZG.3, BNE)</p>
+
+<h3>Weitere Ideen für die Oberstufe</h3>
+<ul>
+  <li><b>Demokratie-Werkstatt:</b> Politik-Karten, Zeitstrahl ab 1848, Volk und Stände durchrechnen, Landsgemeinde und Urne vergleichen.</li>
+  <li><b>Kantonsporträt:</b> Gruppen vergleichen Glarus mit einem anderen Kanton und präsentieren Unterschiede in Natur und Geschichte.</li>
+  <li><b>Bestimmungsübung:</b> Vor der Exkursion Verwechslungs-Duell, im Gelände gedruckte Steckbriefe, danach Funde dokumentieren.</li>
+  <li><b>Eigene Forscheraufträge:</b> Lernende schreiben Aufträge im Stil der App (Situation, Rätsel, Rechnung) für die Mittelstufe.</li>
+  <li><b>Quellenkritik:</b> Steckbriefe mit Fachquellen prüfen, Bildlizenzen untersuchen (Knopf «Quelle», Menü → Copyright).</li>
+</ul>
+</div>
+
+<h3>Differenzieren</h3>
+<table>
+  <tr><th>Für wen</th><th>Was hilft</th></tr>
+  <tr><td>Schwächere Lesende, Deutsch als Zweitsprache</td><td>Einfach lesen, Vorlesen, LernApp «Leicht», Quiz mit Bildern ohne Text</td></tr>
+  <tr><td>Schnelle und interessierte Lernende</td><td>Mehr Kategorien pro Lernsession, Steckbrief-Detektiv, Forscherfragen, Kantone vergleichen<span class="os">, eigene Aufträge schreiben</span></td></tr>
+  <tr><td>Ohne Geräte</td><td>Gedruckte Steckbriefe, Arbeitsblätter, Memory-Karten</td></tr>
+</table>
+
+<h3>Beurteilen</h3>
+<p>Die App ist zum Üben gedacht, nicht zum Prüfen; sie meldet keine Resultate an die Lehrperson. Für eine Beurteilung eignen sich das
+gedruckte <b>Arbeitsblatt</b> (mit Lösungsblatt), das <b>Quiz</b> mit Notizzettel<span class="os">, schriftliche Antworten auf
+<b>Forscherfragen</b></span> und Präsentationen. Den Lernweg zeigen die Lernenden im Gespräch über ihre Abzeichen und den Karteikasten.</p>
+
+<!-- ===================== 15 Kategorien ===================== -->
+<h2>15 · Die 25 Kategorien mit Lernzielen</h2>
+<p>Das Lernziel steht in der App oben in jeder Kategorie. Die Zuordnung zum Lehrplan 21 nennt die Kompetenzbereiche als Orientierung.
+<span class="ms">Mit ★ markiert: besonders geeignet für die Mittelstufe.</span></p>
+<table>
+  <tr><th>Kategorie</th><th>Lernziel: Die Lernenden können …</th><th>LP 21</th></tr>
+  <tr><td><b>Bäume</b><span class="ms"> ★</span></td><td>die wichtigsten Waldbäume der Schweiz an Wuchs, Blättern oder Nadeln, Früchten und Rinde erkennen und benennen.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Sträucher</b></td><td>häufige Sträucher von Hecke und Waldrand an Blättern, Blüten und Früchten erkennen und giftige Früchte meiden.</td><td class="lp"><span class="ms">NMG.2, NMG.1</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Alpenblumen</b><span class="ms"> ★</span></td><td>Blumen über der Waldgrenze an Blüte und Blättern erkennen und wissen, welche geschützt oder giftig sind.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Wiesenblumen</b><span class="ms"> ★</span></td><td>Blumen der Wiesen und Weiden erkennen und die giftige Herbstzeitlose sicher von ähnlichen Pflanzen unterscheiden.</td><td class="lp"><span class="ms">NMG.2, NMG.1</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Gräser</b></td><td>Wiesen- und Ufergräser an Blütenstand und Ährchen unterscheiden und wissen, wo sie wachsen.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Pilze</b></td><td>Speise- und Giftpilze erkennen und ihre gefährlichen Doppelgänger kennen; gegessen wird nur nach der Pilzkontrolle.</td><td class="lp"><span class="ms">NMG.2, NMG.1</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Säugetiere</b><span class="ms"> ★</span></td><td>Wildtiere aus Wald und Gebirge erkennen und ähnliche Arten wie Reh und Rothirsch sicher unterscheiden.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Hunde</b><span class="ms"> ★</span></td><td>Schweizer und häufige Hunderassen erkennen und die vier Sennenhunde sowie die Laufhunde auseinanderhalten.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Vögel</b><span class="ms"> ★</span></td><td>Vögel vom Bartgeier bis zum Rotkehlchen an Gestalt, Gefieder und Lebensraum erkennen, einige auch an der Stimme.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Reptilien</b></td><td>Eidechsen, Schlangen und Schildkröten erkennen und die beiden Giftschlangen Kreuzotter und Aspisviper sicher bestimmen.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Amphibien</b><span class="ms"> ★</span></td><td>Frösche, Kröten, Molche und Salamander erkennen und ihren Nachwuchs der richtigen Art zuordnen.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Fische</b></td><td>einheimische Fische an Körperform, Flossen und Färbung erkennen und wissen, in welchen Gewässern sie leben.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Insekten</b><span class="ms"> ★</span></td><td>Insekten von der Honigbiene bis zum Hirschkäfer erkennen und ihre Larven zuordnen.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Falter</b></td><td>Tagfalter und tagaktive Nachtfalter an Farbe und Flügelmuster erkennen und ihre Raupen zuordnen.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9</span></td></tr>
+  <tr><td><b>Nutztiere</b><span class="ms"> ★</span></td><td>Schweizer Rassen von Hof und Alp erkennen: Rinder, Pferde, Schafe, Ziegen, Schweine und Hühner.</td><td class="lp"><span class="ms">NMG.2, NMG.6</span><span class="os">NT.9, WAH</span></td></tr>
+  <tr><td><b>Steine</b></td><td>Gesteine und Mineralien der Schweiz an Farbe, Körnung und Aufbau erkennen und wissen, wo sie vorkommen.</td><td class="lp"><span class="ms">NMG.4</span><span class="os">RZG.1</span></td></tr>
+  <tr><td><b>Berge</b><span class="ms"> ★</span></td><td>bekannte Berge der Schweiz an ihrer Gestalt erkennen und auf der Landkarte finden.</td><td class="lp"><span class="ms">NMG.8</span><span class="os">RZG.1, RZG.4</span></td></tr>
+  <tr><td><b>Gewässer</b><span class="ms"> ★</span></td><td>die grossen Seen und Flüsse der Schweiz erkennen und wissen, in welcher Gegend sie liegen.</td><td class="lp"><span class="ms">NMG.8</span><span class="os">RZG.1, RZG.4</span></td></tr>
+  <tr><td><b>Sehenswürdigkeiten</b><span class="ms"> ★</span></td><td>berühmte Bauwerke und Orte der Schweiz erkennen und wissen, wo sie stehen und wofür sie bekannt sind.</td><td class="lp"><span class="ms">NMG.8, NMG.9</span><span class="os">RZG.4, RZG.5</span></td></tr>
+  <tr><td><b>Naturwunder</b></td><td>Wasserfälle, Schluchten, Gletscher und Felsen der Schweiz erkennen und erklären, wie sie entstanden sind.</td><td class="lp"><span class="ms">NMG.4, NMG.8</span><span class="os">RZG.1</span></td></tr>
+  <tr><td><b>Schädlinge</b></td><td>Schädlinge in Wald, Feld und Garten an Tier, Larve und Schadbild erkennen.</td><td class="lp"><span class="ms">NMG.2</span><span class="os">NT.9, RZG.3</span></td></tr>
+  <tr><td><b>Wetterphänomene</b><span class="ms"> ★</span></td><td>Wetter und Himmelserscheinungen der Schweiz erkennen und in einfachen Worten erklären, wie sie entstehen.</td><td class="lp"><span class="ms">NMG.4</span><span class="os">RZG.1</span></td></tr>
+  <tr><td><b>Spezialitäten</b><span class="ms"> ★</span></td><td>typische Schweizer Spezialitäten erkennen und wissen, woraus sie bestehen und aus welcher Region sie stammen.</td><td class="lp"><span class="ms">NMG.6, NMG.8</span><span class="os">WAH, RZG.5</span></td></tr>
+  <tr><td><b>Geschichte</b></td><td>wichtige Ereignisse und Personen der Schweizer Geschichte zeitlich einordnen und ihre Bedeutung erklären.</td><td class="lp"><span class="ms">NMG.9</span><span class="os">RZG.5, RZG.6</span></td></tr>
+  <tr><td><b>Politik</b></td><td>erklären, wie die Schweiz regiert wird und wie Bürgerinnen und Bürger mitbestimmen.</td><td class="lp"><span class="ms">NMG.10</span><span class="os">RZG.8</span></td></tr>
+</table>
+<div class="box tipp">
+  <p><b>Abkürzungen Lehrplan 21:</b>
+  <span class="ms">NMG.1 Identität, Körper, Gesundheit · NMG.2 Tiere, Pflanzen und Lebensräume erkunden und erhalten · NMG.4 Phänomene der
+  belebten und unbelebten Natur erforschen · NMG.6 Arbeit, Produktion und Konsum · NMG.8 Menschen nutzen Räume · NMG.9 Zeit, Dauer
+  und Wandel · NMG.10 Gemeinschaft und Gesellschaft · D Deutsch · MA Mathematik · MI Medien und Informatik.</span>
+  <span class="os">NT.1 Wesen und Bedeutung von Naturwissenschaften · NT.9 Ökosysteme erkunden · RZG.1 Natürliche Grundlagen der Erde ·
+  RZG.2 Lebensweisen und Lebensräume · RZG.3 Mensch-Umwelt-Beziehungen · RZG.4 Sich in Räumen orientieren · RZG.5 Schweiz in Tradition
+  und Wandel · RZG.6 Weltgeschichtliche Kontinuitäten und Umbrüche · RZG.7 Geschichtskultur · RZG.8 Demokratie und Menschenrechte ·
+  WAH Wirtschaft, Arbeit, Haushalt · MA Mathematik · MI Medien und Informatik · BNE Bildung für Nachhaltige Entwicklung.</span></p>
+  <p>Die Zuordnung ist eine Orientierung auf der Ebene der Kompetenzbereiche. Die genauen Kompetenzstufen finden Sie im Lehrplan 21
+  des Kantons Glarus.</p>
+</div>
+
+<!-- ===================== 16 Praktisches ===================== -->
+<h2>16 · Praktisches und häufige Fragen</h2>
+<h4>Als App installieren und offline nutzen</h4>
+<p>Menü → Einstellungen zeigt die Anleitung für iPhone/iPad, Android und Computer. Danach öffnet sich die Seite in einem eigenen
+Fenster. Mit «Alle Bilder herunterladen» stehen alle Bilder auch ohne Internet bereit, z. B. auf der Exkursion. Tierstimmen und die
+Meldungen brauchen Internet.</p>
+<h4>Direkte Links und QR-Codes</h4>
+<p>Der Knopf «Teilen» (Kettensymbol) in der Grossansicht liefert einen Link direkt zu einem Eintrag, z. B. für einen Auftrag auf der
+Lernplattform. Die Adresse des Kantons (je-net.ch/sff/glarus) öffnet gleich den Kanton. QR-Codes für Posten druckt die Verwaltung.</p>
+<h4>Datenschutz</h4>
+<ul>
+  <li>Die Lernenden melden sich nirgends an und geben keine Namen ein. Lernstand, Antworten und Abzeichen bleiben im Browser des Geräts.</li>
+  <li>Bild- und Textmeldungen werden ohne Namen gespeichert.</li>
+  <li>Bilder stammen grösstenteils von Wikimedia Commons; Urheber und Lizenz stehen unter «Quelle» und im Menü → Copyright.</li>
+</ul>
+<h4>Häufige Fragen</h4>
+<table>
+  <tr><th>Frage</th><th>Antwort</th></tr>
+  <tr><td>Der Lernstand ist weg.</td><td>Er gehört zum Gerät und Browser. Anderes Gerät, privater Modus oder gelöschte Browserdaten
+    beginnen neu.</td></tr>
+  <tr><td>Jeden Tag erscheint ein Auftrag, das stört im Unterricht.</td><td>Unter Menü → Forscheraufträge oder Einstellungen
+    «Jeden Tag beim Öffnen einen Auftrag zeigen» abschalten.</td></tr>
+  <tr><td>Die Seite zeigt nur wenige Einträge.</td><td>Vermutlich ist ein Kanton gewählt. Oben links auf «Ganze Schweiz» wechseln.</td></tr>
+  <tr><td>Ein Bild passt nicht oder ein Text ist falsch.</td><td>«Melden» bzw. «Fehler im Text melden» – die Verwaltung korrigiert es.</td></tr>
+  <tr><td>Die Einführung erscheint nicht mehr.</td><td>Menü → Hilfe → «Einführung nochmals zeigen».</td></tr>
+  <tr><td>Wo finde ich eine Anleitung für die Lernenden?</td><td>Menü → Hilfe: Anleitung zu jedem Thema, ausserdem «?»-Knöpfe
+    direkt neben vielen Funktionen.</td></tr>
+</table>
+
+<script>
+  // Fassung aus der Adresse (#ms oder #os), dann QR-Codes zeichnen
+  document.body.className = location.hash === "#os" ? "os" : "ms";
+  document.title = "Natur und Schweiz – Anleitung " + (document.body.className === "os" ? "Oberstufe" : "Mittelstufe");
+  document.querySelectorAll("[data-qr]").forEach(el => {
+    const qr = qrcode(0, "M"); qr.addData(el.dataset.qr); qr.make();
+    el.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  });
+</script>
+</body>
+</html>

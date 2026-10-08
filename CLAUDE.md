@@ -14,6 +14,7 @@ Daten und Bilder liegen in **Supabase** (Postgres und Storage). Es gibt keinen B
 - `supabase/` Datenbankschema und nummerierte Änderungen
 - `.htaccess` Einstellungen des Webservers (Hostpoint), `tools/hostpoint-paket.ps1` Upload-Paket (siehe «Veröffentlichen»)
 - `docs/TECHNIK.md` technische Umsetzung und Begründungen (Architektur, Sicherheit, Offline, Algorithmen, Tests, Probleme). Bei grösseren technischen Änderungen mitführen.
+- `docs/anleitung/` Anleitung für Lehrpersonen (seit 2.22.0): eine Quelle `anleitung.html` (+ `anleitung.css`, `bilder/`) für zwei Fassungen, `#ms` Mittelstufe und `#os` Oberstufe (Blöcke mit `class="ms"`/`class="os"`). `powershell -ExecutionPolicy Bypass -File tools/anleitung-pdf.ps1` druckt mit headless Edge nach `anleitung/anleitung-mittelstufe.pdf` und `…-oberstufe.pdf` (im Repo, werden hochgeladen, verlinkt unter Hilfe). Bei neuen Möglichkeiten dort nachführen (mit Lernzielen pro Stufe) und die PDFs neu erstellen.
 - `docs/WERDEGANG.md` Dokumentation für den User: was die Seite kann und wie sie entstanden ist. **Bei jeder neuen Möglichkeit im selben Commit nachführen** (Abschnitt «Was die Seite heute kann», neuer Eintrag unter «Werdegang» mit Datum, bei Bedarf «Bewusste Entscheide», Datenbank-Tabelle und «Stand» mit den aktuellen Zahlen). Für den User geschrieben, nicht für Entwickler: keine Funktionsnamen.
 
 Die alten lokalen Bilder (`bilder/`) und das Migrationswerkzeug (damals `tools/`) wurden nach der Migration entfernt (in der Git-Geschichte noch vorhanden).
@@ -199,7 +200,7 @@ Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt da
 
 - Die Seite läuft auf dem Webspace des Users bei Hostpoint: **https://je-net.ch/sff/** (Ordner `sff/`, Apache). Supabase bleibt Datenbank und Bildspeicher; alle Pfade im Code sind relativ, darum ist keine Adresse fest eingetragen.
 - Ablauf: committen und pushen (Repo = Quelle und Sicherung), dann `powershell -File tools/hostpoint-paket.ps1` → Ordner `..\sff-upload` (neben dem Repo, nicht im Repo). Der User lädt dessen Inhalt selbst per SFTP hoch (Dateien überschreiben); keine Zugangsdaten in dieser Sitzung oder im Repo. Danach die Version auf der Seite prüfen (Einstellungen → Version).
-- Hochgeladen werden nur `index.html`, `admin.html`, `config.js`, `sw.js`, `manifest.webmanifest`, `.htaccess`, `css/`, `js/`, `icons/`. Neue Datei oder neuer Ordner, den die Seite braucht → im Skript ergänzen. Gelöschte Dateien auf dem Webspace von Hand entfernen.
+- Hochgeladen werden nur `index.html`, `admin.html`, `config.js`, `sw.js`, `manifest.webmanifest`, `.htaccess`, `css/`, `js/`, `icons/`, `anleitung/`. Neue Datei oder neuer Ordner, den die Seite braucht → im Skript ergänzen. Gelöschte Dateien auf dem Webspace von Hand entfernen.
 - `.htaccess`: HTTPS erzwingen, keine Ordnerlisten, `nosniff`, nicht einbettbar (`frame-ancestors` geht nicht im Meta-CSP), `no-cache` für HTML/JS/CSS, Symbole 30 Tage.
 - GitHub Pages (`https://rustyknive.github.io/sff/`) liefert seit dem Umzug den Branch `gh-pages` aus: nur eine Weiterleitung auf die neue Adresse (mit `#/…`, damit Direktlinks und gedruckte QR-Codes weiter funktionieren) und eine `sw.js`, die den alten Service Worker samt Speicher entfernt. Der Branch `main` wird nicht mehr von GitHub Pages ausgeliefert.
 
