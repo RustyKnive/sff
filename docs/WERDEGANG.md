@@ -4,8 +4,8 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.17.1 (Datenbank 23) · 22 Kategorien mit 373 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
-73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge · 1 Kanton (Glarus, 90 Einträge, davon 16 eigene Glarner Einträge)
+**Stand:** 8. Oktober 2026 · Version 2.18.0 (Datenbank 24) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge · 1 Kanton (Glarus, 101 Einträge, alle Vorschläge gesichtet)
 
 ---
 
@@ -479,6 +479,22 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - Ebenfalls auf Wunsch des Users: Auch die **ganze Schweiz** hat jetzt oben ein Farbband, in Rot und Weiss wie die Schweizer Fahne.
   So erkennt man in jedem Bereich gleich, wo man ist.
 
+### 8. Oktober – Spezialitäten, Geschichte und Politik (Version 2.18.0)
+
+- Wunsch des Users: drei neue Kategorien, gefüllt mit Einträgen aus der ganzen Schweiz und aus Glarus (Datenbank-Version 24).
+- **Spezialitäten** (16): Fondue, Raclette, Rösti, Zürcher Geschnetzeltes, Älplermagronen, Birchermüesli, Basler Läckerli,
+  Zuger Kirschtorte, Bündner Nusstorte, Berner Platte, Luzerner Chügelipastete, St. Galler Bratwurst, Polenta und aus Glarus
+  Schabziger, Glarner Kalberwurst und Glarner Pastete.
+- **Geschichte** (16): Bundesbrief 1291, Wilhelm Tell, Morgarten, Sempach, Näfels, Marignano, Zwingli, Helvetische Republik,
+  Bundesverfassung 1848, Henri Dunant, Gotthardtunnel, Landesstreik 1918, Rütlirapport 1940 und aus Glarus Schlacht bei Näfels,
+  Brand von Glarus, Bergsturz von Elm und der heilige Fridolin.
+- **Politik** (16): Bundesrat, Nationalrat, Ständerat, Bundespräsident, Bundesgericht, Volksinitiative, Referendum, Föderalismus,
+  Neutralität, Frauenstimmrecht, Milizsystem, Gemeindeversammlung und aus Glarus Landsgemeinde (von den Sehenswürdigkeiten
+  hierher verschoben), Gemeindereform 2011, Stimmrecht ab 16 und Landrat.
+- Fakten mit Quellen geprüft (u. a. Historisches Lexikon der Schweiz, AOP-IGP, Glarnerland Tourismus, Kanton Glarus); bei
+  widersprüchlichen Angaben steht nur, was sicher ist. Die Kategorien werden ausgeblendet angelegt, wie alle neuen Kategorien:
+  zuerst Bilder übernehmen und durchsehen, dann einblenden. Am selben Abend vom User eingeblendet.
+
 ---
 
 ## Versionen
@@ -515,6 +531,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.16.0 | 2.10.2026 | Verwaltung: «Übersicht» mit den wichtigsten Kennzahlen als Startseite, oben in der Navigation und über den Titel von überall erreichbar; «Zu erledigen» unter eigener Adresse |
 | 2.17.0 | 8.10.2026 | Kantone: eigener Bereich pro Kanton mit Farben und Zeichen aus dem Wappen, Wahl im Kopf der Seite und über je-net.ch/sff/glarus, alle Möglichkeiten der Seite auch im Kanton; Verwaltung «Kantone» mit Zuordnung, Hinweisen, Vorschlägen und QR-Plakat; Glarus mit 68 vorgeschlagenen Einträgen (Datenbank-Version 22) |
 | 2.17.1 | 8.10.2026 | 16 neue Glarner Einträge (Glärnisch, Klöntalersee, Linth, Freulerpalast, Landsgemeinde, Lochsite u. a.) und 6 weitere Vorschläge für Glarus; die ganze Schweiz bekommt oben ein rot-weisses Band wie die Kantone ihr Wappenband (Datenbank-Version 23) |
+| 2.18.0 | 8.10.2026 | Neue Kategorien Spezialitäten, Geschichte und Politik mit je 16 Einträgen aus der ganzen Schweiz und aus Glarus; Landsgemeinde zu Politik verschoben (Datenbank-Version 24) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -571,6 +588,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `021_auftraege.sql` | Tabelle `tasks` für Forscheraufträge (Frage, Art, Antwortform, Auswahl, Antwort, Tipp, Erklärung) und 25 Aufträge |
 | `022_kantone.sql` | Tabellen `regions` (Kantone mit Farben und Zeichen) und `entry_regions` (Zuordnung mit Hinweis und Vorschlag), Glarus mit 68 Vorschlägen; der Speicher nimmt neu auch PNG an (Kantonszeichen) |
 | `023_glarus_eintraege.sql` | 16 neue Einträge aus dem Kanton Glarus (Berge, Gewässer, Sehenswürdigkeiten, Naturwunder), Glarus zugeordnet, und 6 weitere Vorschläge |
+| `024_spezialitaeten_geschichte_politik.sql` | Kategorien Spezialitäten, Geschichte, Politik (ausgeblendet angelegt) mit 47 Einträgen, Landsgemeinde zu Politik, 12 Glarner Zuordnungen |
 
 ## Offen und geplant
 
