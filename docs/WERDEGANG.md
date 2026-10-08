@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.23.0 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 8. Oktober 2026 · Version 2.23.1 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
 Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23)
 
@@ -579,6 +579,8 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Prüfungen an einem Ort, gegliedert in «Pendenzen der Spielwiese», «Weitere Ideen» und «Prüfen und Qualität».
 - Zwischenabschluss: Alles bisher Umgesetzte ist veröffentlicht; die übrigen Pendenzen (als Nächstes «Steckbriefe vorschlagen»)
   warten in der Verwaltung unter «Ideen».
+- 2.23.1: In «Ideen» stehen neu je sechs bzw. sieben Ideen für Mittelstufe und Oberstufe (Vorschläge von Claude) und die Idee
+  des Users, Kategorien und Einträge mit einem Häkchen «von Hand geprüft» zu markieren.
 
 ---
 
@@ -622,6 +624,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.21.0 | 8.10.2026 | Einfach lesen (Kurzfassung in einfacher Sprache für alle 421 Einträge), Themenpfade mit «Klimawandel in der Schweiz» (11 Karten, 6 Aufträge), Abstimmung spielen (Landsgemeinde schätzen, Volk und Stände), neue Abzeichen Entdecker, Unterwegs und Pfadfinder (Datenbank-Version 27) |
 | 2.22.0 | 8.10.2026 | Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) mit Lernzielen zu jeder Möglichkeit, verlinkt unter Hilfe |
 | 2.23.0 | 8.10.2026 | Entdeckungskarte: 85 Orte auf der Landeskarte von swisstopo, «Wo bin ich?» mit Liste nach Entfernung, «Auf der Karte zeigen» auf der Textseite, Koordinaten in der Verwaltung; Verwaltung: neuer Bereich «Ideen» mit allen Pendenzen (Datenbank-Version 29) |
+| 2.23.1 | 8.10.2026 | Verwaltung, Ideen: neue Ideen für Mittelstufe und Oberstufe und das Häkchen «von Hand geprüft» vorgemerkt |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -716,12 +719,16 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   - [x] **PDF-Anleitung für Lehrpersonen** (2.22.0, gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
 - **Weitere Ideen** (noch nicht entschieden):
   - «Welches Tier ruft da?» mit den Tierstimmen.
-  - Ideen für die Mittelstufe Glarus und die Oberstufe (Gespräch vom 8. Oktober 2026).
   - Entdeckungskarte: Flüsse als Linien; Koordinaten bei neuen Orten gleich im Claude-Auftrag.
   - Weitere Kantone.
   - Bildnachweis mit Urheber und Lizenz, 7 problematische Bilder ersetzen (nur bei Vermarktung).
   - Vermarktung (Schullizenz, Druckprodukte, Verlag, Anpassungen, Weiterbildungen).
   - Neue App mit Moodle und weiteren Stufen (zuerst Architektur beraten).
-- **Prüfen und Qualität:** Koordinaten von Berglistüber und Bundesgericht; Lehrplan-Zuordnung der Anleitung; vollständige
+- **Ideen für die Mittelstufe** (Vorschläge von Claude, 8. Oktober 2026): Lebensräume sortieren, «Wie gross ist das?»
+  (Grössenvergleich), Mein Steckbrief (Druckvorlage), Naturtagebuch, Glarner Sagen, Bestimmen mit Ja/Nein-Fragen.
+- **Ideen für die Oberstufe** (Vorschläge von Claude, 8. Oktober 2026): Nahrungsnetz bauen, Bestimmungsschlüssel, Neophyten und
+  Gefährdung (Rote Liste), Berufe in der Natur, Zeitstrahl-Puzzle, Argumente sortieren, Klimadaten auswerten.
+- **Prüfen und Qualität:** Häkchen «von Hand geprüft» für Kategorien und Einträge (Idee des Users: mit Datum,
+  Stand pro Kategorie und in der Übersicht, fällt bei Textänderung weg; ersetzt die Prüfliste als Excel-Datei); Koordinaten von Berglistüber und Bundesgericht; Lehrplan-Zuordnung der Anleitung; vollständige
   Prüfung der Inhalte (Prüfliste neu erzeugen, heute 420 Einträge); Erprobung mit Lernenden; einzelne Bildkorrekturen
   (doppelte oder falsche Fotos); auf dem Handy «Wo bin ich?» und Zoomen mit zwei Fingern.

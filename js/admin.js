@@ -2280,14 +2280,31 @@ const IDEEN = [
   ]},
   { title:"Weitere Ideen", hint:"Noch nicht entschieden.", items:[
     ["«Welches Tier ruft da?»", "Spiel oder LernApp-Variante mit den Tierstimmen (28 Arten): Stimme hören, Tier wählen."],
-    ["Ideen für die Mittelstufe Glarus und die Oberstufe", "Im Gespräch vom 8. Oktober 2026 besprochen, noch nichts entschieden."],
     ["Entdeckungskarte erweitern", "Flüsse als Linien statt Punkt (Linth, Rhein, Aare …); bei neuen Einträgen mit festem Ort die Koordinaten gleich im Claude-Auftrag mitliefern lassen."],
     ["Weitere Kantone", "Weitere Kantone mit eigenem Bereich, Kantonszeichen und vorgeschlagenen Einträgen (heute Glarus, Graubünden, St. Gallen, Zürich, Tessin)."],
     ["Bildnachweis mit Urheber und Lizenz", "Für Druck und Weitergabe Urheber und Lizenz direkt angeben statt nur den Link zu Commons; 7 Bilder mit GFDL oder Persönlichkeitsrechten ersetzen (Lizenzprüfung vom 30.9.2026). Nur nötig bei Vermarktung."],
     ["Vermarktung", "Möglichkeiten: Schullizenz oder Freemium, Druckprodukte, Verlag oder Organisation, Anpassungen auf Bestellung, Weiterbildungen. Noch nichts entschieden."],
     ["Neue App", "Mit Verknüpfung zu Moodle und weiteren Stufen (Kategorie › Thema › Unterthema › Einträge), eigenes Hosting mit MariaDB. Zuerst Architektur beraten."]
   ]},
+  { title:"Ideen für die Mittelstufe", hint:"Vorschläge von Claude vom 8. Oktober 2026, noch nicht entschieden.", items:[
+    ["Lebensräume sortieren", "Spiel: Karten in Wald, Wiese, Wasser, Gebirge und Siedlung ziehen; danach zeigt die Seite, was stimmt. Braucht pro Eintrag den Lebensraum (steht oft schon im Steckbrief)."],
+    ["Wie gross ist das?", "Tier oder Pflanze im Grössenvergleich mit einem Kind, einer Hand oder einem Schulzimmer, aus den Massen im Steckbrief."],
+    ["Mein Steckbrief", "Druckvorlage zum Ausfüllen: Bild aus der App, leere Steckbrief-Zeilen und Platz für eine Zeichnung; danach mit der Karte vergleichen."],
+    ["Naturtagebuch", "Beobachtungen mit Datum, Ort und Notiz festhalten (nur auf dem Gerät), passend zum Jahreskalender; am Ende als Seite drucken."],
+    ["Glarner Sagen", "Neue Kategorie mit Sagen (Vrenelisgärtli, Martinsloch, Fridolin, Näfelser Fahrt) zum Vorlesen, verknüpft mit den Orten auf der Karte."],
+    ["Bestimmen mit Ja/Nein-Fragen", "Einfacher Bestimmungsweg für Bäume: Nadeln oder Blätter? Einzeln oder gebündelt? … bis zur Karte."]
+  ]},
+  { title:"Ideen für die Oberstufe", hint:"Vorschläge von Claude vom 8. Oktober 2026, noch nicht entschieden.", items:[
+    ["Nahrungsnetz bauen", "Wer frisst wen? Aus den Steckbriefen ein Nahrungsnetz für Wald, Bach oder Alp zusammenstellen und überlegen, was fehlt, wenn eine Art verschwindet (NT.9)."],
+    ["Bestimmungsschlüssel", "Dichotomer Schlüssel für Amphibien, Nadelbäume oder Pilze, Schritt für Schritt mit Merkmalen; am Schluss Vergleich mit der Verwechslungsgefahr."],
+    ["Neophyten und Gefährdung", "Neue Kategorie invasive Pflanzen (Japanischer Knöterich, Drüsiges Springkraut, Goldrute) und pro Art der Status auf der Roten Liste; Diskussion über Schutz und Bekämpfung."],
+    ["Berufe in der Natur", "Förster, Wildhüterin, Landwirt, Fischereiaufseher, Geologin: kurze Porträts mit Bezug zu den Karten, passend zur beruflichen Orientierung."],
+    ["Zeitstrahl-Puzzle", "Spiel: Ereignisse aus Geschichte und Politik in die richtige Reihenfolge bringen, mit Jahr und Begründung als Auflösung."],
+    ["Argumente sortieren", "Zu einer Abstimmungsfrage Pro- und Contra-Argumente ordnen und gewichten, danach Abstimmung spielen (RZG.8)."],
+    ["Klimadaten auswerten", "Forscherauftrag mit echten Messreihen (z. B. Temperatur Glarus seit 1900) als Tabelle: Diagramm zeichnen, Trend beschreiben, mit dem Themenpfad Klimawandel verbinden."]
+  ]},
   { title:"Prüfen und Qualität", hint:"Was sich nicht automatisch testen liess oder fachlich bestätigt werden muss.", items:[
+    ["Häkchen «von Hand geprüft» für Kategorien und Einträge", "Idee des Users: Im Eintrag ein Kontrollkästchen «geprüft» mit Datum, in der Kategorie «12 von 16 geprüft», in der Übersicht eine Kachel mit dem Gesamtstand und ein Filter «noch nicht geprüft». Ersetzt die Prüfliste als Excel-Datei. Vorschlag: Ändert sich danach der Text eines Eintrags, fällt das Häkchen weg, damit «geprüft» immer zum aktuellen Stand passt. Braucht eine kleine Datenbank-Änderung (Datum der Prüfung pro Eintrag)."],
     ["Verwaltung von Hand testen", "Bild über ↻ ersetzen; eigenes Bild hochladen, zuschneiden, Ausschnitt, entfernen; Text und Quelle speichern; Reihenfolge der Einträge; Aufträge bearbeiten, anlegen, löschen; Sicherung herunterladen; Kantone: Vorschläge bestätigen, Hinweis ändern, Zeichen hochladen, Plakat drucken."],
     ["Seite von Hand testen", "Erster Besuch: Forscherauftrag nach der Einführung; auf dem Handy Kanton wechseln und LernApp-Session im Kanton anlegen; Entdeckungskarte: «Wo bin ich?» und Zoomen mit zwei Fingern."],
     ["Koordinaten prüfen", "Berglistüber und Bundesgericht fand die Ortssuche von swisstopo nicht: im Eintrag mit «Auf der Karte prüfen» kontrollieren."],
