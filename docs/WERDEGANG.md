@@ -573,7 +573,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
   - [ ] Verwaltung, Register «Aufträge»: Auftrag bearbeiten und speichern, neu anlegen, ein- und ausblenden, löschen
   - [ ] Verwaltung, Werkzeuge: «Sicherung herunterladen» (die Datei enthält auch die Forscheraufträge)
   - [ ] Seite: Beim allerersten Besuch erscheint nach dem Schliessen der Einführung der erste Forscherauftrag
-  - [ ] Kantone: je-net.ch/sff/glarus öffnet den Kanton Glarus (Weiterleitung in .htaccess, nur auf dem Webspace prüfbar)
+  - [x] Kantone: je-net.ch/sff/glarus öffnet den Kanton Glarus (Weiterleitung in .htaccess, geprüft am 8.10.2026, auch mit Grossbuchstaben und «/» am Schluss)
   - [ ] Kantone, Verwaltung: Vorschläge bestätigen und entfernen, Hinweis ändern, Kantonszeichen hochladen, Plakat drucken (mit echter Anmeldung)
   - [ ] Kantone: auf dem Handy den Kanton wechseln, LernApp-Session im Kanton anlegen
 
