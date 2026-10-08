@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.24.0 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 8. Oktober 2026 · Version 2.24.1 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
 Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23)
 
@@ -633,6 +633,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.23.0 | 8.10.2026 | Entdeckungskarte: 85 Orte auf der Landeskarte von swisstopo, «Wo bin ich?» mit Liste nach Entfernung, «Auf der Karte zeigen» auf der Textseite, Koordinaten in der Verwaltung; Verwaltung: neuer Bereich «Ideen» mit allen Pendenzen (Datenbank-Version 29) |
 | 2.23.1 | 8.10.2026 | Verwaltung, Ideen: neue Ideen für Mittelstufe und Oberstufe und das Häkchen «von Hand geprüft» vorgemerkt |
 | 2.24.0 | 8.10.2026 | Knopf «Kategorie teilen» in jeder Kategorie (bisher liessen sich nur einzelne Einträge teilen) |
+| 2.24.1 | 8.10.2026 | Verwaltung, Ideen: «Einträge verknüpfen» vorgemerkt |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -726,6 +727,8 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   - [ ] **Themenpfade in der Verwaltung bearbeiten:** heute nur per SQL (Tabelle `paths`); weitere Pfade, z. B. Wald, Wasser, Glarnerland.
   - [x] **PDF-Anleitung für Lehrpersonen** (2.22.0, gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
 - **Weitere Ideen** (noch nicht entschieden):
+  - Einträge verknüpfen (Idee des Users): zu einem Ort passende Tiere, Pflanzen und Steine zeigen und umgekehrt, z. B. Glärnisch
+    und Steinbock; Links auf der Textseite, Zuordnung in der Verwaltung, Vorschläge von Claude.
   - «Welches Tier ruft da?» mit den Tierstimmen.
   - Entdeckungskarte: Flüsse als Linien; Koordinaten bei neuen Orten gleich im Claude-Auftrag.
   - Weitere Kantone.

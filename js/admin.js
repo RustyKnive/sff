@@ -2279,7 +2279,8 @@ const IDEEN = [
     ["Exkursionen und Posten aus der Entdeckungskarte", "Orte auf der Karte auswählen und daraus einen Postenlauf mit QR-Plakaten und Steckbriefen drucken."]
   ]},
   { title:"Weitere Ideen", hint:"Noch nicht entschieden.", items:[
-    ["«Welches Tier ruft da?»", "Spiel oder LernApp-Variante mit den Tierstimmen (28 Arten): Stimme hören, Tier wählen."],
+    ["Einträge verknüpfen", "Idee des Users: Zu einem Eintrag passende andere Einträge zeigen, z. B. beim Glärnisch die Tiere, Pflanzen und Steine, die man dort findet («Hier lebt …», «Hier wächst …»), und umgekehrt beim Steinbock, wo man ihn sehen kann. Auf der Textseite als Links, in der Verwaltung zuordnen, Claude schlägt Verknüpfungen vor (sofort sichtbar, später bestätigen wie bei den Kantonen). Braucht eine neue Tabelle für die Verknüpfungen. Grundlage auch für Exkursionen, Themenpfade und die Entdeckungskarte."],
+    ["«Welches Tier ruft da?»","Spiel oder LernApp-Variante mit den Tierstimmen (28 Arten): Stimme hören, Tier wählen."],
     ["Entdeckungskarte erweitern", "Flüsse als Linien statt Punkt (Linth, Rhein, Aare …); bei neuen Einträgen mit festem Ort die Koordinaten gleich im Claude-Auftrag mitliefern lassen."],
     ["Weitere Kantone", "Weitere Kantone mit eigenem Bereich, Kantonszeichen und vorgeschlagenen Einträgen (heute Glarus, Graubünden, St. Gallen, Zürich, Tessin)."],
     ["Bildnachweis mit Urheber und Lizenz", "Für Druck und Weitergabe Urheber und Lizenz direkt angeben statt nur den Link zu Commons; 7 Bilder mit GFDL oder Persönlichkeitsrechten ersetzen (Lizenzprüfung vom 30.9.2026). Nur nötig bei Vermarktung."],
