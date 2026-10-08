@@ -592,7 +592,8 @@ Welche Kategorien es gibt, entscheidet die Lehrperson. Wo es zur Kategorie passt
 und es sollen die bekanntesten und für Schülerinnen und Schüler wichtigsten sein.`;
 const AI_RULES = `Sprache: Deutsch mit Schweizer Rechtschreibung (nie Eszett, immer «ss»; Anführungszeichen «…»).
 Texte sachlich, anschaulich und für Sek I verständlich. Die Fakten müssen stimmen: Lieber eine Angabe weglassen als raten.`;
-const AI_ENTRY_TASK = `Beschreibung in 3–4 Sätzen, Steckbrief mit 3–4 kurzen Zeilen,
+const AI_ENTRY_TASK = `Beschreibung in 3–4 Sätzen, dazu «simple»: dieselbe Information in 2–3 kurzen, einfachen Sätzen für die Mittelstufe
+(wenig Fachwörter, keine Angaben, die nicht auch in der Beschreibung stehen), Steckbrief mit 3–4 kurzen Zeilen,
 genau 3 englische Suchbegriffe für Wikimedia Commons passend zu den Bildbeschriftungen 2, 3 und 4,
 und wp = Titel des englischen Wikipedia-Artikels fürs Hauptbild (leer, wenn der lateinische Name genügt).`;
 // Beispiel-Eintrag aus der Kategorie Bäume (Bildbeschriftungen Baum, Blätter, Früchte, Rinde)
@@ -600,6 +601,7 @@ const AI_EXAMPLE = `{
       "name": "Buche",
       "subtitle": "Fagus sylvatica",
       "description": "Die Rotbuche ist der häufigste Laubbaum der Schweiz und würde ohne menschlichen Einfluss grosse Teile des Mittellandes und des Juras bedecken. Typisch sind die glatte, silbergraue Rinde und die eiförmigen Blätter mit leicht gewelltem, bewimpertem Rand. Ihre dreikantigen Früchte heissen Bucheckern.",
+      "simple": "Die Buche ist der häufigste Laubbaum der Schweiz. Ihre Rinde ist glatt und silbergrau. Ihre Früchte heissen Bucheckern.",
       "facts": [{"k": "Höhe", "v": "bis 40 m"}, {"k": "Alter", "v": "bis 300 Jahre"}, {"k": "Vorkommen", "v": "Mittelland, Jura, bis ca. 1500 m"}, {"k": "Merkmal", "v": "glatte, silbergraue Rinde"}],
       "search_terms": ["Fagus sylvatica leaves", "Fagus sylvatica beechnuts", "Fagus sylvatica bark"],
       "wp": ""
@@ -661,6 +663,7 @@ const aiStr = (v, max = 2000) => String(v ?? "").replace(eszett, "ss").trim().sl
 function aiEntry(e){
   return {
     name:aiStr(e?.name, 100), subtitle:aiStr(e?.subtitle, 100), description:aiStr(e?.description),
+    simple:aiStr(e?.simple, 400),
     facts:(Array.isArray(e?.facts) ? e.facts : []).map(f => ({ k:aiStr(f?.k, 60), v:aiStr(f?.v, 200) })).filter(f => f.k && f.v).slice(0, 6),
     search_terms:(Array.isArray(e?.search_terms) ? e.search_terms : []).map(t => aiStr(t, 120)).filter(Boolean).slice(0, 3),
     wp:aiStr(e?.wp, 200) || null,
@@ -760,7 +763,7 @@ async function createWithAi(form, row, chosen){
   try{
     await must(sb.from("categories").insert(row));
     const saved = await must(sb.from("entries").insert(chosen.map((e, i) => ({
-      category_id:row.id, name:e.name, subtitle:e.subtitle, description:e.description, facts:e.facts,
+      category_id:row.id, name:e.name, subtitle:e.subtitle, description:e.description, simple:e.simple || "", facts:e.facts,
       search_terms:e.search_terms, wp:e.wp, visible:true, sort:i
     }))).select("id,name"));
     // Für einen Kanton erstellt: alle Einträge dort zuordnen, mit dem Hinweis aus der Antwort (022)
@@ -913,6 +916,7 @@ function setupAiEntry(form, cat){
     F.name.value = e.name;
     F.subtitle.value = e.subtitle;
     F.description.value = e.description;
+    F.simple.value = e.simple || "";
     $("facts").innerHTML = e.facts.map(f => factRow(f.k, f.v)).join("");
     [0,1,2].forEach(i => { F["q" + i].value = e.search_terms[i] || ""; });
     F.wp.value = e.wp || "";
@@ -1013,8 +1017,9 @@ async function downloadBackup(){
   const taskRows = await selectAll("tasks").catch(() => []);   // Forscheraufträge (021); fehlt die Tabelle, leer
   const regionRows = await selectAll("regions").catch(() => []);         // Kantone (022)
   const entryRegions = await selectAll("entry_regions").catch(() => []);
+  const pathRows = await selectAll("paths").catch(() => []);              // Themenpfade (026)
   const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket,
-    categories, entries, images, tasks:taskRows, regions:regionRows, entry_regions:entryRegions };
+    categories, entries, images, tasks:taskRows, regions:regionRows, entry_regions:entryRegions, paths:pathRows };
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
   a.download = `natur-und-schweiz-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
@@ -1112,6 +1117,8 @@ function renderEntry(cat, entry){
       <label class="inline"><input type="checkbox" name="visible" ${e.visible ? "checked" : ""}> Eintrag auf der Seite sichtbar</label>
       <label>Beschreibung <textarea name="description">${esc(e.description)}</textarea></label>
       <p class="hint">3–4 Sätze, sachlich und für Sek I verständlich. Schweizer Rechtschreibung: immer «ss», nie Eszett.</p>
+      <label>Einfache Fassung (für die Mittelstufe und «Einfach lesen»: 2–3 kurze Sätze, wenig Fachwörter)
+        <textarea name="simple" maxlength="400" rows="3">${esc(e.simple || "")}</textarea></label>
 
       <h3>Steckbrief</h3>
       <div class="facts" id="facts">${e.facts.map(f => factRow(f.k, f.v)).join("")}</div>
@@ -1215,6 +1222,7 @@ function renderEntry(cat, entry){
     const row = {
       category_id:cat.id,
       name:F.name.value.trim(), subtitle:F.subtitle.value.trim(), description:F.description.value.trim(),
+      simple:F.simple.value.trim(),
       visible:F.visible.checked,
       facts:[...facts.querySelectorAll(".fact")]
         .map(f => ({ k:f.querySelector("[data-k]").value.trim(), v:f.querySelector("[data-v]").value.trim() }))
@@ -1767,7 +1775,7 @@ const proposalCount = () => cats.reduce((s, c) => s + c.entries.reduce((n, e) =>
 const regionLinks = id => cats.flatMap(c => c.entries.flatMap(e => e.entry_regions.filter(r => r.region_id === id).map(r => ({ cat:c, e, r }))));
 const regionShort = g => siteUrl() + g.id;   // .htaccess leitet /sff/<id> auf /sff/#/<id> weiter
 // Adressen der Anzeige: Kantone, Kategorien und Seiten teilen sich #/<id>, darum darf keine doppelt vorkommen
-const PAGE_SLUGS = ["lernapp", "auftraege", "spiele", "jetzt", "quiz", "pdf", "hilfe", "einstellungen", "admin", "copyright", "schweiz", "zeitstrahl", "vergleich", "abzeichen"];
+const PAGE_SLUGS = ["lernapp", "auftraege", "spiele", "jetzt", "quiz", "pdf", "hilfe", "einstellungen", "admin", "copyright", "schweiz", "zeitstrahl", "vergleich", "abzeichen", "pfade", "abstimmung"];
 function slugTaken(id){
   if(PAGE_SLUGS.includes(id)) return "Diese Adresse braucht schon eine Seite.";
   if(findCat(id)) return "Es gibt schon eine Kategorie mit dieser ID.";
@@ -2134,6 +2142,7 @@ function renderDashboard(){
       ${tile(all.reduce((s, { e }) => s + (e.confusions || []).length, 0), "Verwechslungshinweise")}
       ${tile(`${goals}/${cats.length}`, "Lernziele", goals < cats.length ? `${cats.length - goals} fehlen` : "alle gesetzt", "", goals < cats.length)}
       ${tile(tasks.length, "Forscheraufträge", `${tasks.filter(x => x.visible).length} sichtbar`)}
+      ${tile(`${all.filter(({ e }) => (e.simple || "").trim()).length}/${all.length}`, "einfache Texte", all.some(({ e }) => !(e.simple || "").trim()) ? `${all.filter(({ e }) => !(e.simple || "").trim()).length} fehlen` : "alle vorhanden", "", all.some(({ e }) => !(e.simple || "").trim()))}
       ${tile(regions.length, regions.length === 1 ? "Kanton" : "Kantone", proposalCount() ? `${proposalCount()} Vorschläge offen`
         : regions.map(g => `${esc(g.code || g.name)}: ${regionLinks(g.id).length}`).join(" · ") || "noch keiner", "#/kantone", proposalCount() > 0)}
       ${tile(esc(VERSION.app), "Website", `Datenbank ${dbSchema ?? "?"}${schemaMissing() ? ` (benötigt ${VERSION.schema})` : ""}`, "#/werkzeuge", schemaMissing())}

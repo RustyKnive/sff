@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.20.0 (Datenbank 25) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 8. Oktober 2026 · Version 2.21.0 (Datenbank 27) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 49 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen)
 
 ---
@@ -524,6 +524,19 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - **LernApp leicht:** pro Lernsession wählbar, immer aus 4 Namen auswählen statt tippen, gut für die Mittelstufe.
 - Getestet mit den echten Daten im Testbrowser (alle neuen Seiten, Vorlesen-Knopf, leichte Lernsession).
 
+### 8. Oktober – Einfach lesen, Themenpfade und Abstimmung spielen (Version 2.21.0)
+
+- Aus den Pendenzen auf Wunsch des Users umgesetzt (Datenbank-Version 27):
+- **Einfach lesen:** Für alle 421 Einträge eine Kurzfassung in einfacher Sprache (2–3 kurze Sätze, aus der Beschreibung abgeleitet).
+  Umschalten auf jeder Textseite oder unter Einstellungen; Merksatz und Vorlesen folgen der Wahl. In der Verwaltung pro Eintrag bearbeitbar,
+  neue Einträge mit Claude bekommen sie gleich mit.
+- **Themenpfade** mit dem ersten Pfad «Klimawandel in der Schweiz»: 11 Karten (Hitzewelle, Gletscher, Fische, Fichte und Buchdrucker,
+  Starkregen, Schneehase) mit Leitfragen, danach 6 Forscheraufträge (5 neu). Angesehene Karten bekommen ein Häkchen.
+- **Abstimmung spielen:** Landsgemeinde (die Klasse schätzt das Mehr aus 300 Händen) und Volk und Stände (Ja-Anteil pro Kanton,
+  Volksmehr und Ständemehr; Beispiel Konzernverantwortungsinitiative 2020).
+- **Neue Abzeichen:** Entdecker (angesehene Karten), Unterwegs in der Schweiz (besuchte Kantone), Pfadfinder (geschaffte Themenpfade).
+- Mit Testdaten im Testbrowser geprüft; die Häkchen nach dem Schliessen einer Karte nur im echten Browser prüfbar.
+
 ---
 
 ## Versionen
@@ -563,6 +576,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.18.0 | 8.10.2026 | Neue Kategorien Spezialitäten, Geschichte und Politik mit je 16 Einträgen aus der ganzen Schweiz und aus Glarus; Landsgemeinde zu Politik verschoben (Datenbank-Version 24) |
 | 2.19.0 | 8.10.2026 | Kantone Graubünden, St. Gallen, Zürich und Tessin mit Kantonszeichen und vorgeschlagenen Einträgen; 24 neue Forscheraufträge (8 für Glarus, je 4 für die neuen Kantone) (Datenbank-Version 25) |
 | 2.20.0 | 8.10.2026 | Menü in Gruppen (Lernen, Spielen, Entdecken, Für den Unterricht); neu Vorlesen, Jahreskalender mit Gedenktagen und Bräuchen, Zeitstrahl, Kantone vergleichen, Abzeichen und leichte LernApp |
+| 2.21.0 | 8.10.2026 | Einfach lesen (Kurzfassung in einfacher Sprache für alle 421 Einträge), Themenpfade mit «Klimawandel in der Schweiz» (11 Karten, 6 Aufträge), Abstimmung spielen (Landsgemeinde schätzen, Volk und Stände), neue Abzeichen Entdecker, Unterwegs und Pfadfinder (Datenbank-Version 27) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -621,6 +635,8 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `023_glarus_eintraege.sql` | 16 neue Einträge aus dem Kanton Glarus (Berge, Gewässer, Sehenswürdigkeiten, Naturwunder), Glarus zugeordnet, und 6 weitere Vorschläge |
 | `024_spezialitaeten_geschichte_politik.sql` | Kategorien Spezialitäten, Geschichte, Politik (ausgeblendet angelegt) mit 47 Einträgen, Landsgemeinde zu Politik, 12 Glarner Zuordnungen |
 | `025_kantone_auftraege.sql` | Kantone Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen und 24 Forscheraufträge zu Kantonseinträgen |
+| `026_lesemodus_themenpfade.sql` | Spalte `entries.simple`, Tabelle `paths` (Themenpfade), Pfad Klimawandel mit 5 neuen Aufträgen |
+| `027_einfache_texte.sql` | Kurzfassungen in einfacher Sprache für alle 421 Einträge |
 
 ## Offen und geplant
 
@@ -638,13 +654,15 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
   - [ ] Kantone: auf dem Handy den Kanton wechseln, LernApp-Session im Kanton anlegen
 
 - **Pendenzen der Spielwiese** (vorgemerkt am 8. Oktober 2026, noch nicht umgesetzt):
-  - [ ] **Einfacher Lesemodus:** pro Eintrag eine Kurzfassung in einfacher Sprache (Mittelstufe, Deutsch als Zweitsprache), umschaltbar; braucht ein neues Feld und Texte für alle Einträge (mit Claude über claude.ai).
+  - [x] **Einfacher Lesemodus** (2.21.0): pro Eintrag eine Kurzfassung in einfacher Sprache (Mittelstufe, Deutsch als Zweitsprache), umschaltbar; braucht ein neues Feld und Texte für alle Einträge (mit Claude über claude.ai).
   - [ ] **Entdeckungskarte:** Einträge mit Koordinaten auf einer Karte (z. B. Glarnerland), daraus Exkursionen und Posten mit QR-Plakaten; braucht Koordinaten pro Eintrag und eine Kartenquelle (swisstopo), Datenschutz und CSP klären.
-  - [ ] **Abstimmungs-Simulation:** Klasse stimmt wie an der Landsgemeinde ab, Volks- und Ständemehr an einem Beispiel durchrechnen (Seite für den Beamer).
+  - [x] **Abstimmungs-Simulation** (2.21.0): Klasse stimmt wie an der Landsgemeinde ab, Volks- und Ständemehr an einem Beispiel durchrechnen (Seite für den Beamer).
   - [ ] **Steckbriefe vorschlagen:** Lernende schlagen einen Eintrag vor (ohne Namen, wie die Textmeldungen), die Lehrperson übernimmt ihn in der Verwaltung.
   - [ ] **Forscheraufträge draussen:** Aufträge mit Messungen (Föhn: Temperatur und Wind, Bach: Lebensraum der Bachforelle) und eigener Beobachtung.
-  - [ ] **Themenpfad Klimawandel:** Gletscherrückgang, neue Arten (Kastaniengallwespe, Japankäfer), Hitzewellen als zusammenhängende Aufträge mit Rechnen und Begründen.
-  - [ ] **Abzeichen «Entdecker»:** angesehene Karten zählen (heute zählt nur, was die LernApp, Aufträge und Spiele speichern).
+  - [x] **Themenpfad Klimawandel** (2.21.0): Gletscherrückgang, neue Arten (Kastaniengallwespe, Japankäfer), Hitzewellen als zusammenhängende Aufträge mit Rechnen und Begründen.
+  - [x] **Abzeichen «Entdecker»** (2.21.0): angesehene Karten zählen (heute zählt nur, was die LernApp, Aufträge und Spiele speichern).
   - [ ] **Vorlesen in LernApp und Aufträgen:** Frage bzw. Merksatz vorlesen lassen.
+  - [ ] **Themenpfade in der Verwaltung bearbeiten:** heute nur per SQL (Tabelle `paths`); weitere Pfade, z. B. Wald, Wasser, Glarnerland.
+  - [ ] **PDF-Anleitung für Lehrpersonen** (gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
 - Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).

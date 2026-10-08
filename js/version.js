@@ -1,6 +1,6 @@
-/* Versionen von Website und Datenbank – bei jeder Veröffentlichung nachführen (siehe CLAUDE.md, «Versionierung»).
-   app:    Hauptversion.Funktion.Korrektur (2.1.0 = neue Möglichkeit, 2.0.1 = Korrektur, 3.0.0 = grosser Umbau)
-   datum:  Tag der Veröffentlichung
-   schema: Datenbank-Version, die diese Website mindestens braucht (= Nummer der letzten SQL-Datei supabase/0NN_…)
+﻿/* Versionen von Website und Datenbank â€“ bei jeder VerÃ¶ffentlichung nachfÃ¼hren (siehe CLAUDE.md, Â«VersionierungÂ»).
+   app:    Hauptversion.Funktion.Korrektur (2.1.0 = neue MÃ¶glichkeit, 2.0.1 = Korrektur, 3.0.0 = grosser Umbau)
+   datum:  Tag der VerÃ¶ffentlichung
+   schema: Datenbank-Version, die diese Website mindestens braucht (= Nummer der letzten SQL-Datei supabase/0NN_â€¦)
    Wird von index.html, admin.html und sw.js geladen (self = window bzw. der Service Worker). */
-self.SFF_VERSION = { app:"2.20.0", datum:"2026-10-08", schema:25 };
+self.SFF_VERSION = { app:"2.21.0", datum:"2026-10-08", schema:27 };

@@ -32,10 +32,12 @@
       <a class="menu-item m-play" href="#/spiele">Spiele</a>
       <p class="menu-head">Entdecken</p>
       <a class="menu-item" href="#/jetzt">Jahreskalender</a>
+      <a class="menu-item" href="#/pfade">Themenpfade</a>
       <a class="menu-item" href="#/zeitstrahl">Zeitstrahl</a>
       <a class="menu-item" href="#/vergleich" id="menuCompare">Kantone vergleichen</a>
       <p class="menu-head">Für den Unterricht</p>
       <a class="menu-item" href="#/quiz">Quiz für die Klasse</a>
+      <a class="menu-item" href="#/abstimmung">Abstimmung spielen</a>
       <a class="menu-item" href="#/pdf">PDF drucken</a>
       <div class="menu-more">
         <a href="#/hilfe">Hilfe</a><a href="#/einstellungen">Einstellungen</a><a href="#/admin">Admin</a><a href="#/copyright">Copyright</a>
@@ -130,6 +132,14 @@
   </div>
   <div id="vergleich"></div>
 </section>
+<!-- Themenpfade (#/pfade, #/pfade/<id>, js/index.js renderPaths) -->
+<section class="page" id="page-pfade" hidden>
+  <div id="pfade"></div>
+</section>
+<!-- Abstimmung spielen (#/abstimmung, js/index.js renderVote): Landsgemeinde schätzen, Volk und Stände -->
+<section class="page" id="page-abstimmung" hidden>
+  <div id="abstimmung"></div>
+</section>
 <!-- Abzeichen (#/abzeichen, js/index.js renderBadges): aus LernApp, Aufträgen, Spielen und Serie, nur auf dem Gerät -->
 <section class="page" id="page-abzeichen" hidden>
   <div id="abzeichen"></div>
@@ -219,6 +229,8 @@
         <li><b>Fehler im Text melden:</b> Stimmt in Beschreibung, Steckbrief oder Verwechslungsgefahr etwas nicht? Der Knopf
           unten auf der Textseite schickt eine Meldung an die Verwaltung. Du bekommst eine Nummer; merke sie dir, falls deine
           Lehrperson danach fragt. Dein Name wird nicht übermittelt.</li>
+        <li><b>Einfach lesen:</b> Der Knopf oben auf der Textseite zeigt eine Kurzfassung in einfacher Sprache, nochmals tippen
+          zeigt wieder den ausführlichen Text. Die Wahl gilt für alle Karten, auch unter Einstellungen.</li>
         <li><b>Vorlesen:</b> Der Knopf auf der Textseite liest Name, Beschreibung und Steckbrief vor; nochmals tippen hält an.</li>
         <li><b>Schliessen:</b> ×, <kbd>Esc</kbd> oder «Zurück»; man bleibt in der Kategorie.</li>
       </ul>
@@ -260,6 +272,12 @@
         Eine gute Anregung für einen Ausflug.</p>
     </details>
     <details>
+      <summary>Themenpfade</summary>
+      <p>Menü → «Themenpfade»: ein Thema Schritt für Schritt, zum Beispiel «Klimawandel in der Schweiz». Jeder Schritt ist eine
+        Karte mit einer Frage zum Nachdenken; ein Tipp öffnet sie gross, danach steht ein Häkchen. Am Schluss warten
+        Forscheraufträge. Geschafft ist der Pfad, wenn alle Karten angesehen und alle Aufträge gelöst sind.</p>
+    </details>
+    <details>
       <summary>Zeitstrahl</summary>
       <p>Menü → «Zeitstrahl» ordnet die Einträge aus Geschichte und Politik nach Jahr, von 1291 bis heute. Im Kanton erscheinen
         nur seine Ereignisse, in der ganzen Schweiz zeigt ein Kürzel (z. B. GL), zu welchem Kanton ein Ereignis gehört.</p>
@@ -288,7 +306,7 @@
         <li><b>Leicht:</b> Für Jüngere wählst du immer aus 4 Namen, statt zu tippen. Einschalten beim Anlegen der Session
           oder unter dem Bild.</li>
         <li><b>Abzeichen:</b> Menü → «Abzeichen» zeigt, was du geschafft hast: richtige Begriffe, gelöste Aufträge, Spiele,
-          Tage in Folge und pro Kanton, in Bronze, Silber und Gold.</li>
+          Tage in Folge, angesehene Karten, besuchte Kantone, geschaffte Themenpfade und pro Kanton, in Bronze, Silber und Gold.</li>
         <li>Der Lernstand bleibt nur auf diesem Gerät gespeichert, es braucht kein Konto.</li>
       </ul>
     </details>
@@ -325,6 +343,12 @@
           deiner letzten 10 Spiele (pro Spiel und Kategorie, nur auf diesem Gerät). Darunter die Paare oder Arten, die du dir
           nochmals anschauen solltest, mit Link zur Karte. Bei einem sehr guten Resultat oder einem neuen Rekord gibt es Konfetti.</li>
       </ul>
+    </details>
+    <details>
+      <summary>Abstimmung spielen</summary>
+      <p>Menü → «Abstimmung spielen» für den Unterricht: Bei der <b>Landsgemeinde</b> erscheinen viele Hände für Ja und Nein,
+        und die Klasse schätzt wie der Landammann, welche Seite das Mehr hat. Bei <b>Volk und Stände</b> stellst du für jeden
+        Kanton den Ja-Anteil ein und siehst, ob Volksmehr und Ständemehr erreicht sind und wann eine Vorlage trotz Volks-Ja scheitert.</p>
     </details>
     <details>
       <summary>Quiz für die Klasse (Beamer)</summary>
@@ -382,6 +406,11 @@
     <li>Oder im Menü (⋮ bzw. …) «Installieren» bzw. «Apps → Diese Website als App installieren» wählen.</li>
   </ol>
   <p>Bietet ein Browser kein Installieren an, genügt ein Lesezeichen.</p>
+
+  <h2>Einfach lesen</h2>
+  <p>Statt der ausführlichen Beschreibung zeigt jede Karte eine Kurzfassung in einfacher Sprache, gut für jüngere Kinder und
+    für Lernende, die noch Deutsch lernen. Umschalten geht auch direkt auf jeder Textseite.</p>
+  <label class="easy-setting"><input type="checkbox"> Einfache Texte zeigen</label>
 
   <h2>Bilder herunterladen</h2>
   <p>Die Seite funktioniert auch ohne Internet. Bilder, die du schon angeschaut hast, sind bereits gespeichert.

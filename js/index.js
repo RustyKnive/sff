@@ -6,6 +6,7 @@ let ALL = [];       // alle Kategorien der ganzen Schweiz
 let CATS = [];      // was gerade gezeigt wird: ALL oder nur die Einträge des gewählten Kantons (regionView)
 let REGIONS = [];   // Kantone mit eigenem Bereich (022)
 let REGION = null;  // gewählter Kanton oder null = ganze Schweiz
+let PATHS = [];     // Themenpfade (026)
 
 /* Kategorien mit Einträgen und Bildern in einer Anfrage laden (REST, ohne Bibliothek)
    und in die Form bringen, mit der der Rest der Seite arbeitet:
@@ -17,7 +18,7 @@ let REGION = null;  // gewählter Kanton oder null = ganze Schweiz
    reg: Kantone des Eintrags mit Hinweis { glarus:"Höchster Gipfel …" } (022) */
 async function loadCats(){
   const select = "id,name,description,goal,latin,labels,cover_entry_id,"
-    + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
+    + "entries!entries_category_id_fkey(id,name,subtitle,description,simple,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
     + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited),entry_regions(region_id,note)),"
     + "tasks(id,entry_id,kind,question,guess,answer_type,choices,answer,hint,explanation,sort)";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
@@ -31,7 +32,7 @@ async function loadCats(){
     id:c.id, name:c.name, desc:c.description, goal:c.goal || "", latin:c.latin, labels:c.labels,
     cover:Math.max(0, c.entries.findIndex(e => e.id === c.cover_entry_id)),
     items:c.entries.map(e => ({
-      id:e.id, n:e.name, s:e.subtitle, t:e.description, f:e.facts || [],
+      id:e.id, n:e.name, s:e.subtitle, t:e.description, e:e.simple || "", f:e.facts || [],
       q:e.search_terms || [], wp:e.wp, lb:e.labels, cf:e.confusions || [],
       snd:e.sound_path ? { src:publicUrl(e.sound_path), page:e.sound_page, file:e.sound_file } : null,
       reg:Object.fromEntries((e.entry_regions || []).map(r => [r.region_id, r.note || ""])),
@@ -55,7 +56,12 @@ async function loadRegions(){
     emblem:!g.emblem ? null : g.emblem.startsWith("icons/") ? g.emblem
       : CFG.url + "/storage/v1/object/public/" + CFG.bucket + "/" + g.emblem.split("/").map(encodeURIComponent).join("/") }));
 }
-const loadAll = () => Promise.all([loadCats(), loadRegions()]);
+// Themenpfade (026): ein Thema Schritt für Schritt; fehlt die Tabelle, keine Pfade
+async function loadPaths(){
+  const r = await fetch(CFG.url + "/rest/v1/paths?select=id,title,intro,steps,tasks&order=sort.asc,title.asc", { headers:{ apikey:CFG.key } });
+  return r.ok ? r.json() : [];
+}
+const loadAll = () => Promise.all([loadCats(), loadRegions(), loadPaths().catch(() => [])]);
 
 /* ------------------------------------------------------------------
    VERSIONEN: Website-Version und benötigte Datenbank-Version stehen in js/version.js,
@@ -203,7 +209,8 @@ function slidesHtml(cat, item, labels, big){
     <div class="slide text"><div class="text-inner">
       <h2>${esc(item.n)}</h2>
       <p class="sub${cat.latin ? " latin" : ""}">${esc(item.s)}</p>
-      <p>${esc(item.t)}</p>
+      ${item.e ? `<button type="button" class="easy-toggle" data-easy aria-pressed="${easyOn()}">${easyLabel(easyOn())}</button>` : ""}
+      <p class="desc" data-desc="${esc(item.id)}">${esc(descOf(item))}</p>
       <dl>${facts}</dl>
       ${REGION && item.reg[REGION.id] ? `<p class="region-note"><b>Im ${esc(REGION.title)}:</b> ${esc(item.reg[REGION.id])}</p>` : ""}
       ${item.snd ? `<p class="sound"><button class="sound-btn" data-sound="${esc(item.snd.src)}">▶ Stimme anhören</button>
@@ -267,7 +274,7 @@ function buildCard(cat, item){
     <div class="name">${esc(item.n)}</div>
     ${controlsHtml(item, labels)}`;
 
-  const c = carousel(card, (cur, isText) => card.classList.toggle("on-text", isText));
+  const c = carousel(card, (cur, isText) => { card.classList.toggle("on-text", isText); if(isText) markSeen("e", item.id); });
   c.go(0);
 
   // Erstes Bild sofort laden, die weiteren erst beim ersten Darüberfahren
@@ -333,6 +340,7 @@ document.body.append(lightbox);
 let lbCarousel = null;
 
 function openLightbox(cat, item, start){
+  markSeen("e", item.id);
   const labels = item.lb || cat.labels;
   lightbox.setAttribute("aria-label", item.n);
   lightbox.innerHTML = `
@@ -376,6 +384,7 @@ function openLightbox(cat, item, start){
 }
 lightbox.addEventListener("close", () => {
   if(lightbox.open) return;   // kommt verzögert: ist schon die nächste Lightbox offen, nichts wegräumen
+  if(location.hash.startsWith("#/pfade/")) renderPaths(location.hash.split("/")[2]);   // Häkchen der angesehenen Karte
   document.body.classList.remove("lb-open");
   speakStop();
   lbZoom.reset();
@@ -625,6 +634,7 @@ function savedRegion(){ try{ return localStorage.getItem(REGION_KEY); }catch(e){
 // Kanton wählen (null = ganze Schweiz); save = false gilt nur bis zum Neuladen (Direktlink auf einen Eintrag ausserhalb)
 function setRegion(id, save = true){
   REGION = findRegion(id);
+  if(REGION) markSeen("r", REGION.id);
   if(save) try{ if(REGION) localStorage.setItem(REGION_KEY, REGION.id); else localStorage.removeItem(REGION_KEY); }catch(e){}
   CATS = regionView(REGION?.id);
   catCards.clear();
@@ -719,6 +729,47 @@ function showRegionHero(){
 }
 
 /* ------------------------------------------------------------------
+   EINFACH LESEN (seit 2.21.0): statt der Beschreibung die Kurzfassung in einfacher Sprache (entries.simple, 026/027).
+   Gilt für das ganze Gerät (localStorage «sff-einfach»); umschalten auf jeder Textseite oder unter Einstellungen.
+   Beschreibungen tragen data-desc, so lassen sie sich ohne Neuaufbau der Karten austauschen.
+------------------------------------------------------------------- */
+const EASY_KEY = "sff-einfach";
+const easyOn = () => { try{ return localStorage.getItem(EASY_KEY) === "1"; }catch(e){ return false; } };
+const descOf = item => easyOn() && item.e ? item.e : item.t;
+let itemIndex = null;   // Einträge nach id (bei neuen Daten verworfen)
+const itemById = id => {
+  if(!itemIndex) itemIndex = new Map(ALL.flatMap(c => c.items.map(it => [it.id, it])));
+  return itemIndex.get(id);
+};
+const easyLabel = on => on ? "Ausführlich lesen" : "Einfach lesen";
+function setEasy(on){
+  try{ if(on) localStorage.setItem(EASY_KEY, "1"); else localStorage.removeItem(EASY_KEY); }catch(e){}
+  document.querySelectorAll("[data-desc]").forEach(p => { const it = itemById(p.dataset.desc); if(it) p.textContent = descOf(it); });
+  document.querySelectorAll("[data-easy]").forEach(b => { b.textContent = easyLabel(on); b.setAttribute("aria-pressed", on); });
+  document.querySelectorAll(".easy-setting input").forEach(b => { b.checked = on; });
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-easy]");
+  if(!b) return;
+  e.stopPropagation();
+  setEasy(!easyOn());
+});
+document.addEventListener("change", e => { if(e.target.closest(".easy-setting")) setEasy(e.target.checked); });
+
+/* Angesehene Karten und besuchte Kantone (seit 2.21.0, für Abzeichen und Themenpfade), nur auf dem Gerät:
+   localStorage «sff-gesehen» = { e:[Eintrags-ids], r:[Kantons-ids] } */
+const SEEN_KEY = "sff-gesehen";
+const seen = (() => {
+  try{ const s = JSON.parse(localStorage.getItem(SEEN_KEY)) || {}; return { e:new Set(s.e || []), r:new Set(s.r || []) }; }
+  catch(e){ return { e:new Set(), r:new Set() }; }
+})();
+function markSeen(kind, id){
+  if(!id || seen[kind].has(id)) return;
+  seen[kind].add(id);
+  try{ localStorage.setItem(SEEN_KEY, JSON.stringify({ e:[...seen.e], r:[...seen.r] })); }catch(e){}
+}
+
+/* ------------------------------------------------------------------
    ANSICHTEN: Übersicht und Kategorie
 ------------------------------------------------------------------- */
 const grid = document.getElementById("grid");
@@ -755,6 +806,8 @@ const PAGES = {
   spiele:{ title:"Spiele", intro:"Memory, Verwechslungs-Duell und Steckbrief-Detektiv: dasselbe Wissen spielerisch üben." },
   abzeichen:{ title:"Abzeichen", intro:"Was du schon geschafft hast: in der LernApp, bei den Forscheraufträgen und in den Spielen." },
   zeitstrahl:{ title:"Zeitstrahl", intro:"Ereignisse aus Geschichte und Politik der Reihe nach." },
+  pfade:{ title:"Themenpfade", intro:"Ein Thema Schritt für Schritt: Karten ansehen, nachdenken, Aufträge lösen." },
+  abstimmung:{ title:"Abstimmung spielen", intro:"Wie an der Landsgemeinde das Mehr schätzen und ausprobieren, wie Volk und Stände entscheiden." },
   vergleich:{ title:"Kantone vergleichen", intro:"Was zwei Kantone gemeinsam haben und was nur einer kennt." },
   quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
@@ -1154,7 +1207,7 @@ function lernChoices({ cat, item }, items){
 // Merksatz nach der Antwort: der erste Satz der Beschreibung
 function lernMerksatz(item){
   // Kein Satzende nach Zahlen («im 19. Jahrhundert») und Abkürzungen («St. Gallen», «z. B.»)
-  const m = (item.t || "").match(/^.+?(?<!\d|\b(?:ca|bzw|St|Nr|evtl|resp|etc|inkl|z|d|u|v|B|h|a))[.!?](?=\s+\p{Lu}|$)/u);
+  const m = (descOf(item) || "").match(/^.+?(?<!\d|\b(?:ca|bzw|St|Nr|evtl|resp|etc|inkl|z|d|u|v|B|h|a))[.!?](?=\s+\p{Lu}|$)/u);
   return m ? m[0] : "";
 }
 
@@ -2003,7 +2056,8 @@ function render(){
   const saved = findRegion(savedRegion());
   if(!id && REGION !== saved) setRegion(saved?.id, false);
   const [first, second] = id.split("/");
-  const pageId = PAGES[id] ? id : first === "spiele" ? "spiele" : null;   // #/spiele/<spiel> springt zum Spiel
+  // #/spiele/<spiel> springt zum Spiel, #/pfade/<id> öffnet einen Themenpfad
+  const pageId = PAGES[id] ? id : first === "spiele" ? "spiele" : first === "pfade" ? "pfade" : null;
   const page = pageId && PAGES[pageId];
   // Direktlink (z. B. QR-Code) auf eine Kategorie oder einen Eintrag, den es im gewählten Kanton nicht gibt:
   // vorübergehend die ganze Schweiz zeigen (die gespeicherte Wahl bleibt)
@@ -2029,11 +2083,13 @@ function render(){
       if(game?.classList.contains("game")) game.scrollIntoView();
     }
     if(pageId === "quiz") fillQuizSelect();
-    if(pageId === "einstellungen"){ showVersion(); taskDailyBoxes(); }
+    if(pageId === "einstellungen"){ showVersion(); taskDailyBoxes(); document.querySelectorAll(".easy-setting input").forEach(b => { b.checked = easyOn(); }); }
     if(pageId === "auftraege") renderTasks();
     if(pageId === "zeitstrahl") renderTimeline();
     if(pageId === "vergleich") renderCompare();
     if(pageId === "abzeichen") renderBadges();
+    if(pageId === "pfade") renderPaths(second);
+    if(pageId === "abstimmung") renderVote();
     lastCat = null;
     return;
   }
@@ -2357,7 +2413,11 @@ function taskShowDone(t, review){
 }
 // Links im Fenster (zum Eintrag) schliessen es; danach Band und Liste nachführen
 taskDlg.addEventListener("click", e => { if(e.target.closest("a[href^='#']")) taskDlg.close(); });
-taskDlg.addEventListener("close", () => { showTaskBarIfVisible(); if(location.hash === "#/auftraege") renderTasks(); });
+taskDlg.addEventListener("close", () => {
+  showTaskBarIfVisible();
+  if(location.hash === "#/auftraege") renderTasks();
+  if(location.hash.startsWith("#/pfade/")) renderPaths(location.hash.split("/")[2]);
+});
 function showTaskBarIfVisible(){
   const id = location.hash.replace(/^#\/?/, "");
   if(!id || CATS.some(c => c.id === id.split("/")[0])) showTaskBar(); else taskBar.hidden = true;
@@ -2699,6 +2759,10 @@ function renderBadges(){
       ${badge("🔍", "Forscherin, Forscher", solved, [1, 10, 25], "Aufträge gelöst")}
       ${badge("🎲", "Spielerin, Spieler", gamesPlayed(), [1, 10, 30], "Spiele")}
       ${badge("🔥", "Dranbleiben", lernStreak(), [3, 7, 30], "Tage in Folge")}
+      ${badge("🧭", "Entdeckerin, Entdecker", seen.e.size, [20, 100, 300], "Karten angesehen")}
+      ${REGIONS.length ? badge("🗺️", "Unterwegs in der Schweiz", seen.r.size, [1, Math.min(3, REGIONS.length), REGIONS.length]
+        .filter((v, i, a) => a.indexOf(v) === i), "Kantone besucht") : ""}
+      ${PATHS.length ? badge("🥾", "Pfadfinderin, Pfadfinder", pathsDone(), [1, PATHS.length].filter((v, i, a) => a.indexOf(v) === i), "Themenpfade geschafft") : ""}
     </div>
     ${regionBadges.length ? `<h2>Kantone</h2><div class="badges">${regionBadges.join("")}</div>` : ""}
     <h2>Kategorien gemeistert</h2>
@@ -2706,6 +2770,167 @@ function renderBadges(){
       : `<p class="lern-hint">Noch keine. Eine Kategorie ist gemeistert, wenn du in der LernApp alle ihre Einträge richtig beantwortet hast.</p>`}
     <p><a class="button" href="#/lernapp">Weiterlernen</a></p>`;
   el.querySelectorAll(".badge-bar i").forEach(i => { i.style.width = i.dataset.pct + "%"; });
+}
+
+/* ------------------------------------------------------------------
+   THEMENPFADE (#/pfade, #/pfade/<id>, seit 2.21.0, Tabelle paths aus 026): ein Thema Schritt für Schritt.
+   Jeder Schritt ist eine Karte mit einer Leitfrage; ein Klick öffnet sie gross (angesehen = Häkchen, aus «sff-gesehen»).
+   Danach die Aufträge des Pfads. Arbeitet mit allen Einträgen (ALL), unabhängig vom gewählten Kanton.
+------------------------------------------------------------------- */
+function pathState(p){
+  const steps = (p.steps || []).map(s => {
+    const cat = ALL.find(c => c.id === s.cat), item = cat?.items.find(it => it.n === s.entry);
+    return item ? { cat, item, text:s.text || "" } : null;
+  }).filter(Boolean);
+  const all = ALL.flatMap(cat => cat.tasks.map(t => ({ ...t, cat, item:cat.items.find(it => it.id === t.entry) || null })));
+  const tasks = (p.tasks || []).map(id => all.find(t => t.id === id)).filter(Boolean);
+  const seenN = steps.filter(s => seen.e.has(s.item.id)).length, doneN = tasks.filter(taskDone).length;
+  return { steps, tasks, seenN, doneN, complete:steps.length > 0 && seenN === steps.length && doneN === tasks.length };
+}
+const pathsDone = () => PATHS.filter(p => pathState(p).complete).length;
+function renderPaths(id){
+  const el = document.getElementById("pfade");
+  const p = PATHS.find(x => x.id === id);
+  if(!p){
+    el.innerHTML = PATHS.length ? `<div class="path-list">${PATHS.map(x => {
+      const s = pathState(x), n = s.steps.length + s.tasks.length, d = s.seenN + s.doneN;
+      return `<a class="path-tile${s.complete ? " done" : ""}" href="#/pfade/${esc(x.id)}"><b>${esc(x.title)}</b>
+        <span>${esc(x.intro)}</span>
+        <small>${s.steps.length} Karten · ${s.tasks.length} Aufträge${s.complete ? " · ✓ geschafft" : d ? ` · ${d} von ${n} erledigt` : ""}</small></a>`;
+    }).join("")}</div>` : `<p>Noch keine Themenpfade vorhanden.</p>`;
+    return;
+  }
+  const s = pathState(p);
+  setHead(p.title, p.intro);
+  el.innerHTML = `<p><a href="#/pfade">← Alle Themenpfade</a></p>
+    <div class="lern-stats"><div><b>${s.seenN}/${s.steps.length}</b> Karten angesehen</div><div><b>${s.doneN}/${s.tasks.length}</b> Aufträge gelöst</div></div>
+    <ol class="path-steps">${s.steps.map((st, i) => {
+      const ok = seen.e.has(st.item.id);
+      return `<li class="${ok ? "seen" : ""}"><button type="button" class="path-step" data-step="${i}">
+        <img alt=""><span><small>Schritt ${i + 1} · ${esc(st.cat.name)}</small><b>${esc(st.item.n)}</b>${esc(st.text)}</span>
+        <i class="path-check" aria-label="${ok ? "angesehen" : "noch offen"}">${ok ? "✓" : i + 1}</i></button></li>`;
+    }).join("")}</ol>
+    ${s.tasks.length ? `<h2>Forscheraufträge zum Pfad</h2><ul class="task-list">${s.tasks.map(t => {
+      const done = taskDone(t);
+      return `<li class="task-row${done ? " done" : ""}"><span class="task-state">${done ? "✓" : ""}</span>
+        <div><small>${TASK_ART[t.kind] || ""} · ${esc(t.cat.name)}</small><p>${esc(t.q)}</p></div>
+        <button type="button" class="${done ? "ghost" : ""}" data-ptask="${esc(t.id)}">${done ? "Ansehen" : "Starten"}</button></li>`;
+    }).join("")}</ul>` : ""}
+    ${s.complete ? `<p class="done-box">✓ Pfad geschafft: alle Karten angesehen und alle Aufträge gelöst!</p>` : ""}`;
+  el.querySelectorAll(".path-step").forEach(b => {
+    const st = s.steps[+b.dataset.step];
+    loadPrintImage(b.querySelector("img"), st.cat, st.item).catch(() => b.querySelector("img").remove());
+    b.addEventListener("click", () => openLightbox(st.cat, st.item, 0));
+  });
+  el.querySelectorAll("[data-ptask]").forEach(b => b.addEventListener("click", () => {
+    const t = s.tasks.find(x => x.id === b.dataset.ptask);
+    taskOpen(t, taskDone(t) ? "done" : "start");
+  }));
+}
+
+/* ------------------------------------------------------------------
+   ABSTIMMUNG SPIELEN (#/abstimmung, seit 2.21.0) für den Unterricht:
+   1. Landsgemeinde: zufällig verteilte Hände, die Klasse schätzt wie der Landammann das Mehr, dann wird aufgelöst.
+   2. Volk und Stände: Ja-Anteil pro Kanton einstellen; Volksmehr (gewichtet nach Einwohnern, gerundet) und Ständemehr
+      (Halbkantone je eine halbe Stimme, 23 Standesstimmen). Keine Daten, alles im Browser.
+------------------------------------------------------------------- */
+// Kürzel, Name, Einwohner in Tausend (ungefähr, gerundet), früherer Halbkanton
+const KANTONE_EW = [["ZH", "Zürich", 1605, false], ["BE", "Bern", 1063, false], ["LU", "Luzern", 424, false], ["UR", "Uri", 38, false],
+  ["SZ", "Schwyz", 166, false], ["OW", "Obwalden", 39, true], ["NW", "Nidwalden", 44, true], ["GL", "Glarus", 42, false],
+  ["ZG", "Zug", 132, false], ["FR", "Freiburg", 334, false], ["SO", "Solothurn", 284, false], ["BS", "Basel-Stadt", 201, true],
+  ["BL", "Basel-Landschaft", 297, true], ["SH", "Schaffhausen", 85, false], ["AR", "Appenzell Ausserrhoden", 56, true],
+  ["AI", "Appenzell Innerrhoden", 17, true], ["SG", "St. Gallen", 525, false], ["GR", "Graubünden", 203, false],
+  ["AG", "Aargau", 711, false], ["TG", "Thurgau", 292, false], ["TI", "Tessin", 358, false], ["VD", "Waadt", 836, false],
+  ["VS", "Wallis", 358, false], ["NE", "Neuenburg", 177, false], ["GE", "Genf", 515, false], ["JU", "Jura", 74, false]];
+const STADTKANTONE = new Set(["ZH", "BS", "GE", "VD", "BE", "BL", "ZG", "NE"]);
+const fmtPct = x => x.toFixed(1).replace(".", ",");
+const randInt = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+function renderVote(){
+  const el = document.getElementById("abstimmung");
+  el.innerHTML = `
+    <section class="vote-part"><h2>Landsgemeinde: Wer hat das Mehr?</h2>
+      <p>An der Landsgemeinde wird nicht ausgezählt: Der Landammann schaut über den Ring und schätzt, welche Seite mehr Hände
+        hochhält. Könnt ihr das auch?</p>
+      <label class="vote-q">Worüber wird abgestimmt?
+        <input id="lgQ" type="text" maxlength="120" value="Soll es auf dem Pausenplatz einen Trinkbrunnen geben?"></label>
+      <div class="offline"><button id="lgStart">Hände hoch!</button></div>
+      <div id="lgBoard" aria-live="polite"></div>
+    </section>
+    <section class="vote-part"><h2>Volk und Stände</h2>
+      <p>Für eine Volksinitiative braucht es zwei Mehrheiten: mehr Ja als Nein im ganzen Volk (<b>Volksmehr</b>) und ein Ja in
+        der Mehrheit der Kantone (<b>Ständemehr</b>). Die sechs früheren Halbkantone haben je eine halbe Standesstimme, zusammen
+        sind es 23. Probiere aus, wann das Resultat kippt.</p>
+      <div class="offline">
+        <button id="vsCity">Stadt sagt Ja, Land sagt Nein</button>
+        <button class="ghost" id="vsRandom">Zufall</button>
+        <button class="ghost" id="vsEven">Überall 50 %</button>
+      </div>
+      <div id="vsResult" class="vs-result" aria-live="polite"></div>
+      <div class="vs-wrap"><table class="vs-table">
+        <thead><tr><th>Kanton</th><th class="num">Einwohner</th><th>Ja in %</th><th></th></tr></thead>
+        <tbody>${KANTONE_EW.map(([code, name, ew, half]) => `<tr data-code="${code}">
+          <td><b>${code}</b> ${esc(name)}${half ? ` <small>(½ Stimme)</small>` : ""}</td>
+          <td class="num">${(ew * 1000).toLocaleString("de-CH")}</td>
+          <td><input type="number" min="0" max="100" step="1" value="50" aria-label="Ja-Anteil ${esc(name)} in Prozent"></td>
+          <td class="vs-mark"></td></tr>`).join("")}</tbody></table></div>
+      <p class="lern-hint">Gerechnet wird mit der Einwohnerzahl (ungefähr, gerundet), nicht mit den Stimmberechtigten. Fürs Prinzip genügt das.</p>
+    </section>`;
+  // 1. Landsgemeinde
+  document.getElementById("lgStart").addEventListener("click", () => {
+    const n = 300, share = .4 + Math.random() * .2, ja = Math.round(n * share);
+    const hands = shuffled([...Array(n)].map((_, i) => i < ja));
+    const board = document.getElementById("lgBoard");
+    board.innerHTML = `<p class="vote-question">${esc(document.getElementById("lgQ").value.trim() || "Ja oder Nein?")}</p>
+      <p class="lern-hint"><span class="hand ja"></span> Ja &nbsp; <span class="hand nein"></span> Nein</p>
+      <div class="lg-ring" aria-label="Viele Hände für Ja und Nein">${hands.map(h => `<span class="hand ${h ? "ja" : "nein"}"></span>`).join("")}</div>
+      <div class="offline lg-guess">
+        <button data-guess="ja">Ja hat das Mehr</button>
+        <button data-guess="nein">Nein hat das Mehr</button>
+      </div>
+      <div class="lern-feedback" id="lgFeedback"></div>`;
+    board.querySelector(".lg-guess").addEventListener("click", e => {
+      const b = e.target.closest("[data-guess]");
+      if(!b) return;
+      board.querySelectorAll("[data-guess]").forEach(x => { x.disabled = true; });
+      const win = ja * 2 > n ? "ja" : ja * 2 < n ? "nein" : "gleich";
+      const close = Math.abs(ja / n - .5) < .03;
+      document.getElementById("lgFeedback").innerHTML = `<p class="${b.dataset.guess === win ? "ok" : "bad"}">
+        ${b.dataset.guess === win ? "Richtig geschätzt!" : win === "gleich" ? "Genau gleich viele!" : "Daneben geschätzt."}
+        Ja: ${ja}, Nein: ${n - ja} (${fmtPct(100 * ja / n)} % Ja).</p>
+        <p class="lern-fact">${close ? "So knapp ist es auch für den Landammann schwierig. Er entscheidet trotzdem nach Augenmass, ausgezählt wird nicht."
+          : "Bei einem deutlichen Mehr sieht man es auf einen Blick. Schwierig wird es, wenn es knapp ist."}</p>
+        <button id="lgAgain">Nochmals abstimmen</button>`;
+      document.getElementById("lgAgain").addEventListener("click", () => document.getElementById("lgStart").click());
+    });
+  });
+  // 2. Volk und Stände
+  const inputs = [...el.querySelectorAll(".vs-table input")];
+  const calc = () => {
+    let pop = 0, yes = 0, standJa = 0;
+    inputs.forEach((inp, i) => {
+      const [, , ew, half] = KANTONE_EW[i];
+      const v = Math.max(0, Math.min(100, +inp.value || 0));
+      pop += ew; yes += ew * v / 100;
+      const isJa = v > 50;
+      if(isJa) standJa += half ? .5 : 1;
+      inp.closest("tr").querySelector(".vs-mark").textContent = isJa ? "Ja" : "Nein";
+      inp.closest("tr").className = isJa ? "ja" : "nein";
+    });
+    const volk = 100 * yes / pop, volkJa = volk > 50, standOk = standJa > 11.5;
+    const fmtStand = x => String(x).replace(".5", "½").replace(/^0½$/, "½");
+    document.getElementById("vsResult").innerHTML = `
+      <div class="${volkJa ? "ok" : "bad"}"><small>Volksmehr</small><b>${fmtPct(volk)} % Ja</b>${volkJa ? "erreicht" : "nicht erreicht"}</div>
+      <div class="${standOk ? "ok" : "bad"}"><small>Ständemehr</small><b>${fmtStand(standJa)} : ${fmtStand(23 - standJa)}</b>${standOk ? "erreicht" : "nicht erreicht"}</div>
+      <div class="${volkJa && standOk ? "ok" : "bad"} vs-total"><small>Resultat</small><b>${volkJa && standOk ? "Angenommen" : "Abgelehnt"}</b>
+        ${volkJa && !standOk ? "Das Volk sagt Ja, die Mehrheit der Kantone Nein. So scheiterte 2020 die Konzernverantwortungsinitiative."
+          : !volkJa && standOk ? "Die Mehrheit der Kantone sagt Ja, das Volk aber Nein." : ""}</div>`;
+  };
+  const setAll = f => { inputs.forEach((inp, i) => { inp.value = f(KANTONE_EW[i][0]); }); calc(); };
+  el.querySelector(".vs-table").addEventListener("input", calc);
+  document.getElementById("vsCity").addEventListener("click", () => setAll(code => STADTKANTONE.has(code) ? randInt(55, 66) : randInt(38, 48)));
+  document.getElementById("vsRandom").addEventListener("click", () => setAll(() => randInt(35, 65)));
+  document.getElementById("vsEven").addEventListener("click", () => setAll(() => 50));
+  calc();
 }
 
 /* ------------------------------------------------------------------
@@ -2719,7 +2944,7 @@ function speakItem(cat, item, btn){
   const again = speakBtn === btn;
   speakStop();
   if(again) return;
-  const parts = [item.n + ".", cat.latin ? "" : item.s, item.t, ...item.f.map(f => `${f.k}: ${f.v}.`),
+  const parts = [item.n + ".", cat.latin ? "" : item.s, descOf(item), ...item.f.map(f => `${f.k}: ${f.v}.`),
     REGION && item.reg[REGION.id] ? `Im ${REGION.title}: ${item.reg[REGION.id]}` : ""];
   const u = new SpeechSynthesisUtterance(parts.filter(Boolean).join(" "));
   const voices = speechSynthesis.getVoices();
@@ -2886,8 +3111,9 @@ async function refresh(){
   const json = JSON.stringify(data);
   if(json === lastData) return;
   lastData = json;
-  [ALL, REGIONS] = data;
+  [ALL, REGIONS, PATHS] = data;
   views.clear();
+  itemIndex = null;
   setRegion(REGION?.id, false);   // verwirft auch die gebauten Karten
   const id = location.hash.replace(/^#\/?/, "");
   if(id === "copyright") buildCredits();
@@ -2899,7 +3125,7 @@ document.addEventListener("visibilitychange", () => { if(document.visibilityStat
 document.getElementById("back").addEventListener("click", () => { searchEl.value = ""; if(location.hash.replace(/^#\/?/, "")) location.hash = ""; else render(); });
 introEl.textContent = "Inhalte werden geladen …";
 loadAll().then(data => {
-  [ALL, REGIONS] = data;
+  [ALL, REGIONS, PATHS] = data;
   lastData = JSON.stringify(data);
   setRegion(savedRegion(), false);   // gewählter Kanton von früher (sonst ganze Schweiz)
   window.addEventListener("hashchange", () => { searchEl.value = ""; render(); });

@@ -204,6 +204,12 @@ Die Direktlinks (`#/kategorie/eintrag`) werden mit einem Slug aus dem Namen gebi
 Leerzeichen → Bindestrich). Die QR-Codes erzeugt die Verwaltung mit der kleinen Bibliothek *qrcode-generator* als SVG;
 die Anzeige bleibt ohne Bibliothek. Gedruckt werden 12 Karten pro A4-Seite über Druck-CSS.
 
+### Einfach lesen
+
+Pro Eintrag gibt es eine Kurzfassung in einfacher Sprache (`entries.simple`). Ein Schalter auf dem Gerät entscheidet, welche Fassung die
+Textseite zeigt. Die Beschreibungen tragen die Kennung des Eintrags, darum tauscht der Schalter alle sichtbaren Texte aus, ohne Karten neu
+zu bauen (sonst würden alle Bilder neu laden). Die Kurzfassungen schrieb Claude aus den bestehenden Beschreibungen, ohne neue Angaben.
+
 ### Kantone als Filter
 
 Ein Kanton ist **keine Kopie** der Inhalte, sondern ein Filter: Die Anzeige lädt wie bisher alle Kategorien (dazu pro Eintrag
