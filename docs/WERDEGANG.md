@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.23.1 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 8. Oktober 2026 · Version 2.24.0 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
 Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23)
 
@@ -25,6 +25,7 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
   Unter der Suche führen Knöpfe direkt zu den Spielen mit dieser Kategorie; ein «?» erklärt die Bedienung der Karten.
 - **Direktlink auf jeden Eintrag** (z. B. `#/voegel/amsel`): öffnet die Kategorie, hebt die Karte hervor und zeigt sie gross.
   In der Grossansicht teilt der Knopf «Teilen» diesen Link (auf dem Handy über das Teilen-Menü, sonst in die Zwischenablage).
+  In jeder Kategorie teilt «Kategorie teilen» den Link zur ganzen Kategorie (seit 2.24.0).
 - **Verwechslungsgefahr:** Auf der Textseite steht bei ähnlichen Arten «Nicht verwechseln mit …» mit dem Unterschied
   und einem Link zum anderen Eintrag (z. B. Fichte und Weisstanne, Reh und Rothirsch, Bärlauch und Herbstzeitlose).
 - **Tierstimmen:** Bei Tieren mit typischem Ruf spielt ein Knopf auf der Textseite die Aufnahme ab (mit Quellenangabe).
@@ -582,6 +583,12 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - 2.23.1: In «Ideen» stehen neu je sechs bzw. sieben Ideen für Mittelstufe und Oberstufe (Vorschläge von Claude) und die Idee
   des Users, Kategorien und Einträge mit einem Häkchen «von Hand geprüft» zu markieren.
 
+### 8. Oktober – Kategorie teilen (Version 2.24.0)
+
+- Hinweis des Users: In einer Kategorie gab es keinen Link, um sie zu teilen, nur bei den einzelnen Einträgen. Neu steht in
+  jeder Kategorie rechts neben «Spiele zu …» der Knopf **«Kategorie teilen»** (auf dem Handy das Teilen-Menü, sonst Link in die
+  Zwischenablage). Hilfe und Anleitung für Lehrpersonen sind ergänzt.
+
 ---
 
 ## Versionen
@@ -625,6 +632,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.22.0 | 8.10.2026 | Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) mit Lernzielen zu jeder Möglichkeit, verlinkt unter Hilfe |
 | 2.23.0 | 8.10.2026 | Entdeckungskarte: 85 Orte auf der Landeskarte von swisstopo, «Wo bin ich?» mit Liste nach Entfernung, «Auf der Karte zeigen» auf der Textseite, Koordinaten in der Verwaltung; Verwaltung: neuer Bereich «Ideen» mit allen Pendenzen (Datenbank-Version 29) |
 | 2.23.1 | 8.10.2026 | Verwaltung, Ideen: neue Ideen für Mittelstufe und Oberstufe und das Häkchen «von Hand geprüft» vorgemerkt |
+| 2.24.0 | 8.10.2026 | Knopf «Kategorie teilen» in jeder Kategorie (bisher liessen sich nur einzelne Einträge teilen) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 

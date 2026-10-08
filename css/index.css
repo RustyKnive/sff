@@ -299,6 +299,10 @@ header p.goal b{color:var(--accent)}
 /* Leiste in der Kategorie: Wege zu den Spielen */
 .cat-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px -54px 0 0}
 .cat-bar-label{color:var(--muted);font-size:.92rem}
+.cat-share{display:inline-flex;align-items:center;gap:6px;margin-left:auto;padding:6px 14px;border:none;border-radius:99px;
+  background:var(--accent-soft);color:var(--accent);font:inherit;font-weight:600;font-size:.92rem;cursor:pointer}
+.cat-share:hover{background:var(--accent);color:var(--card)}
+.cat-share svg{width:16px;height:16px}
 .chip{padding:6px 14px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:.92rem;text-decoration:none}
 .chip:hover{background:var(--accent);color:var(--card)}
 

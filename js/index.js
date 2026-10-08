@@ -104,6 +104,15 @@ const slugify = s => s.toLowerCase().replace(/ä/g, "ae").replace(/ö/g, "oe").r
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const entryLink = (cat, item) => "#/" + cat.id + "/" + slugify(item.n);
 const entryUrl = (cat, item) => location.href.split("#")[0] + entryLink(cat, item);
+// Direktlink teilen (Handy: Teilen-Menü) oder in die Zwischenablage kopieren; für Einträge und Kategorien
+async function shareLink(title, url){
+  try{
+    if(navigator.share){ await navigator.share({ title, url }); return; }
+    await navigator.clipboard.writeText(url);
+    toast("Link kopiert: " + url);
+  }catch(e){ if(e.name !== "AbortError") toast(url); }
+}
+const SHARE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>`;
 function findByName(name){
   for(const cat of CATS){ const item = cat.items.find(it => it.n === name); if(item) return { cat, item }; }
   return null;
@@ -358,15 +367,7 @@ function openLightbox(cat, item, start){
   root.querySelectorAll(".slide:not(.text)").forEach(s => fillSlide(s, cat, item, +s.dataset.k));
   lbCarousel.go(start);
   root.querySelector(".lb-close").addEventListener("click", closeLightboxByUser);
-  // Direktlink teilen (Handy: Teilen-Menü) oder in die Zwischenablage kopieren
-  root.querySelector(".lb-share").addEventListener("click", async () => {
-    const url = entryUrl(cat, item);
-    try{
-      if(navigator.share){ await navigator.share({ title:item.n, url }); return; }
-      await navigator.clipboard.writeText(url);
-      toast("Link kopiert: " + url);
-    }catch(e){ if(e.name !== "AbortError") toast(url); }
-  });
+  root.querySelector(".lb-share").addEventListener("click", () => shareLink(item.n, entryUrl(cat, item)));
   root.querySelectorAll("[data-report]").forEach(b => b.addEventListener("click", ev => {
     ev.stopPropagation();
     openReport(item, +b.dataset.report, labels, b);
@@ -1952,7 +1953,10 @@ function showCatBar(cat){
     <a class="chip" href="#/spiele/memo">Memory</a>
     ${duel ? `<a class="chip" href="#/spiele/duel">Verwechslungs-Duell</a>` : ""}
     <a class="chip" href="#/spiele/detektiv">Steckbrief-Detektiv</a>
-    <button type="button" class="help-tip" data-help="karte" aria-label="Hilfe: Karten ansehen">?</button>`;
+    <button type="button" class="help-tip" data-help="karte" aria-label="Hilfe: Karten ansehen">?</button>
+    <button type="button" class="cat-share" title="Link zu dieser Kategorie teilen">${SHARE_ICON} Kategorie teilen</button>`;
+  catBar.querySelector(".cat-share").addEventListener("click", () =>
+    shareLink(cat.name + " – Natur und Schweiz", location.href.split("#")[0] + "#/" + cat.id));
   catBar.hidden = false;
 }
 
