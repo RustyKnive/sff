@@ -23,16 +23,23 @@
   <div class="menu-wrap">
     <button class="menu-btn" id="menuBtn" aria-label="Menü" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     <nav class="menu" id="menu" hidden>
+      <!-- Gegliedert nach dem, was man tun will (seit 2.20.0); «Mehr» klein am Schluss -->
+      <p class="menu-head">Lernen</p>
       <a class="menu-item m-learn" href="#/lernapp">LernApp</a>
       <a class="menu-item m-learn" href="#/auftraege">Forscheraufträge</a>
+      <a class="menu-item m-learn" href="#/abzeichen">Abzeichen</a>
+      <p class="menu-head">Spielen</p>
       <a class="menu-item m-play" href="#/spiele">Spiele</a>
-      <a class="menu-item" href="#/jetzt">Jetzt zu sehen</a>
+      <p class="menu-head">Entdecken</p>
+      <a class="menu-item" href="#/jetzt">Jahreskalender</a>
+      <a class="menu-item" href="#/zeitstrahl">Zeitstrahl</a>
+      <a class="menu-item" href="#/vergleich" id="menuCompare">Kantone vergleichen</a>
+      <p class="menu-head">Für den Unterricht</p>
       <a class="menu-item" href="#/quiz">Quiz für die Klasse</a>
       <a class="menu-item" href="#/pdf">PDF drucken</a>
-      <a class="menu-item" href="#/hilfe">Hilfe</a>
-      <a class="menu-item" href="#/einstellungen">Einstellungen</a>
-      <a class="menu-item" href="#/admin">Admin</a>
-      <a class="menu-item" href="#/copyright">Copyright</a>
+      <div class="menu-more">
+        <a href="#/hilfe">Hilfe</a><a href="#/einstellungen">Einstellungen</a><a href="#/admin">Admin</a><a href="#/copyright">Copyright</a>
+      </div>
     </nav>
   </div>
   <!-- Kanton oder ganze Schweiz (js/index.js showRegionSwitch); Kantone kommen aus der Datenbank (022) -->
@@ -109,6 +116,23 @@
     </div>
     <div class="game-board" id="detBoard"></div>
   </div>
+</section>
+<!-- Zeitstrahl (#/zeitstrahl, js/index.js renderTimeline): Geschichte und Politik nach Jahr -->
+<section class="page" id="page-zeitstrahl" hidden>
+  <div id="zeitstrahl"></div>
+</section>
+<!-- Kantone vergleichen (#/vergleich, js/index.js renderCompare) -->
+<section class="page" id="page-vergleich" hidden>
+  <div class="offline">
+    <select id="cmpA" aria-label="Erster Kanton"></select>
+    <span>und</span>
+    <select id="cmpB" aria-label="Zweiter Kanton"></select>
+  </div>
+  <div id="vergleich"></div>
+</section>
+<!-- Abzeichen (#/abzeichen, js/index.js renderBadges): aus LernApp, Aufträgen, Spielen und Serie, nur auf dem Gerät -->
+<section class="page" id="page-abzeichen" hidden>
+  <div id="abzeichen"></div>
 </section>
 <section class="page" id="page-admin" hidden>
   <h2>Verwaltung</h2>
@@ -195,6 +219,7 @@
         <li><b>Fehler im Text melden:</b> Stimmt in Beschreibung, Steckbrief oder Verwechslungsgefahr etwas nicht? Der Knopf
           unten auf der Textseite schickt eine Meldung an die Verwaltung. Du bekommst eine Nummer; merke sie dir, falls deine
           Lehrperson danach fragt. Dein Name wird nicht übermittelt.</li>
+        <li><b>Vorlesen:</b> Der Knopf auf der Textseite liest Name, Beschreibung und Steckbrief vor; nochmals tippen hält an.</li>
         <li><b>Schliessen:</b> ×, <kbd>Esc</kbd> oder «Zurück»; man bleibt in der Kategorie.</li>
       </ul>
     </details>
@@ -229,9 +254,20 @@
         Kachel auf der Startseite, mit dem Schild «Kategorie des Tages».</p>
     </details>
     <details>
-      <summary>Jetzt zu sehen</summary>
-      <p>Menü → «Jetzt zu sehen» zeigt, was laut Steckbrief in diesem Monat blüht, fliegt, wächst oder laicht, geordnet
-        nach Kategorien. Eine gute Anregung für einen Ausflug.</p>
+      <summary>Jahreskalender</summary>
+      <p>Menü → «Jahreskalender» zeigt für jeden Monat Gedenktage, Termine und Bräuche (z. B. Fridolinstag, Näfelser Fahrt,
+        Landsgemeinde) und was laut Steckbrief blüht, fliegt, wächst oder laicht. Mit ‹ und › blätterst du durch die Monate.
+        Eine gute Anregung für einen Ausflug.</p>
+    </details>
+    <details>
+      <summary>Zeitstrahl</summary>
+      <p>Menü → «Zeitstrahl» ordnet die Einträge aus Geschichte und Politik nach Jahr, von 1291 bis heute. Im Kanton erscheinen
+        nur seine Ereignisse, in der ganzen Schweiz zeigt ein Kürzel (z. B. GL), zu welchem Kanton ein Ereignis gehört.</p>
+    </details>
+    <details>
+      <summary>Kantone vergleichen</summary>
+      <p>Menü → «Kantone vergleichen»: zwei Kantone wählen. Pro Kategorie steht, was beide haben und was nur einer kennt,
+        z. B. welche Reptilien es im Tessin gibt, aber nicht in Glarus.</p>
     </details>
     <details class="g-learn">
       <summary>LernApp</summary>
@@ -249,6 +285,10 @@
         <li><b>Dranbleiben:</b> Die Startseite erinnert an fällige Begriffe, und die Serie zählt die Tage in Folge.</li>
         <li><b>Fortschritt auf der Startseite:</b> Auf jeder Kachel einer Kategorie, die du lernst, zeigt ein Ring, wie viele
           Einträge du schon richtig beantwortet hast (z. B. 6/16). Sind alle gelernt, steht dort «✓ gelernt».</li>
+        <li><b>Leicht:</b> Für Jüngere wählst du immer aus 4 Namen, statt zu tippen. Einschalten beim Anlegen der Session
+          oder unter dem Bild.</li>
+        <li><b>Abzeichen:</b> Menü → «Abzeichen» zeigt, was du geschafft hast: richtige Begriffe, gelöste Aufträge, Spiele,
+          Tage in Folge und pro Kanton, in Bronze, Silber und Gold.</li>
         <li>Der Lernstand bleibt nur auf diesem Gerät gespeichert, es braucht kein Konto.</li>
       </ul>
     </details>

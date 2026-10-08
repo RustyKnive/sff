@@ -439,6 +439,69 @@ body.region header::before{box-shadow:inset 0 0 0 1.5px var(--region);
 .region-hero span{font-size:.92rem}
 .text .region-note{padding:6px 10px;border-radius:0 8px 8px 0;background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--region,var(--accent));font-size:.86rem}
 
+/* Menü in Gruppen (seit 2.20.0): kleine Überschriften, «Mehr» als Zeile am Schluss */
+.menu{max-height:calc(100dvh - 90px);overflow-y:auto}
+.menu-head{margin:8px 14px 2px;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.menu-head:first-child{margin-top:4px}
+.menu-item{padding:7px 14px}
+.menu-more{display:flex;flex-wrap:wrap;gap:2px 12px;margin:8px 0 2px;padding:8px 14px 4px;border-top:1px solid var(--accent-soft);font-size:.85rem}
+.menu-more a{color:var(--muted);text-decoration:none}
+.menu-more a:hover,.menu-more a:focus-visible{color:var(--accent);text-decoration:underline}
+
+/* Jahreskalender: Monat wechseln */
+.month-nav{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.month-nav b{font-size:1.1rem;color:var(--accent);min-width:6em;text-align:center}
+
+/* Zeitstrahl */
+.timeline{list-style:none;margin:0 0 1rem;padding:0 0 0 4px;max-width:760px}
+.timeline li{display:grid;grid-template-columns:4.2em 1fr;gap:14px;position:relative;padding:0 0 14px}
+.timeline li::before{content:"";position:absolute;left:4.9em;top:6px;bottom:-6px;width:2px;background:var(--accent-soft)}
+.timeline li:last-child::before{display:none}
+.timeline li > div{position:relative;padding-left:16px}
+.timeline li > div::before{content:"";position:absolute;left:-3px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.timeline li.tl-politik > div::before{background:var(--learn)}
+.tl-year{font-weight:800;font-size:1.05rem;text-align:right;color:var(--accent)}
+.timeline a{font-weight:700;color:var(--ink)}
+.timeline small{display:block;color:var(--muted)}
+.timeline p{margin:.2rem 0 0;font-size:.9rem}
+.tl-region{display:inline-block;margin-left:6px;padding:0 6px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-size:.7rem;font-weight:700;vertical-align:2px}
+.tl-key{display:inline-flex;align-items:center;gap:4px;margin-left:8px}
+.tl-key::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.tl-key.tl-politik::before{background:var(--learn)}
+
+/* Kantone vergleichen */
+.cmp-head{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin:16px 0}
+.cmp-head > div{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.cmp-head img{width:54px;height:54px}
+.cmp-head small{color:var(--muted)}
+.cmp-both b{font-size:1.6rem;color:var(--accent)}
+.cmp-row{margin:0 0 6px;padding:8px 12px;border-radius:12px;background:var(--card)}
+.cmp-row summary{display:flex;justify-content:space-between;gap:8px;cursor:pointer}
+.cmp-row summary span{color:var(--muted)}
+.cmp-row summary em{font-style:normal;color:var(--accent);font-weight:600}
+.cmp-row p{margin:.5rem 0 0;line-height:2.1}
+.cmp-row p small{color:var(--muted);margin-right:4px}
+
+/* Abzeichen */
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;max-width:none}
+.badge-tile{display:flex;flex-direction:column;align-items:center;gap:3px;padding:14px 10px;border-radius:14px;background:var(--card);
+  text-align:center;opacity:.6;filter:grayscale(1)}
+.badge-tile.got{opacity:1;filter:none;box-shadow:inset 0 0 0 2px var(--accent-soft)}
+.badge-tile.l1{box-shadow:inset 0 0 0 2px #c08a52}
+.badge-tile.l2{box-shadow:inset 0 0 0 2px #a7b0b8}
+.badge-tile.l3{box-shadow:inset 0 0 0 3px #e0b020}
+.badge-icon{font-size:2rem;line-height:1}
+.badge-icon img{width:44px;height:44px}
+.badge-tile small{color:var(--muted);font-size:.78rem}
+.badge-bar{width:100%;height:6px;margin:4px 0;border-radius:99px;background:var(--accent-soft);overflow:hidden}
+.badge-bar i{display:block;height:100%;background:var(--accent)}
+.page .chip.got{display:inline-block;margin:2px 0}
+
+/* Vorlesen und leichte LernApp */
+.text .speak{margin:.8rem 0 0}
+.text .speak-btn{padding:6px 14px;border:1px solid var(--accent);border-radius:99px;background:transparent;color:var(--accent);font:inherit;font-weight:600;cursor:pointer}
+.lern-easy,.lern-easy-set{display:inline-flex;align-items:center;gap:6px;margin:4px 0 8px;font-size:.88rem;color:var(--muted);cursor:pointer}
+
 @media print{
   @page{size:A4;margin:5mm}
   html,body{background:#fff;margin:0}

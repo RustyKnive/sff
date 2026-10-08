@@ -212,6 +212,7 @@ function slidesHtml(cat, item, labels, big){
         const hit = findByName(c.name);
         return `<p>${hit ? `<a href="${entryLink(hit.cat, hit.item)}">${esc(c.name)}</a>` : `<b>${esc(c.name)}</b>`}: ${esc(c.diff)}</p>`;
       }).join("")}</div>` : ""}
+      ${big && canSpeak ? `<p class="speak"><button class="speak-btn" data-speak>🔊 Vorlesen</button></p>` : ""}
       ${big ? `<p class="text-report"><button class="report-text" data-report-text title="Stimmt etwas im Text nicht? Hier melden.">${
         reported.has(item.id + "-t") ? "✓ Fehler gemeldet" : "⚑ Fehler im Text melden"}</button></p>` : ""}
     </div></div>`;
@@ -364,6 +365,10 @@ function openLightbox(cat, item, start){
     ev.stopPropagation();
     openTextReport(item, ev.currentTarget);
   });
+  root.querySelector("[data-speak]")?.addEventListener("click", ev => {
+    ev.stopPropagation();
+    speakItem(cat, item, ev.currentTarget);
+  });
   document.body.classList.add("lb-open");
   lightbox.showModal();
   // Eigener Verlaufseintrag (gleiche Adresse): «Zurück» schliesst nur die Lightbox
@@ -372,6 +377,7 @@ function openLightbox(cat, item, start){
 lightbox.addEventListener("close", () => {
   if(lightbox.open) return;   // kommt verzögert: ist schon die nächste Lightbox offen, nichts wegräumen
   document.body.classList.remove("lb-open");
+  speakStop();
   lbZoom.reset();
   lightbox.replaceChildren();
   lbCarousel = null;
@@ -672,6 +678,7 @@ const SWISS = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" heig
 const regionIcon = g => g ? (g.emblem ? `<img src="${esc(g.emblem)}" alt="">` : `<span class="region-code">${esc(g.code || g.name.slice(0, 2).toUpperCase())}</span>`) : SWISS;
 function showRegionSwitch(){
   regionWrap.hidden = !REGIONS.length;
+  document.getElementById("menuCompare").hidden = REGIONS.length < 2;
   regionBtn.innerHTML = `${regionIcon(REGION)}<span>${esc(REGION ? REGION.title : "Ganze Schweiz")}</span><small aria-hidden="true">▾</small>`;
   regionBtn.title = "Kanton wählen: nur Einträge aus diesem Kanton zeigen, oder die ganze Schweiz";
   regionMenu.innerHTML = [null, ...REGIONS].map(g => `<button type="button" class="region-item${g === REGION ? " current" : ""}"
@@ -746,6 +753,9 @@ const PAGES = {
   lernapp:{ title:"LernApp", intro:"Namen zu Bildern lernen, mit dem Leitner-System." },
   auftraege:{ title:"Forscheraufträge", intro:"Alltagssituationen, Rätsel und Rechenaufgaben: in den Karten nachforschen und lösen." },
   spiele:{ title:"Spiele", intro:"Memory, Verwechslungs-Duell und Steckbrief-Detektiv: dasselbe Wissen spielerisch üben." },
+  abzeichen:{ title:"Abzeichen", intro:"Was du schon geschafft hast: in der LernApp, bei den Forscheraufträgen und in den Spielen." },
+  zeitstrahl:{ title:"Zeitstrahl", intro:"Ereignisse aus Geschichte und Politik der Reihe nach." },
+  vergleich:{ title:"Kantone vergleichen", intro:"Was zwei Kantone gemeinsam haben und was nur einer kennt." },
   quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
   hilfe:{ title:"Hilfe", intro:"Was die Seite kann, womit man beginnt, und eine Anleitung zu allen Möglichkeiten." },
@@ -1255,6 +1265,7 @@ function renderLernSetup(){
     <div class="lern-cats">${CATS.map(c => `<label><input type="checkbox" value="${esc(c.id)}">
       ${esc(c.name)} <small>(${c.items.length})</small></label>`).join("")}</div>
     <p id="lernSum" class="lern-sum"></p>
+    <label class="lern-easy-set"><input type="checkbox" id="lernEasy"> Leicht: immer aus 4 Namen wählen statt eintippen (gut für Jüngere)</label>
     <fieldset class="lern-colors"><legend>Farbe</legend>${LERN_FARBEN.map((f, i) => `
       <label class="sc${i}" title="${f}"><input type="radio" name="lernColor" value="${i}" ${i === color ? "checked" : ""}>
         <span class="lern-dot"></span><span class="sr">${f}</span></label>`).join("")}</fieldset>
@@ -1285,6 +1296,7 @@ function renderLernSetup(){
       const nr = Math.max(0, ...lernStore.sessions.map(x => parseInt(String(x.id).slice(1), 10) || 0)) + 1;
       s = { id:"s" + nr, color:+lernEl.querySelector("[name=lernColor]:checked").value, cats:ids, cards:{} };
       if(here) s.region = here;
+      if(document.getElementById("lernEasy").checked) s.easy = true;
       lernStore.sessions.push(s);
     }
     lernSwitch(s);
@@ -1313,7 +1325,8 @@ function renderLernQuiz(){
   const round = lernRound;
   const roundText = round && round.n ? `Runde: ${round.right} von ${round.n} richtig${round.helped ? `, ${round.helped} mit Tipp` : ""}.` : "";
   // Fach 1: aus 4 Namen wählen; ab Fach 2 und beim freien Üben selbst eintippen
-  const choice = counting && lern.cards[lernCur.item.id].box === 1;
+  // Leicht (seit 2.20.0, pro Session): immer auswählen, auch ab Fach 2 und beim freien Üben
+  const choice = !!lernCur && (lern.easy || (counting && lern.cards[lernCur.item.id].box === 1));
   if(!lernCur && !(roundDone && s.due)) lernRound = null;   // Tagesende: nächstes Mal beginnt eine neue Runde
 
   lernEl.innerHTML = `
@@ -1335,10 +1348,11 @@ function renderLernQuiz(){
       ${lernCardHtml(lernCur)}
       <p class="lern-hint">${counting && round ? `Frage ${round.n + 1} von ${round.size} · ` : ""}${esc(lernCur.cat.name)}
         · ${counting ? `Fach ${lern.cards[lernCur.item.id].box}` : "freies Üben (zählt nicht)"}</p>
+      <label class="lern-easy"><input type="checkbox" id="lernEasyNow" ${lern.easy ? "checked" : ""}> Leicht: aus 4 Namen wählen</label>
       ${choice ? `
       <div class="lern-choices" id="lernChoices">${lernChoices(lernCur, items).map(n =>
         `<button type="button" class="ghost" data-name="${esc(n)}">${esc(n)}</button>`).join("")}</div>
-      <p class="lern-hint">Neue Begriffe wählst du aus. Ab Fach 2 tippst du den Namen selbst ein.</p>
+      <p class="lern-hint">${lern.easy ? "Leicht: Du wählst immer aus 4 Namen." : "Neue Begriffe wählst du aus. Ab Fach 2 tippst du den Namen selbst ein."}</p>
       <p><button type="button" class="ghost" id="lernSkip">Weiss nicht</button></p>`
       : `
       <form id="lernForm" class="lern-form" autocomplete="off">
@@ -1378,6 +1392,11 @@ function renderLernQuiz(){
   lernEl.querySelectorAll(".lern-box i").forEach((el, i) => { el.style.height = (100 * s.boxes[i] / max) + "%"; });
   lernEl.querySelectorAll(".lern-mini i").forEach((el, i) => { el.style.width = (100 * catStats[i].richtig / catStats[i].total) + "%"; });
   document.getElementById("lernPracticeBtn")?.addEventListener("click", () => { lernPractice = true; renderLernQuiz(); });
+  document.getElementById("lernEasyNow")?.addEventListener("change", e => {
+    if(e.target.checked) lern.easy = true; else delete lern.easy;
+    lernSave();
+    renderLernQuiz();
+  });
   document.getElementById("lernNextRound")?.addEventListener("click", () => { lernRound = null; renderLernQuiz(); });
   document.getElementById("lernStop")?.addEventListener("click", () => { lernRound = null; location.hash = "#/"; });
   document.getElementById("lernMoreNew")?.addEventListener("click", () => {
@@ -2012,10 +2031,13 @@ function render(){
     if(pageId === "quiz") fillQuizSelect();
     if(pageId === "einstellungen"){ showVersion(); taskDailyBoxes(); }
     if(pageId === "auftraege") renderTasks();
+    if(pageId === "zeitstrahl") renderTimeline();
+    if(pageId === "vergleich") renderCompare();
+    if(pageId === "abzeichen") renderBadges();
     lastCat = null;
     return;
   }
-  if(id === "jetzt"){ renderSeason(); lastCat = null; return; }
+  if(first === "jetzt"){ renderSeason(second ? +second - 1 : null); lastCat = null; return; }
   lastCat = cat ? cat.id : null;
   if(!cat){
     setHead("Natur und Schweiz by toj-apps", "", false);
@@ -2531,7 +2553,9 @@ searchEl.addEventListener("keydown", e => { if(e.key === "Escape"){ searchEl.val
    den aktuellen Monat umfasst («Mai–August», «Juli», «November–März» über den Jahreswechsel).
 ------------------------------------------------------------------- */
 const MONATE = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
-const SEASON_KEYS = /^(Blütezeit|Flugzeit|Zeit|Laichzeit|Aktiv)$/;
+// Natur (Blüte-, Flug-, Pilz-, Laichzeit) und seit 2.20.0 Gedenktage, Termine und Bräuche (Gedenktag, Termin, Datum)
+const SEASON_KEYS = /^(Blütezeit|Flugzeit|Zeit|Laichzeit|Aktiv|Gedenktag|Termin|Datum)$/;
+const isDate = item => item.f.some(x => /^(Gedenktag|Termin|Datum)$/.test(x.k));
 function seasonMonths(item){
   const f = item.f.find(x => SEASON_KEYS.test(x.k));
   if(!f) return null;
@@ -2544,17 +2568,168 @@ function seasonMonths(item){
   }
   return new Set(found);
 }
-function renderSeason(){
-  const month = new Date().getMonth();
+/* Jahreskalender (#/jetzt, #/jetzt/<1–12>, früher «Jetzt zu sehen»): Termine und Bräuche des Monats, dann was blüht,
+   fliegt, wächst oder laicht; mit ‹ › durch die Monate blättern */
+function renderSeason(m){
+  const now = new Date().getMonth();
+  const month = Number.isInteger(m) && m >= 0 && m < 12 ? m : now;
   const groups = CATS.map(cat => ({ cat, items:cat.items.filter(it => seasonMonths(it)?.has(month)) })).filter(g => g.items.length);
-  const n = groups.reduce((s, g) => s + g.items.length, 0);
-  setHead("Jetzt zu sehen", `Im ${MONATE[month]} blühen, fliegen, wachsen oder laichen diese ${n} Arten (gemäss Steckbrief).`);
-  for(const g of groups){
-    const head = document.createElement("h2");
-    head.className = "grid-head";
-    head.textContent = g.cat.name;
-    grid.append(head, ...g.items.map(it => cardOf(g.cat, it)));
+  const dates = groups.flatMap(g => g.items.filter(isDate).map(item => ({ cat:g.cat, item })));
+  const nature = groups.map(g => ({ cat:g.cat, items:g.items.filter(it => !isDate(it)) })).filter(g => g.items.length);
+  const n = nature.reduce((s, g) => s + g.items.length, 0);
+  setHead("Jahreskalender", `${month === now ? "Jetzt im" : "Im"} ${MONATE[month]}: ${dates.length ? `${dates.length} ${dates.length === 1 ? "Termin" : "Termine"} und ` : ""}`
+    + `${n} Arten, die laut Steckbrief blühen, fliegen, wachsen oder laichen.`);
+  const nav = document.createElement("nav");
+  nav.className = "month-nav";
+  nav.innerHTML = `<a class="chip" href="#/jetzt/${(month + 11) % 12 + 1}" aria-label="Voriger Monat">‹ ${MONATE[(month + 11) % 12]}</a>
+    <b>${MONATE[month]}</b>
+    <a class="chip" href="#/jetzt/${(month + 1) % 12 + 1}" aria-label="Nächster Monat">${MONATE[(month + 1) % 12]} ›</a>
+    ${month !== now ? `<a class="chip" href="#/jetzt">Heute</a>` : ""}`;
+  grid.append(nav);
+  const head = text => { const h = document.createElement("h2"); h.className = "grid-head"; h.textContent = text; return h; };
+  if(dates.length) grid.append(head("Gedenktage, Termine und Bräuche"), ...dates.map(d => cardOf(d.cat, d.item)));
+  for(const g of nature) grid.append(head(g.cat.name), ...g.items.map(it => cardOf(g.cat, it)));
+}
+
+/* ------------------------------------------------------------------
+   ZEITSTRAHL (#/zeitstrahl, seit 2.20.0): Einträge aus Geschichte und Politik nach Jahr. Das Jahr steht im Untertitel
+   («1291, Schwyz») oder in einer Steckbrief-Zeile (Lebensdaten, Datum, Seit …); Einträge ohne Jahr (Sagen) stehen am Schluss.
+   Im Kanton nur seine Einträge (CATS); in der ganzen Schweiz zeigt ein Kürzel, zu welchem Kanton ein Ereignis gehört.
+------------------------------------------------------------------- */
+const TIMELINE_CATS = ["geschichte", "politik"];
+const yearOf = item => {
+  const y = s => (String(s || "").match(/\b(1[0-9]{3}|20[0-9]{2})\b/) || [])[1];
+  return +(y(item.s) || item.f.map(f => y(f.v)).find(Boolean) || 0);
+};
+const regionCodes = item => REGION ? "" : Object.keys(item.reg).map(id => findRegion(id)).filter(Boolean)
+  .map(g => `<span class="tl-region" title="${esc(g.title)}">${esc(g.code || g.name)}</span>`).join("");
+function renderTimeline(){
+  const el = document.getElementById("zeitstrahl");
+  const list = CATS.filter(c => TIMELINE_CATS.includes(c.id)).flatMap(cat => cat.items.map(item => ({ cat, item, year:yearOf(item) })));
+  const dated = list.filter(x => x.year).sort((a, b) => a.year - b.year || a.item.n.localeCompare(b.item.n));
+  const legend = list.filter(x => !x.year && x.cat.id === "geschichte");
+  if(!dated.length){ el.innerHTML = `<p>Hier gibt es noch keine Ereignisse${REGION ? ` aus dem ${esc(REGION.title)}` : ""}.</p>`; return; }
+  const row = ({ cat, item, year }) => `<li class="tl-${esc(cat.id)}"><span class="tl-year">${year || ""}</span>
+    <div><a href="${esc(entryLink(cat, item))}">${esc(item.n)}</a>${regionCodes(item)}
+      <small>${esc(cat.name)}${item.s ? " · " + esc(item.s) : ""}</small>
+      <p>${esc(lernMerksatz(item))}</p></div></li>`;
+  el.innerHTML = `<p class="lern-hint">${dated.length} Ereignisse von ${dated[0].year} bis ${dated[dated.length - 1].year}.
+      Ein Klick öffnet die Karte. <span class="tl-key tl-geschichte">Geschichte</span> <span class="tl-key tl-politik">Politik</span></p>
+    <ol class="timeline">${dated.map(row).join("")}</ol>
+    ${legend.length ? `<h2>Ohne festes Jahr</h2><ol class="timeline">${legend.map(row).join("")}</ol>` : ""}`;
+}
+
+/* ------------------------------------------------------------------
+   KANTONE VERGLEICHEN (#/vergleich, seit 2.20.0): zwei Kantone, pro Kategorie was beide haben und was nur einer.
+   Arbeitet immer mit allen Einträgen (ALL), unabhängig vom gewählten Bereich.
+------------------------------------------------------------------- */
+const cmpA = document.getElementById("cmpA"), cmpB = document.getElementById("cmpB");
+function renderCompare(){
+  const el = document.getElementById("vergleich");
+  if(REGIONS.length < 2){ el.innerHTML = `<p>Für einen Vergleich braucht es mindestens zwei Kantone.</p>`; return; }
+  const opts = sel => REGIONS.map(g => `<option value="${esc(g.id)}">${esc(g.title)}</option>`).join("");
+  if(!cmpA.options.length || cmpA.options.length !== REGIONS.length){
+    cmpA.innerHTML = opts(); cmpB.innerHTML = opts();
+    cmpA.value = (REGION || REGIONS[0]).id;
+    cmpB.value = REGIONS.find(g => g.id !== cmpA.value).id;
   }
+  const a = findRegion(cmpA.value), b = findRegion(cmpB.value);
+  if(a === b){ el.innerHTML = `<p>Bitte zwei verschiedene Kantone wählen.</p>`; return; }
+  const chips = (cat, items) => items.map(it => `<a class="chip" href="${esc(entryLink(cat, it))}">${esc(it.n)}</a>`).join(" ");
+  const rows = ALL.map(cat => ({ cat,
+    both:cat.items.filter(it => a.id in it.reg && b.id in it.reg),
+    onlyA:cat.items.filter(it => a.id in it.reg && !(b.id in it.reg)),
+    onlyB:cat.items.filter(it => b.id in it.reg && !(a.id in it.reg)) })).filter(r => r.both.length + r.onlyA.length + r.onlyB.length);
+  const sum = k => rows.reduce((s, r) => s + r[k].length, 0);
+  const emblem = g => g.emblem ? `<img src="${esc(g.emblem)}" alt="">` : "";
+  el.innerHTML = `<div class="cmp-head">
+      <div>${emblem(a)}<b>${esc(a.title)}</b><small>${sum("onlyA") + sum("both")} Einträge</small></div>
+      <div class="cmp-both"><b>${sum("both")}</b><small>gemeinsam</small></div>
+      <div>${emblem(b)}<b>${esc(b.title)}</b><small>${sum("onlyB") + sum("both")} Einträge</small></div>
+    </div>
+    ${rows.map(r => `<details class="cmp-row"${r.both.length ? " open" : ""}><summary><b>${esc(r.cat.name)}</b>
+        <span>${r.onlyA.length + r.both.length} · <em>${r.both.length} gemeinsam</em> · ${r.onlyB.length + r.both.length}</span></summary>
+      ${r.both.length ? `<p><small>In beiden:</small> ${chips(r.cat, r.both)}</p>` : ""}
+      ${r.onlyA.length ? `<p><small>Nur ${esc(a.name)}:</small> ${chips(r.cat, r.onlyA)}</p>` : ""}
+      ${r.onlyB.length ? `<p><small>Nur ${esc(b.name)}:</small> ${chips(r.cat, r.onlyB)}</p>` : ""}</details>`).join("")}`;
+}
+cmpA.addEventListener("change", renderCompare);
+cmpB.addEventListener("change", renderCompare);
+
+/* ------------------------------------------------------------------
+   ABZEICHEN (#/abzeichen, seit 2.20.0): aus dem, was ohnehin auf dem Gerät gespeichert ist (LernApp, Aufträge, Rekorde),
+   keine eigenen Daten. Stufen Bronze, Silber, Gold; dazu ein Abzeichen pro Kanton und pro ganz gelernter Kategorie.
+------------------------------------------------------------------- */
+const STUFEN = ["Bronze", "Silber", "Gold"];
+function knownEntries(){   // in irgendeiner Lernsession richtig beantwortet (Fach 2–5)
+  const ids = new Set();
+  for(const s of lernStore.sessions) for(const [id, c] of Object.entries(s.cards)) if(c.box >= 2) ids.add(id);
+  return ids;
+}
+function gamesPlayed(){
+  try{ return Object.values(JSON.parse(localStorage.getItem(REKORD_KEY)) || {}).reduce((n, r) => n + (r.last?.length || 0), 0); }catch(e){ return 0; }
+}
+function renderBadges(){
+  const el = document.getElementById("abzeichen");
+  const known = knownEntries();
+  const all = ALL.flatMap(c => c.items);
+  const solved = Object.values(taskStore.log).filter(l => l.done).length;
+  const badge = (icon, title, value, steps, unit, img = "") => {
+    const level = steps.filter(s => value >= s).length;
+    const next = steps[level];
+    const pct = next ? Math.round(100 * value / next) : 100;
+    return `<div class="badge-tile${level ? " got l" + level : ""}">
+      <span class="badge-icon">${img || icon}</span>
+      <b>${esc(title)}</b>
+      <small>${level ? STUFEN[level - 1] : "noch nicht erreicht"} · ${value} ${esc(unit)}</small>
+      <span class="badge-bar"><i data-pct="${pct}"></i></span>
+      <small>${next ? `Nächste Stufe bei ${next}` : "Höchste Stufe erreicht!"}</small></div>`;
+  };
+  const regionBadges = REGIONS.filter(g => all.some(it => g.id in it.reg)).map(g => {
+    const total = all.filter(it => g.id in it.reg).length;
+    const steps = [10, 25, total].filter((v, i, a) => v <= total && a.indexOf(v) === i);
+    return badge("", `${g.name}-Kenner`, all.filter(it => g.id in it.reg && known.has(it.id)).length, steps, "richtig",
+      g.emblem ? `<img src="${esc(g.emblem)}" alt="">` : "");
+  });
+  const mastered = ALL.filter(c => c.items.length && c.items.every(it => known.has(it.id)));
+  el.innerHTML = `<p class="lern-hint">Gezählt wird nur auf diesem Gerät, es braucht kein Konto.</p>
+    <h2>Allgemein</h2>
+    <div class="badges">
+      ${badge("🧠", "Namenskenner", known.size, [10, 50, 150], "Begriffe richtig")}
+      ${badge("🔍", "Forscherin, Forscher", solved, [1, 10, 25], "Aufträge gelöst")}
+      ${badge("🎲", "Spielerin, Spieler", gamesPlayed(), [1, 10, 30], "Spiele")}
+      ${badge("🔥", "Dranbleiben", lernStreak(), [3, 7, 30], "Tage in Folge")}
+    </div>
+    ${regionBadges.length ? `<h2>Kantone</h2><div class="badges">${regionBadges.join("")}</div>` : ""}
+    <h2>Kategorien gemeistert</h2>
+    ${mastered.length ? `<p>${mastered.map(c => `<a class="chip got" href="#/${esc(c.id)}">✓ ${esc(c.name)}</a>`).join(" ")}</p>`
+      : `<p class="lern-hint">Noch keine. Eine Kategorie ist gemeistert, wenn du in der LernApp alle ihre Einträge richtig beantwortet hast.</p>`}
+    <p><a class="button" href="#/lernapp">Weiterlernen</a></p>`;
+  el.querySelectorAll(".badge-bar i").forEach(i => { i.style.width = i.dataset.pct + "%"; });
+}
+
+/* ------------------------------------------------------------------
+   VORLESEN (seit 2.20.0): Knopf auf der Textseite der Grossansicht liest Name, Beschreibung, Steckbrief und den Hinweis
+   zum Kanton vor (Sprachausgabe des Browsers, ohne Netz und ohne Kosten). Nochmals tippen hält an.
+------------------------------------------------------------------- */
+const canSpeak = "speechSynthesis" in window;
+let speakBtn = null;
+function speakStop(){ if(canSpeak) speechSynthesis.cancel(); if(speakBtn) speakBtn.textContent = "🔊 Vorlesen"; speakBtn = null; }
+function speakItem(cat, item, btn){
+  const again = speakBtn === btn;
+  speakStop();
+  if(again) return;
+  const parts = [item.n + ".", cat.latin ? "" : item.s, item.t, ...item.f.map(f => `${f.k}: ${f.v}.`),
+    REGION && item.reg[REGION.id] ? `Im ${REGION.title}: ${item.reg[REGION.id]}` : ""];
+  const u = new SpeechSynthesisUtterance(parts.filter(Boolean).join(" "));
+  const voices = speechSynthesis.getVoices();
+  u.voice = voices.find(v => v.lang === "de-CH") || voices.find(v => v.lang.startsWith("de")) || null;
+  u.lang = u.voice?.lang || "de-CH";
+  u.rate = .95;
+  u.onend = u.onerror = () => { if(speakBtn === btn) speakStop(); };
+  speakBtn = btn;
+  btn.textContent = "■ Anhalten";
+  speechSynthesis.speak(u);
 }
 
 /* ------------------------------------------------------------------

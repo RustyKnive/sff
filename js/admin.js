@@ -1767,7 +1767,7 @@ const proposalCount = () => cats.reduce((s, c) => s + c.entries.reduce((n, e) =>
 const regionLinks = id => cats.flatMap(c => c.entries.flatMap(e => e.entry_regions.filter(r => r.region_id === id).map(r => ({ cat:c, e, r }))));
 const regionShort = g => siteUrl() + g.id;   // .htaccess leitet /sff/<id> auf /sff/#/<id> weiter
 // Adressen der Anzeige: Kantone, Kategorien und Seiten teilen sich #/<id>, darum darf keine doppelt vorkommen
-const PAGE_SLUGS = ["lernapp", "auftraege", "spiele", "jetzt", "quiz", "pdf", "hilfe", "einstellungen", "admin", "copyright", "schweiz"];
+const PAGE_SLUGS = ["lernapp", "auftraege", "spiele", "jetzt", "quiz", "pdf", "hilfe", "einstellungen", "admin", "copyright", "schweiz", "zeitstrahl", "vergleich", "abzeichen"];
 function slugTaken(id){
   if(PAGE_SLUGS.includes(id)) return "Diese Adresse braucht schon eine Seite.";
   if(findCat(id)) return "Es gibt schon eine Kategorie mit dieser ID.";

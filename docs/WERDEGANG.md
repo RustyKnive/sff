@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.19.0 (Datenbank 25) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 8. Oktober 2026 · Version 2.20.0 (Datenbank 25) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 49 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen)
 
 ---
@@ -508,6 +508,22 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Näfelser Fahrt, Bergsturz von Elm, Stimmrecht ab 16) und je 4 für Graubünden, St. Gallen, Zürich und Tessin. Die Antwort steht
   jeweils in einer Karte des Kantons; im Kanton erscheinen nur seine Aufträge, in der ganzen Schweiz alle.
 
+### 8. Oktober – Spielwiese: Menü neu gegliedert und sechs neue Möglichkeiten (Version 2.20.0)
+
+- Wunsch des Users: Die App ist eine Spielwiese für Möglichkeiten; alle Ideen umsetzen, übersichtlich gegliedert und mit guter
+  Menüführung, ohne überladen zu wirken. Ein Teil darf als Pendenz warten.
+- **Menü in Gruppen:** Lernen (LernApp, Forscheraufträge, Abzeichen), Spielen (Spiele), Entdecken (Jahreskalender, Zeitstrahl,
+  Kantone vergleichen), Für den Unterricht (Quiz, PDF). Hilfe, Einstellungen, Admin und Copyright stehen klein in einer Zeile am Schluss.
+- **Vorlesen:** Knopf «Vorlesen» auf der Textseite der Grossansicht (Sprachausgabe des Browsers, ohne Kosten).
+- **Jahreskalender** (bisher «Jetzt zu sehen»): mit ‹ › durch alle Monate; zuoberst Gedenktage, Termine und Bräuche aus den
+  Steckbriefen (z. B. Fridolinstag im März, Näfelser Fahrt im April, Landsgemeinde im Mai, Morgarten im November).
+- **Zeitstrahl:** Geschichte und Politik nach Jahr von 1291 bis 2011, mit Kürzel des Kantons; im Kanton nur seine Ereignisse.
+- **Kantone vergleichen:** zwei Kantone wählen, pro Kategorie «in beiden», «nur hier», «nur dort».
+- **Abzeichen:** Bronze, Silber und Gold für richtige Begriffe, gelöste Aufträge, Spiele und Tage in Folge, dazu ein Abzeichen
+  pro Kanton (mit Kantonszeichen) und die ganz gelernten Kategorien. Gezählt wird aus dem, was das Gerät schon speichert.
+- **LernApp leicht:** pro Lernsession wählbar, immer aus 4 Namen auswählen statt tippen, gut für die Mittelstufe.
+- Getestet mit den echten Daten im Testbrowser (alle neuen Seiten, Vorlesen-Knopf, leichte Lernsession).
+
 ---
 
 ## Versionen
@@ -546,6 +562,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.17.1 | 8.10.2026 | 16 neue Glarner Einträge (Glärnisch, Klöntalersee, Linth, Freulerpalast, Landsgemeinde, Lochsite u. a.) und 6 weitere Vorschläge für Glarus; die ganze Schweiz bekommt oben ein rot-weisses Band wie die Kantone ihr Wappenband (Datenbank-Version 23) |
 | 2.18.0 | 8.10.2026 | Neue Kategorien Spezialitäten, Geschichte und Politik mit je 16 Einträgen aus der ganzen Schweiz und aus Glarus; Landsgemeinde zu Politik verschoben (Datenbank-Version 24) |
 | 2.19.0 | 8.10.2026 | Kantone Graubünden, St. Gallen, Zürich und Tessin mit Kantonszeichen und vorgeschlagenen Einträgen; 24 neue Forscheraufträge (8 für Glarus, je 4 für die neuen Kantone) (Datenbank-Version 25) |
+| 2.20.0 | 8.10.2026 | Menü in Gruppen (Lernen, Spielen, Entdecken, Für den Unterricht); neu Vorlesen, Jahreskalender mit Gedenktagen und Bräuchen, Zeitstrahl, Kantone vergleichen, Abzeichen und leichte LernApp |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -620,5 +637,14 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
   - [ ] Kantone, Verwaltung: Vorschläge bestätigen und entfernen, Hinweis ändern, Kantonszeichen hochladen, Plakat drucken (mit echter Anmeldung)
   - [ ] Kantone: auf dem Handy den Kanton wechseln, LernApp-Session im Kanton anlegen
 
+- **Pendenzen der Spielwiese** (vorgemerkt am 8. Oktober 2026, noch nicht umgesetzt):
+  - [ ] **Einfacher Lesemodus:** pro Eintrag eine Kurzfassung in einfacher Sprache (Mittelstufe, Deutsch als Zweitsprache), umschaltbar; braucht ein neues Feld und Texte für alle Einträge (mit Claude über claude.ai).
+  - [ ] **Entdeckungskarte:** Einträge mit Koordinaten auf einer Karte (z. B. Glarnerland), daraus Exkursionen und Posten mit QR-Plakaten; braucht Koordinaten pro Eintrag und eine Kartenquelle (swisstopo), Datenschutz und CSP klären.
+  - [ ] **Abstimmungs-Simulation:** Klasse stimmt wie an der Landsgemeinde ab, Volks- und Ständemehr an einem Beispiel durchrechnen (Seite für den Beamer).
+  - [ ] **Steckbriefe vorschlagen:** Lernende schlagen einen Eintrag vor (ohne Namen, wie die Textmeldungen), die Lehrperson übernimmt ihn in der Verwaltung.
+  - [ ] **Forscheraufträge draussen:** Aufträge mit Messungen (Föhn: Temperatur und Wind, Bach: Lebensraum der Bachforelle) und eigener Beobachtung.
+  - [ ] **Themenpfad Klimawandel:** Gletscherrückgang, neue Arten (Kastaniengallwespe, Japankäfer), Hitzewellen als zusammenhängende Aufträge mit Rechnen und Begründen.
+  - [ ] **Abzeichen «Entdecker»:** angesehene Karten zählen (heute zählt nur, was die LernApp, Aufträge und Spiele speichern).
+  - [ ] **Vorlesen in LernApp und Aufträgen:** Frage bzw. Merksatz vorlesen lassen.
 - Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).
