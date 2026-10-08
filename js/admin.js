@@ -25,6 +25,17 @@ function msg(text, isErr){
   clearTimeout(msgTimer);
   msgTimer = setTimeout(() => { m.hidden = true; }, isErr ? 7000 : 2500);
 }
+// Koordinaten aus dem Feld «Ort auf der Entdeckungskarte»: «47.0410, 9.0670», auch mit Leerzeichen, ° oder N/E und in
+// vertauschter Reihenfolge. Leer = null, ungültig = "bad". Bereich wie die Datenbank (028): etwa die Schweiz mit Rand.
+const GEO_HINT = "Koordinaten bitte als Breite, Länge in Grad, z. B. «47.0410, 9.0670» (Bereich Schweiz).";
+function parseGeo(text){
+  const n = (String(text).match(/-?\d+(?:[.,]\d+)?/g) || []).map(s => +s.replace(",", "."));
+  if(!String(text).trim()) return null;
+  if(n.length !== 2) return "bad";
+  const [lat, lon] = n[0] < n[1] ? [n[1], n[0]] : n;
+  const ok = lat >= 45 && lat <= 48.5 && lon >= 5 && lon <= 11.5;
+  return ok ? [Math.round(lat * 1e5) / 1e5, Math.round(lon * 1e5) / 1e5] : "bad";
+}
 async function must(p){
   const { data, error } = await p;
   if(error) throw new Error(error.message);
@@ -1165,6 +1176,16 @@ function renderEntry(cat, entry){
       <p class="hint">Mit Claude ausgefüllt: Die Bilder werden beim Anlegen übernommen. Sonst nach dem Anlegen hochladen.</p>
       </details>` : ""}
 
+      <details class="sec" ${e.lat != null ? "open" : ""}><summary>Ort auf der Entdeckungskarte</summary>
+      <p class="hint">Nur für Einträge mit festem Ort (Berg, See, Bauwerk, Ereignis). Koordinaten in Grad, z. B. «47.0410, 9.0670».
+        Auf map.geo.admin.ch mit Rechtsklick (Handy: lange drücken) auf den Ort, dann die Zeile «WGS 84» kopieren. Leer = nicht auf der Karte.</p>
+      <div class="row">
+        <label>Koordinaten (Breite, Länge) <input type="text" name="geo" inputmode="decimal" placeholder="47.0410, 9.0670"
+          value="${e.lat != null ? esc(e.lat + ", " + e.lon) : ""}"></label>
+      </div>
+      <p><a id="geoCheck" target="_blank" rel="noopener" href="#">Auf der Karte prüfen ↗</a></p>
+      </details>
+
       <details class="sec"><summary>Online-Ersatz und Suchbegriffe</summary>
       <p class="hint">Gilt, solange ein Bildplatz kein eigenes Bild hat, und für «Fehlende Bilder übernehmen» und die Vorschläge (↻).</p>
       <label>Englischer Wikipedia-Artikel für das Hauptbild (leer = ${cat.latin ? "lateinischer Name" : "Name"})
@@ -1217,12 +1238,22 @@ function renderEntry(cat, entry){
     render();
   });
 
+  // Ort auf der Entdeckungskarte (028): «Auf der Karte prüfen» zeigt die eingetragenen Koordinaten auf map.geo.admin.ch
+  $("geoCheck").addEventListener("click", ev => {
+    const g = parseGeo(F.geo.value);
+    if(!g || g === "bad"){ ev.preventDefault(); msg(g ? GEO_HINT : "Zuerst Koordinaten eintragen.", true); return; }
+    ev.currentTarget.href = "https://map.geo.admin.ch/?lang=de&swisssearch=" + g.join(",");
+  });
+
   form.addEventListener("submit", async ev => {
     ev.preventDefault();
+    const geo = parseGeo(F.geo.value);
+    if(geo === "bad"){ F.geo.focus(); msg(GEO_HINT, true); return; }
     const row = {
       category_id:cat.id,
       name:F.name.value.trim(), subtitle:F.subtitle.value.trim(), description:F.description.value.trim(),
       simple:F.simple.value.trim(),
+      lat:geo ? geo[0] : null, lon:geo ? geo[1] : null,
       visible:F.visible.checked,
       facts:[...facts.querySelectorAll(".fact")]
         .map(f => ({ k:f.querySelector("[data-k]").value.trim(), v:f.querySelector("[data-v]").value.trim() }))

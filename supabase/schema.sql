@@ -68,6 +68,12 @@ create table if not exists public.entries (
   sound_path   text,
   sound_page   text constraint entries_sound_page_http check (sound_page is null or sound_page ~* '^https?://'),
   sound_file   text,
+  -- Kurzfassung in einfacher Sprache (026)
+  simple       text not null default '' constraint entries_simple_len check (char_length(simple) <= 400),
+  -- Ort auf der Entdeckungskarte in Grad (WGS84), beide leer = nicht auf der Karte (028)
+  lat          double precision,
+  lon          double precision,
+  constraint entries_geo_check check ((lat is null and lon is null) or (lat between 45.0 and 48.5 and lon between 5.0 and 11.5)),
   sort         integer not null default 0,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()

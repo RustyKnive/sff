@@ -741,3 +741,46 @@ ul.game-review li{margin:4px 0}
 .task-state{flex:0 0 28px;display:grid;place-items:center;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700}
 .task-row.done .task-state{background:var(--accent);color:var(--card)}
 @media (max-width:560px){ .task-bar-label{flex-basis:100%} .task-row{flex-wrap:wrap} .task-row > div{flex-basis:calc(100% - 40px)} .task-row button{margin-left:40px} }
+/* Entdeckungskarte (#/karte, seit 2.23.0). Die Punkte haben feste Farben pro Kategorie, weil sie auf der Landeskarte liegen
+   (wie die Fortschrittsringe auf den Bildern); Rand weiss für den Kontrast auf jedem Kartenhintergrund. */
+.page > .map,.page > #mapList{max-width:none}
+.map{position:relative;height:min(62vh,620px);min-height:320px;border-radius:14px;overflow:hidden;background:#e9e6dc;
+  touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;outline-offset:3px}
+.map:active{cursor:grabbing}
+.map-tiles,.map-pins{position:absolute;inset:0}
+.map-tile{position:absolute;left:0;top:0;width:256px;height:256px;max-width:none;pointer-events:none}
+.map-pin,.map-chip,.map-pop{--pin:#555}
+.pin-berge{--pin:#8a5a2b}
+.pin-gewaesser{--pin:#1565c0}
+.pin-naturwunder{--pin:#2e7d32}
+.pin-sehenswuerdigkeiten{--pin:#c62828}
+.pin-geschichte{--pin:#6a3d9a}
+.pin-politik{--pin:#00796b}
+.page button.map-pin:not(.nav):not(.dot){position:absolute;left:-9px;top:-9px;width:18px;height:18px;padding:0;border-radius:50%;
+  background:var(--pin);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.55);cursor:pointer}
+.page button.map-pin.on:not(.nav):not(.dot){left:-13px;top:-13px;width:26px;height:26px;border-width:3px;z-index:1}
+.map-me{position:absolute;left:-8px;top:-8px;width:16px;height:16px;border-radius:50%;background:#1a73e8;border:3px solid #fff;
+  box-shadow:0 0 0 6px rgba(26,115,232,.25)}
+.map-pop{position:absolute;left:0;top:0;z-index:3;width:220px;padding:10px 12px 12px;border-radius:12px;background:var(--card);color:var(--ink);
+  box-shadow:0 6px 20px rgba(0,0,0,.3);cursor:default}
+.map-pop img{display:block;width:100%;height:110px;object-fit:cover;border-radius:8px;margin:0 0 8px}
+.map-pop b{display:block;padding-right:20px}
+.map-pop small{display:block;color:var(--muted);margin:2px 0 8px}
+.page .map-pop button.map-pop-x:not(.nav):not(.dot){position:absolute;right:16px;top:14px;width:26px;height:26px;padding:0;background:var(--card);color:var(--ink);font-size:1.1rem;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.page .map-pop img + b{padding-right:0}
+.map-zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px;z-index:2}
+.page .map-zoom button:not(.nav):not(.dot){width:38px;height:38px;padding:0;border-radius:10px;background:var(--card);color:var(--ink);
+  font-size:1.3rem;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.map-credit{position:absolute;right:4px;bottom:4px;z-index:2;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.85);color:#333;font-size:.72rem}
+.map-note{position:absolute;left:10px;right:58px;top:10px;z-index:2;margin:0;padding:8px 12px;border-radius:10px;background:var(--card);color:var(--ink);font-size:.9rem}
+.map-filter{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.map-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px 4px 8px;border-radius:99px;background:var(--card);font-size:.9rem;cursor:pointer}
+.map-chip::after{content:"";order:-1;width:11px;height:11px;border-radius:50%;background:var(--pin)}
+.map-chip input{margin:0}
+.map-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:12px 0}
+.map-list{columns:2 260px;column-gap:24px;padding-left:1.2em;margin:0 0 1rem}
+.map-list li{break-inside:avoid;margin:0 0 6px}
+.page button.map-go:not(.nav):not(.dot){padding:0;background:none;color:var(--accent);font-weight:700;text-align:left;border-radius:0}
+.map-list small{display:block;color:var(--muted)}
+.map-link{margin:.6rem 0 0}
+.map-link a{font-weight:600;color:var(--accent)}

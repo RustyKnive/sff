@@ -18,7 +18,7 @@ let PATHS = [];     // Themenpfade (026)
    reg: Kantone des Eintrags mit Hinweis { glarus:"Höchster Gipfel …" } (022) */
 async function loadCats(){
   const select = "id,name,description,goal,latin,labels,cover_entry_id,"
-    + "entries!entries_category_id_fkey(id,name,subtitle,description,simple,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
+    + "entries!entries_category_id_fkey(id,name,subtitle,description,simple,lat,lon,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
     + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited),entry_regions(region_id,note)),"
     + "tasks(id,entry_id,kind,question,guess,answer_type,choices,answer,hint,explanation,sort)";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
@@ -35,6 +35,7 @@ async function loadCats(){
       id:e.id, n:e.name, s:e.subtitle, t:e.description, e:e.simple || "", f:e.facts || [],
       q:e.search_terms || [], wp:e.wp, lb:e.labels, cf:e.confusions || [],
       snd:e.sound_path ? { src:publicUrl(e.sound_path), page:e.sound_page, file:e.sound_file } : null,
+      geo:e.lat != null && e.lon != null ? [e.lat, e.lon] : null,
       reg:Object.fromEntries((e.entry_regions || []).map(r => [r.region_id, r.note || ""])),
       img:[1,2,3,4].map(p => {
         const i = e.images.find(x => x.position === p);
@@ -213,6 +214,7 @@ function slidesHtml(cat, item, labels, big){
       <p class="desc" data-desc="${esc(item.id)}">${esc(descOf(item))}</p>
       <dl>${facts}</dl>
       ${REGION && item.reg[REGION.id] ? `<p class="region-note"><b>Im ${esc(REGION.title)}:</b> ${esc(item.reg[REGION.id])}</p>` : ""}
+      ${big && item.geo ? `<p class="map-link"><a href="#/karte/${esc(cat.id)}/${esc(slugify(item.n))}">📍 Auf der Karte zeigen</a></p>` : ""}
       ${item.snd ? `<p class="sound"><button class="sound-btn" data-sound="${esc(item.snd.src)}">▶ Stimme anhören</button>
         ${safeUrl(item.snd.page) ? `<a href="${esc(item.snd.page)}" target="_blank" rel="noopener">Quelle</a>` : ""}</p>` : ""}
       ${item.cf.length ? `<div class="confuse"><b>Nicht verwechseln mit:</b>${item.cf.map(c => {
@@ -809,6 +811,7 @@ const PAGES = {
   pfade:{ title:"Themenpfade", intro:"Ein Thema Schritt für Schritt: Karten ansehen, nachdenken, Aufträge lösen." },
   abstimmung:{ title:"Abstimmung spielen", intro:"Wie an der Landsgemeinde das Mehr schätzen und ausprobieren, wie Volk und Stände entscheiden." },
   vergleich:{ title:"Kantone vergleichen", intro:"Was zwei Kantone gemeinsam haben und was nur einer kennt." },
+  karte:{ title:"Entdeckungskarte", intro:"Orte aus den Karten auf der Landeskarte von swisstopo: antippen, ansehen, hingehen." },
   quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
   hilfe:{ title:"Hilfe", intro:"Was die Seite kann, womit man beginnt, und eine Anleitung zu allen Möglichkeiten." },
@@ -2056,8 +2059,8 @@ function render(){
   const saved = findRegion(savedRegion());
   if(!id && REGION !== saved) setRegion(saved?.id, false);
   const [first, second] = id.split("/");
-  // #/spiele/<spiel> springt zum Spiel, #/pfade/<id> öffnet einen Themenpfad
-  const pageId = PAGES[id] ? id : first === "spiele" ? "spiele" : first === "pfade" ? "pfade" : null;
+  // #/spiele/<spiel> springt zum Spiel, #/pfade/<id> öffnet einen Themenpfad, #/karte/<kat>/<eintrag> zeigt einen Ort
+  const pageId = PAGES[id] ? id : ["spiele", "pfade", "karte"].includes(first) ? first : null;
   const page = pageId && PAGES[pageId];
   // Direktlink (z. B. QR-Code) auf eine Kategorie oder einen Eintrag, den es im gewählten Kanton nicht gibt:
   // vorübergehend die ganze Schweiz zeigen (die gespeicherte Wahl bleibt)
@@ -2090,6 +2093,7 @@ function render(){
     if(pageId === "abzeichen") renderBadges();
     if(pageId === "pfade") renderPaths(second);
     if(pageId === "abstimmung") renderVote();
+    if(pageId === "karte") renderMap(second, id.split("/")[2]);
     lastCat = null;
     return;
   }
@@ -2715,6 +2719,249 @@ function renderCompare(){
 }
 cmpA.addEventListener("change", renderCompare);
 cmpB.addEventListener("change", renderCompare);
+
+/* ------------------------------------------------------------------
+   ENTDECKUNGSKARTE (#/karte, #/karte/<kat>/<eintrag>, seit 2.23.0): Einträge mit Ort (entries.lat/lon, 028) als Punkte auf
+   der Landeskarte von swisstopo (Web-Mercator-Kacheln zu 256 px). Eigene kleine Kartenansicht ohne Bibliothek: ganze
+   Zoomstufen, Ziehen, Mausrad, zwei Finger, Doppelklick, Tasten. Im Kanton nur seine Orte (CATS).
+   «Wo bin ich?» fragt den Standort im Browser ab; er bleibt im Speicher der Seite und sortiert nur die Liste.
+------------------------------------------------------------------- */
+const MAP_TILE = (z, x, y) => `https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/${z}/${x}/${y}.jpeg`;
+const MAP_MIN = 7, MAP_MAX = 17, MAP_NEAR = 15;
+const mapEl = document.getElementById("map"), mapTiles = document.getElementById("mapTiles"),
+  mapPins = document.getElementById("mapPins"), mapPop = document.getElementById("mapPop"),
+  mapNote = document.getElementById("mapNote"), mapFilter = document.getElementById("mapFilter"),
+  mapList = document.getElementById("mapList");
+const map = { z:8, cx:0, cy:0, places:[], off:new Set(), me:null, pop:null, tiles:new Map(), failed:0, loaded:0 };
+// Web Mercator: Grad → Anteil der Weltbreite (0–1); mal 256 · 2^z ergibt Pixel bei Zoomstufe z
+const mapUnit = (lat, lon) => {
+  const r = lat * Math.PI / 180;
+  return [(lon + 180) / 360, (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2];
+};
+const mapSize = () => 256 * 2 ** map.z;
+const mapShown = () => map.places.filter(p => !map.off.has(p.cat.id));
+// Entfernung in km (Haversine)
+function mapKm([a, b], [c, d]){
+  const r = Math.PI / 180, h = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(h));
+}
+const mapKmText = km => km < 10 ? km.toFixed(1).replace(".", ",") + " km" : Math.round(km) + " km";
+
+function renderMap(catId, slug){
+  map.places = CATS.flatMap(cat => cat.items.filter(it => it.geo).map(item => ({ cat, item, u:mapUnit(...item.geo) })));
+  const cats = [...new Set(map.places.map(p => p.cat))];
+  mapFilter.innerHTML = cats.length > 1 ? cats.map(c => `<label class="map-chip pin-${esc(c.id)}"><input type="checkbox"
+    value="${esc(c.id)}"${map.off.has(c.id) ? "" : " checked"}> ${esc(c.name)}</label>`).join("") : "";
+  const has = map.places.length > 0;
+  mapEl.hidden = !has;
+  document.querySelector("#page-karte .map-tools").hidden = !has;
+  if(!has){
+    mapList.innerHTML = `<p>Hier gibt es noch keine Orte auf der Karte${REGION ? ` im ${esc(REGION.title)}` : ""}.</p>`;
+    return;
+  }
+  const hit = catId && map.places.find(p => p.cat.id === catId && slugify(p.item.n) === slug);
+  if(hit && map.off.delete(hit.cat.id)) mapFilter.querySelector(`input[value="${hit.cat.id}"]`).checked = true;
+  map.pop = null;
+  mapPop.hidden = true;
+  mapBuildPins();
+  if(hit){ mapCenter(hit.item.geo, 13); mapShowPop(hit); } else mapFit();
+  mapListRender();
+}
+// Alle sichtbaren Orte einpassen: grösste Zoomstufe, bei der sie mit Rand Platz haben
+function mapFit(){
+  const list = mapShown();
+  if(!list.length) return mapCenter([46.8, 8.2], 8);
+  const xs = list.map(p => p.u[0]), ys = list.map(p => p.u[1]);
+  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const W = mapEl.clientWidth - 60, H = mapEl.clientHeight - 60;
+  let z = 13;
+  while(z > MAP_MIN && ((x1 - x0) * 256 * 2 ** z > W || (y1 - y0) * 256 * 2 ** z > H)) z--;
+  map.z = z;
+  map.cx = (x0 + x1) / 2 * mapSize(); map.cy = (y0 + y1) / 2 * mapSize();
+  mapDraw();
+}
+function mapCenter(geo, z){
+  map.z = Math.max(MAP_MIN, Math.min(MAP_MAX, z));
+  const u = mapUnit(...geo);
+  map.cx = u[0] * mapSize(); map.cy = u[1] * mapSize();
+  mapDraw();
+}
+function mapZoom(dz, at){
+  const z = Math.max(MAP_MIN, Math.min(MAP_MAX, map.z + dz));
+  if(z === map.z) return;
+  const W = mapEl.clientWidth, H = mapEl.clientHeight, [ax, ay] = at || [W / 2, H / 2], f = 2 ** (z - map.z);
+  // Der Punkt unter dem Mauszeiger bzw. zwischen den Fingern bleibt stehen
+  map.cx = (map.cx - W / 2 + ax) * f - ax + W / 2;
+  map.cy = (map.cy - H / 2 + ay) * f - ay + H / 2;
+  map.z = z;
+  mapDraw();
+}
+function mapBuildPins(){
+  mapPins.innerHTML = mapShown().map(p => `<button type="button" class="map-pin pin-${esc(p.cat.id)}"
+    data-pin="${map.places.indexOf(p)}" title="${esc(p.item.n)}" aria-label="${esc(p.item.n + ", " + p.cat.name)}"></button>`).join("")
+    + (map.me ? `<span class="map-me" title="Du bist hier"></span>` : "");
+}
+function mapDraw(){
+  const W = mapEl.clientWidth, H = mapEl.clientHeight, S = mapSize(), n = 2 ** map.z;
+  map.cx = Math.max(0, Math.min(S, map.cx)); map.cy = Math.max(0, Math.min(S, map.cy));
+  const left = map.cx - W / 2, top = map.cy - H / 2, want = new Set();
+  for(let x = Math.floor(left / 256); x <= Math.floor((left + W) / 256); x++){
+    for(let y = Math.max(0, Math.floor(top / 256)); y <= Math.min(n - 1, Math.floor((top + H) / 256)); y++){
+      if(x < 0 || x >= n) continue;
+      const key = map.z + "/" + x + "/" + y;
+      want.add(key);
+      let img = map.tiles.get(key);
+      if(!img){
+        img = new Image();
+        img.alt = ""; img.className = "map-tile"; img.decoding = "async";
+        img.addEventListener("load", () => { map.loaded++; mapNote.hidden = true; });
+        // Ausserhalb der Schweiz hat swisstopo keine Kacheln; der Hinweis erscheint nur, wenn gar nichts lädt (offline)
+        img.addEventListener("error", () => { img.hidden = true; map.failed++; mapNote.hidden = map.loaded > 0 || map.failed < 3; });
+        img.src = MAP_TILE(map.z, x, y);
+        map.tiles.set(key, img);
+        mapTiles.append(img);
+      }
+      img.style.transform = `translate(${Math.round(x * 256 - left)}px,${Math.round(y * 256 - top)}px)`;
+    }
+  }
+  for(const [key, img] of map.tiles) if(!want.has(key)){ img.remove(); map.tiles.delete(key); }
+  const at = u => `translate(${Math.round(u[0] * S - left)}px,${Math.round(u[1] * S - top)}px)`;
+  for(const b of mapPins.querySelectorAll("[data-pin]")){
+    const p = map.places[+b.dataset.pin];
+    b.style.transform = at(p.u);
+    b.classList.toggle("on", p === map.pop);
+  }
+  const me = mapPins.querySelector(".map-me");
+  if(me) me.style.transform = at(mapUnit(...map.me));
+  if(map.pop){
+    const x = map.pop.u[0] * S - left, y = map.pop.u[1] * S - top;
+    // Über dem Punkt, ohne über den Rand der Karte hinauszuragen
+    const w = mapPop.offsetWidth, h = mapPop.offsetHeight;
+    const px = Math.max(6, Math.min(W - w - 6, x - w / 2)), py = y - h - 18 < 6 ? y + 18 : y - h - 18;
+    mapPop.style.transform = `translate(${Math.round(px)}px,${Math.round(py)}px)`;
+    mapPop.hidden = x < -20 || y < -20 || x > W + 20 || y > H + 20;
+  }
+}
+function mapShowPop(p){
+  map.pop = p;
+  const img = p.item.img[shownSlots(p.item)[0]];
+  mapPop.innerHTML = `<button type="button" class="map-pop-x" aria-label="Schliessen">×</button>
+    ${img ? `<img src="${esc(img.src)}" alt="">` : ""}
+    <b>${esc(p.item.n)}</b><small>${esc(p.cat.name)}${p.item.s ? " · " + esc(p.item.s) : ""}${
+      map.me ? " · " + mapKmText(mapKm(map.me, p.item.geo)) + " entfernt" : ""}</small>
+    <button type="button" class="map-pop-open">Karte ansehen</button>`;
+  mapPop.hidden = false;
+  mapPop.querySelector(".map-pop-x").addEventListener("click", mapHidePop);
+  mapPop.querySelector(".map-pop-open").addEventListener("click", () => openLightbox(p.cat, p.item, 0));
+  mapPop.querySelector("img")?.addEventListener("load", mapDraw);
+  mapDraw();
+}
+function mapHidePop(){ map.pop = null; mapPop.hidden = true; mapDraw(); }
+function mapListRender(){
+  const list = mapShown();
+  const row = p => `<li><button type="button" class="map-go" data-go="${map.places.indexOf(p)}">${esc(p.item.n)}</button>
+    <small>${map.me ? mapKmText(mapKm(map.me, p.item.geo)) + " · " : ""}${esc(p.cat.name)}${p.item.s ? " · " + esc(p.item.s) : ""}</small></li>`;
+  if(map.me){
+    const near = [...list].sort((a, b) => mapKm(map.me, a.item.geo) - mapKm(map.me, b.item.geo)).slice(0, MAP_NEAR);
+    mapList.innerHTML = `<h2>In deiner Nähe</h2><ol class="map-list">${near.map(row).join("")}</ol>`;
+    return;
+  }
+  const byCat = [...new Set(list.map(p => p.cat))];
+  mapList.innerHTML = `<p class="lern-hint">${list.length} Orte. Ein Tipp auf einen Punkt oder einen Namen zeigt den Ort,
+    «Karte ansehen» öffnet Bilder und Steckbrief.</p>` + byCat.map(c => `<h2>${esc(c.name)}</h2>
+    <ul class="map-list">${list.filter(p => p.cat === c).sort((a, b) => a.item.n.localeCompare(b.item.n)).map(row).join("")}</ul>`).join("");
+}
+
+mapPins.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-pin]");
+  if(b) mapShowPop(map.places[+b.dataset.pin]);
+});
+mapList.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-go]");
+  if(!b) return;
+  const p = map.places[+b.dataset.go];
+  mapCenter(p.item.geo, Math.max(map.z, 12));
+  mapShowPop(p);
+  mapEl.scrollIntoView({ behavior:"smooth", block:"center" });
+});
+mapFilter.addEventListener("change", ev => {
+  const id = ev.target.value;
+  if(ev.target.checked) map.off.delete(id); else map.off.add(id);
+  if(map.pop && map.off.has(map.pop.cat.id)) mapHidePop();
+  mapBuildPins(); mapDraw(); mapListRender();
+});
+document.getElementById("mapIn").addEventListener("click", () => mapZoom(1));
+document.getElementById("mapOut").addEventListener("click", () => mapZoom(-1));
+document.getElementById("mapAll").addEventListener("click", () => { mapHidePop(); mapFit(); });
+document.getElementById("mapLocate").addEventListener("click", () => {
+  if(!navigator.geolocation){ toast("Dieses Gerät kann den Standort nicht bestimmen."); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    map.me = [pos.coords.latitude, pos.coords.longitude];
+    mapBuildPins();
+    // Ausserhalb der Schweiz nur die Liste nach Entfernung, die Karte bleibt
+    if(map.me[0] > 45.7 && map.me[0] < 47.9 && map.me[1] > 5.8 && map.me[1] < 10.6) mapCenter(map.me, Math.max(map.z, 11));
+    else mapDraw();
+    mapListRender();
+  }, err => toast(err.code === 1 ? "Standort nicht erlaubt. Du kannst ihn in den Einstellungen des Browsers freigeben."
+    : "Standort nicht gefunden. Versuch es draussen oder später nochmals."), { timeout:15000, maximumAge:60000 });
+});
+// Verschieben mit Maus oder Finger, zwei Finger zoomen
+const mapPts = new Map();
+let mapDrag = null, mapPinch = 0;
+const mapDist = () => { const [a, b] = [...mapPts.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]); };
+const mapAt = ev => { const r = mapEl.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+mapEl.addEventListener("pointerdown", ev => {
+  if(ev.target.closest("button, a, .map-pop")) return;
+  mapEl.setPointerCapture(ev.pointerId);
+  mapPts.set(ev.pointerId, [ev.clientX, ev.clientY]);
+  if(mapPts.size === 1) mapDrag = { x:ev.clientX, y:ev.clientY, moved:false };
+  else { mapDrag = null; mapPinch = mapDist(); }
+});
+mapEl.addEventListener("pointermove", ev => {
+  if(!mapPts.has(ev.pointerId)) return;
+  mapPts.set(ev.pointerId, [ev.clientX, ev.clientY]);
+  if(mapPts.size === 2 && mapPinch){
+    const d = mapDist(), [a, b] = [...mapPts.values()], r = mapEl.getBoundingClientRect();
+    const mid = [(a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top];
+    if(d / mapPinch > 1.5){ mapZoom(1, mid); mapPinch = d; }
+    else if(d / mapPinch < 0.67){ mapZoom(-1, mid); mapPinch = d; }
+  } else if(mapDrag){
+    const dx = ev.clientX - mapDrag.x, dy = ev.clientY - mapDrag.y;
+    if(Math.abs(dx) + Math.abs(dy) > 3) mapDrag.moved = true;
+    map.cx -= dx; map.cy -= dy;
+    mapDrag.x = ev.clientX; mapDrag.y = ev.clientY;
+    mapDraw();
+  }
+});
+const mapUp = ev => {
+  if(!mapPts.delete(ev.pointerId)) return;
+  if(mapPts.size < 2) mapPinch = 0;
+  if(!mapPts.size){
+    if(mapDrag && !mapDrag.moved && ev.type === "pointerup" && map.pop) mapHidePop();
+    mapDrag = null;
+  }
+};
+mapEl.addEventListener("pointerup", mapUp);
+mapEl.addEventListener("pointercancel", mapUp);
+let mapWheelAt = 0;
+mapEl.addEventListener("wheel", ev => {
+  ev.preventDefault();
+  if(Date.now() - mapWheelAt < 250 || !ev.deltaY) return;   // ein Mausrad-Ruck = eine Zoomstufe
+  mapWheelAt = Date.now();
+  mapZoom(ev.deltaY < 0 ? 1 : -1, mapAt(ev));
+}, { passive:false });
+mapEl.addEventListener("dblclick", ev => { if(!ev.target.closest("button, a, .map-pop")) mapZoom(1, mapAt(ev)); });
+mapEl.addEventListener("keydown", ev => {
+  if(ev.target !== mapEl) return;
+  const step = { ArrowLeft:[-80, 0], ArrowRight:[80, 0], ArrowUp:[0, -80], ArrowDown:[0, 80] }[ev.key];
+  if(step){ map.cx += step[0]; map.cy += step[1]; mapDraw(); }
+  else if(ev.key === "+" || ev.key === "=") mapZoom(1);
+  else if(ev.key === "-") mapZoom(-1);
+  else if(ev.key === "Escape" && map.pop) mapHidePop();
+  else return;
+  ev.preventDefault();
+});
+window.addEventListener("resize", () => { if(!document.getElementById("page-karte").hidden && map.places.length) mapDraw(); });
 
 /* ------------------------------------------------------------------
    ABZEICHEN (#/abzeichen, seit 2.20.0): aus dem, was ohnehin auf dem Gerät gespeichert ist (LernApp, Aufträge, Rekorde),

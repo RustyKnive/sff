@@ -232,6 +232,19 @@ sie schrittweise mit Schwarz bzw. Weiss, bis der Kontrast zu Hintergrund, Karten
 zwischen hell und dunkel wird neu gerechnet. Das Kantonszeichen ist eine eigene Zeichnung (SVG in `icons/` oder hochgeladenes
 PNG), kein offizielles Wappen, weil Kantonswappen geschützt sind.
 
+### Entdeckungskarte ohne Kartenbibliothek
+
+Die Karte (seit 2.23.0) zeigt die Landeskarte von swisstopo als Kacheln im Web-Mercator-Raster (256 px, `wmts.geo.admin.ch`, frei
+nutzbar mit Quellenangabe). Eine Bibliothek wie Leaflet hätte die Regel «Anzeige ohne Bibliotheken» gebrochen; die nötigen Teile
+sind klein: Grad in Pixel umrechnen (Mercator-Formel), die sichtbaren Kacheln als Bilder setzen, Punkte darüberlegen, Ziehen und
+Zoomen in ganzen Stufen um den Mauszeiger bzw. die Fingermitte. Ausserhalb der Schweiz liefert swisstopo keine Kacheln; der
+Hinweis «ohne Internet» erscheint darum nur, wenn gar keine Kachel lädt. Die Kacheln laufen nicht über den Offline-Speicher (zu
+viele Daten). Der Standort («Wo bin ich?») kommt aus der Geolocation-Schnittstelle des Browsers und bleibt in der Seite.
+
+Die Koordinaten stehen pro Eintrag in `lat`/`lon` (WGS84). Claude schlug sie vor; ein Abgleich mit der Ortssuche von swisstopo
+(`api3.geo.admin.ch`, SearchServer) zeigte bei kleinen Orten Abweichungen bis 4 km, die 029 korrigiert. Bei neuen Orten darum
+immer auf map.geo.admin.ch prüfen.
+
 ### KI ohne Schnittstelle
 
 Neue Kategorien und Einträge schreibt Claude über **claude.ai im bestehenden Abo**: Die Verwaltung baut einen Auftrag mit

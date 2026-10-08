@@ -4,9 +4,9 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.22.0 (Datenbank 27) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 8. Oktober 2026 · Version 2.23.0 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
-Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe)
+Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23)
 
 ---
 
@@ -65,6 +65,10 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe)
   Quiz und Drucken. Auf der Textseite steht bei manchen Einträgen «Im Kanton Glarus: …». Ein Eintrag kann zu mehreren Kantonen gehören.
   Direkter Einstieg über **je-net.ch/sff/glarus**; die Wahl bleibt auf dem Gerät gespeichert, bis man eine andere trifft.
   Führt ein Direktlink (z. B. QR-Code) zu einem Eintrag ausserhalb des Kantons, zeigt die Seite dafür kurz die ganze Schweiz.
+- **Entdeckungskarte:** Menü → «Entdeckungskarte» zeigt Berge, Seen, Naturwunder, Sehenswürdigkeiten und Orte aus Geschichte und
+  Politik als Punkte auf der Landeskarte von swisstopo (zoomen, verschieben, Kategorien ausblenden, im Kanton nur seine Orte).
+  Ein Punkt zeigt Bild und Name und öffnet die Karte. «Wo bin ich?» sortiert die Orte nach Entfernung; der Standort bleibt auf
+  dem Gerät. Auf der Textseite: «Auf der Karte zeigen».
 - **Anleitung für Lehrpersonen:** Unter Menü → Hilfe zwei PDFs, getrennt für Mittelstufe und Oberstufe: wie man mit der App
   im Unterricht arbeitet, zu jeder Möglichkeit Einsatz, Tipp für die Stufe und Lernziele mit Bezug zum Lehrplan 21, dazu eine
   4-Wochen-Sequenz, Ideen, Differenzierung, die 25 Kategorien mit Lernzielen und häufige Fragen.
@@ -554,6 +558,22 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - Zu finden unter Menü → Hilfe (oben und im Abschnitt «Für Lehrpersonen»). Die Zuordnung zum Lehrplan 21 ist eine Orientierung
   auf Ebene der Kompetenzbereiche; die genauen Kompetenzstufen bitte im Lehrplan nachschlagen.
 
+### 8. Oktober – Entdeckungskarte (Version 2.23.0)
+
+- Pendenz auf Wunsch des Users (Datenbank-Version 29): **Entdeckungskarte** unter Menü → Entdecken. Berge, Seen, Naturwunder,
+  Sehenswürdigkeiten und Orte aus Geschichte und Politik erscheinen als farbige Punkte auf der **Landeskarte von swisstopo**
+  (Entscheid des Users: echte Landeskarte statt eigener Umrisskarte). Ziehen, Zoomen (Mausrad, zwei Finger, + und −), Kategorien
+  ein- und ausblenden; ein Tipp auf einen Punkt zeigt Bild und Name, «Karte ansehen» öffnet den Eintrag. Im Kanton nur seine Orte.
+- **Wo bin ich?** zeigt den eigenen Standort und sortiert die Orte nach Entfernung («In deiner Nähe»). Der Standort bleibt auf
+  dem Gerät. Auf der Textseite jeder Karte mit Ort steht **«Auf der Karte zeigen»**.
+- **85 Orte** (Entscheid des Users: nur feste Orte; Flüsse, Spezialitäten, Tiere und Pflanzen haben keinen festen Punkt).
+  Die Koordinaten schlug Claude vor und glich sie danach mit der Ortssuche von swisstopo ab; 24 wurden dabei korrigiert (029).
+  Nicht in der Ortssuche gefunden und darum noch zu prüfen: Berglistüber, Bundesgericht.
+- Verwaltung: Im Eintrag Abschnitt «Ort auf der Entdeckungskarte» mit den Koordinaten (aus map.geo.admin.ch kopieren) und
+  «Auf der Karte prüfen». Copyright nennt swisstopo als Quelle der Karte.
+- Die Karte braucht Internet (die Kartenbilder kommen direkt von swisstopo); die Liste darunter funktioniert auch offline.
+- Exkursionen und Posten mit QR-Plakaten aus der Karte sind noch offen (QR-Codes pro Eintrag gibt es schon in der Verwaltung).
+
 ---
 
 ## Versionen
@@ -595,6 +615,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.20.0 | 8.10.2026 | Menü in Gruppen (Lernen, Spielen, Entdecken, Für den Unterricht); neu Vorlesen, Jahreskalender mit Gedenktagen und Bräuchen, Zeitstrahl, Kantone vergleichen, Abzeichen und leichte LernApp |
 | 2.21.0 | 8.10.2026 | Einfach lesen (Kurzfassung in einfacher Sprache für alle 421 Einträge), Themenpfade mit «Klimawandel in der Schweiz» (11 Karten, 6 Aufträge), Abstimmung spielen (Landsgemeinde schätzen, Volk und Stände), neue Abzeichen Entdecker, Unterwegs und Pfadfinder (Datenbank-Version 27) |
 | 2.22.0 | 8.10.2026 | Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) mit Lernzielen zu jeder Möglichkeit, verlinkt unter Hilfe |
+| 2.23.0 | 8.10.2026 | Entdeckungskarte: 85 Orte auf der Landeskarte von swisstopo, «Wo bin ich?» mit Liste nach Entfernung, «Auf der Karte zeigen» auf der Textseite, Koordinaten in der Verwaltung (Datenbank-Version 29) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -655,6 +676,8 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `025_kantone_auftraege.sql` | Kantone Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen und 24 Forscheraufträge zu Kantonseinträgen |
 | `026_lesemodus_themenpfade.sql` | Spalte `entries.simple`, Tabelle `paths` (Themenpfade), Pfad Klimawandel mit 5 neuen Aufträgen |
 | `027_einfache_texte.sql` | Kurzfassungen in einfacher Sprache für alle 421 Einträge |
+| `028_karte.sql` | Spalten `entries.lat` und `entries.lon` (Ort auf der Entdeckungskarte), 85 vorgeschlagene Orte |
+| `029_karte_korrekturen.sql` | 24 Orte nach der Ortssuche von swisstopo korrigiert (nur noch nicht angepasste) |
 
 ## Offen und geplant
 
@@ -673,7 +696,8 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
 - **Pendenzen der Spielwiese** (vorgemerkt am 8. Oktober 2026, noch nicht umgesetzt):
   - [x] **Einfacher Lesemodus** (2.21.0): pro Eintrag eine Kurzfassung in einfacher Sprache (Mittelstufe, Deutsch als Zweitsprache), umschaltbar; braucht ein neues Feld und Texte für alle Einträge (mit Claude über claude.ai).
-  - [ ] **Entdeckungskarte:** Einträge mit Koordinaten auf einer Karte (z. B. Glarnerland), daraus Exkursionen und Posten mit QR-Plakaten; braucht Koordinaten pro Eintrag und eine Kartenquelle (swisstopo), Datenschutz und CSP klären.
+  - [x] **Entdeckungskarte** (2.23.0): Einträge mit Koordinaten auf der Landeskarte von swisstopo, «Wo bin ich?», Liste nach Entfernung.
+    Noch offen: daraus Exkursionen und Posten mit QR-Plakaten planen; Berglistüber und Bundesgericht prüfen.
   - [x] **Abstimmungs-Simulation** (2.21.0): Klasse stimmt wie an der Landsgemeinde ab, Volks- und Ständemehr an einem Beispiel durchrechnen (Seite für den Beamer).
   - [ ] **Steckbriefe vorschlagen:** Lernende schlagen einen Eintrag vor (ohne Namen, wie die Textmeldungen), die Lehrperson übernimmt ihn in der Verwaltung.
   - [ ] **Forscheraufträge draussen:** Aufträge mit Messungen (Föhn: Temperatur und Wind, Bach: Lebensraum der Bachforelle) und eigener Beobachtung.

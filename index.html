@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Erlaubte Quellen: nur eigene Dateien (kein eingebetteter Code), das Supabase-Projekt und Wikipedia/Wikimedia (Bild-Fallback) -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://pkiaxvsgplohhvewbgmw.supabase.co https://upload.wikimedia.org https://thumb.wikimedia.org; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org; media-src https://pkiaxvsgplohhvewbgmw.supabase.co; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://pkiaxvsgplohhvewbgmw.supabase.co https://upload.wikimedia.org https://thumb.wikimedia.org https://wmts.geo.admin.ch; connect-src https://pkiaxvsgplohhvewbgmw.supabase.co https://en.wikipedia.org https://commons.wikimedia.org; media-src https://pkiaxvsgplohhvewbgmw.supabase.co; worker-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'none'">
 <title>Natur und Schweiz by toj-apps</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#2f6b3a">
@@ -32,6 +32,7 @@
       <a class="menu-item m-play" href="#/spiele">Spiele</a>
       <p class="menu-head">Entdecken</p>
       <a class="menu-item" href="#/jetzt">Jahreskalender</a>
+      <a class="menu-item" href="#/karte">Entdeckungskarte</a>
       <a class="menu-item" href="#/pfade">Themenpfade</a>
       <a class="menu-item" href="#/zeitstrahl">Zeitstrahl</a>
       <a class="menu-item" href="#/vergleich" id="menuCompare">Kantone vergleichen</a>
@@ -131,6 +132,25 @@
     <select id="cmpB" aria-label="Zweiter Kanton"></select>
   </div>
   <div id="vergleich"></div>
+</section>
+<!-- Entdeckungskarte (#/karte, #/karte/<kat>/<eintrag>, js/index.js renderMap): Orte auf der Landeskarte von swisstopo -->
+<section class="page" id="page-karte" hidden>
+  <div class="map-filter" id="mapFilter"></div>
+  <div class="map" id="map" tabindex="0" aria-label="Karte: ziehen zum Verschieben, Mausrad oder + und − zum Zoomen">
+    <div class="map-tiles" id="mapTiles"></div>
+    <div class="map-pins" id="mapPins"></div>
+    <div class="map-pop" id="mapPop" hidden></div>
+    <div class="map-zoom">
+      <button type="button" id="mapIn" aria-label="Vergrössern">+</button>
+      <button type="button" id="mapOut" aria-label="Verkleinern">−</button>
+      <button type="button" id="mapAll" aria-label="Alle Orte zeigen" title="Alle Orte zeigen">⤢</button>
+    </div>
+    <p class="map-note" id="mapNote" hidden>Ohne Internet lässt sich die Karte nicht laden. Die Liste unten funktioniert trotzdem.</p>
+    <a class="map-credit" href="https://www.swisstopo.admin.ch" target="_blank" rel="noopener">Karte © swisstopo</a>
+  </div>
+  <p class="map-tools"><button type="button" id="mapLocate">📍 Wo bin ich?</button>
+    <span class="lern-hint">Dein Standort wird nur auf diesem Gerät verwendet und nirgends gespeichert.</span></p>
+  <div id="mapList"></div>
 </section>
 <!-- Themenpfade (#/pfade, #/pfade/<id>, js/index.js renderPaths) -->
 <section class="page" id="page-pfade" hidden>
@@ -279,6 +299,19 @@
       <p>Menü → «Themenpfade»: ein Thema Schritt für Schritt, zum Beispiel «Klimawandel in der Schweiz». Jeder Schritt ist eine
         Karte mit einer Frage zum Nachdenken; ein Tipp öffnet sie gross, danach steht ein Häkchen. Am Schluss warten
         Forscheraufträge. Geschafft ist der Pfad, wenn alle Karten angesehen und alle Aufträge gelöst sind.</p>
+    </details>
+    <details>
+      <summary>Entdeckungskarte</summary>
+      <p>Menü → «Entdeckungskarte» zeigt Berge, Seen, Naturwunder, Sehenswürdigkeiten und Orte aus Geschichte und Politik als
+        Punkte auf der Landeskarte von swisstopo. Ziehen verschiebt die Karte, Mausrad, zwei Finger oder + und − zoomen.
+        Ein Tipp auf einen Punkt zeigt Name und Bild, «Karte ansehen» öffnet Bilder und Steckbrief. Oben lassen sich Kategorien
+        aus- und einblenden, im Kanton erscheinen nur seine Orte.</p>
+      <ul>
+        <li><b>Wo bin ich?</b> zeigt deinen Standort und sortiert die Liste nach Entfernung, z. B. für einen Ausflug. Der Standort
+          bleibt auf deinem Gerät.</li>
+        <li><b>Auf der Karte zeigen:</b> Steht auf der Textseite einer Karte, wenn der Eintrag einen Ort hat.</li>
+        <li>Die Karte braucht Internet; die Liste darunter funktioniert auch ohne.</li>
+      </ul>
     </details>
     <details>
       <summary>Zeitstrahl</summary>
@@ -446,6 +479,10 @@
     als «KI-generiert» gekennzeichnet. Bilder ohne Quelle sind eigene Fotos.</p>
   <p>Die Kantonszeichen sind eigene, vereinfachte Zeichnungen nach den Farben und Merkmalen der Wappen. Sie sind keine
     offiziellen Wappen, und die Seite ist kein Angebot der Kantone.</p>
+  <h2>Karte</h2>
+  <p>Die Entdeckungskarte zeigt die Landeskarte des Bundesamts für Landestopografie
+    (<a href="https://www.swisstopo.admin.ch" target="_blank" rel="noopener">© swisstopo</a>), frei nutzbar mit Quellenangabe.
+    Die Kartenbilder lädt dein Gerät direkt von swisstopo.</p>
   <h2>Bildnachweis</h2>
   <div id="credits"></div>
 </section>
