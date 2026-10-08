@@ -2,7 +2,10 @@
    DATEN (aus Supabase, siehe loadCats)
 ------------------------------------------------------------------- */
 const CFG = window.SFF_CONFIG;
-let CATS = [];
+let ALL = [];       // alle Kategorien der ganzen Schweiz
+let CATS = [];      // was gerade gezeigt wird: ALL oder nur die Einträge des gewählten Kantons (regionView)
+let REGIONS = [];   // Kantone mit eigenem Bereich (022)
+let REGION = null;  // gewählter Kanton oder null = ganze Schweiz
 
 /* Kategorien mit Einträgen und Bildern in einer Anfrage laden (REST, ohne Bibliothek)
    und in die Form bringen, mit der der Rest der Seite arbeitet:
@@ -10,11 +13,12 @@ let CATS = [];
    wp Wikipedia-Titel, lb eigene Bildbeschriftungen, img[0..3] eigene Bilder (oder null)
    Bild: src, page, file, fx/fy/z Ausschnitt für die 4:3-Kacheln (null = Mitte, nicht vergrössert),
    edited zugeschnitten (Hinweis im Bildnachweis); cf Verwechslungsgefahr [{name, diff}], snd Tierstimme {src, page, file}
-   Forscheraufträge der Kategorie (021) in tasks, gleich mitgeladen, damit sie auch offline da sind */
+   Forscheraufträge der Kategorie (021) in tasks, gleich mitgeladen, damit sie auch offline da sind
+   reg: Kantone des Eintrags mit Hinweis { glarus:"Höchster Gipfel …" } (022) */
 async function loadCats(){
   const select = "id,name,description,goal,latin,labels,cover_entry_id,"
     + "entries!entries_category_id_fkey(id,name,subtitle,description,facts,search_terms,wp,labels,confusions,sound_path,sound_page,sound_file,"
-    + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited)),"
+    + "images(position,storage_path,source_page,source_file,thumb_x,thumb_y,thumb_zoom,edited),entry_regions(region_id,note)),"
     + "tasks(id,entry_id,kind,question,guess,answer_type,choices,answer,hint,explanation,sort)";
   const url = CFG.url + "/rest/v1/categories?select=" + encodeURIComponent(select)
     + "&order=sort.asc,name.asc&entries.order=sort.asc,name.asc&tasks.order=sort.asc";
@@ -30,6 +34,7 @@ async function loadCats(){
       id:e.id, n:e.name, s:e.subtitle, t:e.description, f:e.facts || [],
       q:e.search_terms || [], wp:e.wp, lb:e.labels, cf:e.confusions || [],
       snd:e.sound_path ? { src:publicUrl(e.sound_path), page:e.sound_page, file:e.sound_file } : null,
+      reg:Object.fromEntries((e.entry_regions || []).map(r => [r.region_id, r.note || ""])),
       img:[1,2,3,4].map(p => {
         const i = e.images.find(x => x.position === p);
         return i ? { src:publicUrl(i.storage_path), page:i.source_page, file:i.source_file,
@@ -40,6 +45,17 @@ async function loadCats(){
       choices:Array.isArray(t.choices) ? t.choices : [], answer:t.answer || "", hint:t.hint || "", expl:t.explanation || "", sort:t.sort }))
   }));
 }
+
+// Kantone (022), sichtbare in ihrer Reihenfolge. Zeichen: «icons/…» = Datei der Website, sonst Pfad im Bucket
+async function loadRegions(){
+  const r = await fetch(CFG.url + "/rest/v1/regions?select=id,name,title,code,intro,color,color2,color3,on_color,emblem&order=sort.asc,name.asc",
+    { headers:{ apikey:CFG.key } });
+  if(!r.ok) throw new Error("HTTP " + r.status);
+  return (await r.json()).map(g => ({ ...g, title:g.title || "Kanton " + g.name,
+    emblem:!g.emblem ? null : g.emblem.startsWith("icons/") ? g.emblem
+      : CFG.url + "/storage/v1/object/public/" + CFG.bucket + "/" + g.emblem.split("/").map(encodeURIComponent).join("/") }));
+}
+const loadAll = () => Promise.all([loadCats(), loadRegions()]);
 
 /* ------------------------------------------------------------------
    VERSIONEN: Website-Version und benötigte Datenbank-Version stehen in js/version.js,
@@ -189,6 +205,7 @@ function slidesHtml(cat, item, labels, big){
       <p class="sub${cat.latin ? " latin" : ""}">${esc(item.s)}</p>
       <p>${esc(item.t)}</p>
       <dl>${facts}</dl>
+      ${REGION && item.reg[REGION.id] ? `<p class="region-note"><b>Im ${esc(REGION.title)}:</b> ${esc(item.reg[REGION.id])}</p>` : ""}
       ${item.snd ? `<p class="sound"><button class="sound-btn" data-sound="${esc(item.snd.src)}">▶ Stimme anhören</button>
         ${safeUrl(item.snd.page) ? `<a href="${esc(item.snd.page)}" target="_blank" rel="noopener">Quelle</a>` : ""}</p>` : ""}
       ${item.cf.length ? `<div class="confuse"><b>Nicht verwechseln mit:</b>${item.cf.map(c => {
@@ -579,6 +596,122 @@ const lbZoom = zoomable(lightbox, {
 });
 
 /* ------------------------------------------------------------------
+   KANTONE (022): ein Bereich pro Kanton. Gewählt ist ein Kanton (Adresse #/glarus bzw. /sff/glarus, Knopf im Kopf)
+   oder die ganze Schweiz; die Wahl bleibt auf diesem Gerät (localStorage «sff-kanton»), bis jemand anders wählt.
+   Im Kanton zeigen alle Teile der Seite (Kategorien, Suche, LernApp, Spiele, Aufträge, Quiz, Druck) nur seine Einträge:
+   CATS ist dann eine gefilterte Kopie von ALL (regionView), Kategorien ohne Einträge fallen weg.
+   Erscheinungsbild: Farben aus dem Wappen als CSS-Variablen (applyBrand), Kantonszeichen im Kopf.
+------------------------------------------------------------------- */
+const REGION_KEY = "sff-kanton";
+const views = new Map();   // gefilterte Kategorien pro Kanton (bei neuen Daten verworfen)
+function regionView(id){
+  if(!id) return ALL;
+  if(!views.has(id)) views.set(id, ALL.map(c => {
+    const items = c.items.filter(it => id in it.reg);
+    if(!items.length) return null;
+    const ids = new Set(items.map(it => it.id));
+    return { ...c, items, cover:Math.max(0, items.indexOf(c.items[c.cover])), tasks:c.tasks.filter(t => ids.has(t.entry)) };
+  }).filter(Boolean));
+  return views.get(id);
+}
+const findRegion = id => REGIONS.find(g => g.id === String(id || "").toLowerCase()) || null;
+function savedRegion(){ try{ return localStorage.getItem(REGION_KEY); }catch(e){ return null; } }
+// Kanton wählen (null = ganze Schweiz); save = false gilt nur bis zum Neuladen (Direktlink auf einen Eintrag ausserhalb)
+function setRegion(id, save = true){
+  REGION = findRegion(id);
+  if(save) try{ if(REGION) localStorage.setItem(REGION_KEY, REGION.id); else localStorage.removeItem(REGION_KEY); }catch(e){}
+  CATS = regionView(REGION?.id);
+  catCards.clear();
+  overviewCards = null;
+  dailyExtra = null;
+  applyBrand();
+}
+
+// Farben: Schrift und Knöpfe in der Kantonsfarbe müssen auf Hintergrund und Karten lesbar sein (WCAG AA, 4,5:1).
+// Darum wird die Farbe bei Bedarf abgedunkelt (heller Modus) bzw. aufgehellt (dunkler Modus).
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const rgbHex = c => "#" + c.map(v => Math.round(v).toString(16).padStart(2, "0")).join("");
+const mixRgb = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t);
+const luminance = c => {
+  const [r, g, b] = c.map(v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+  return .2126 * r + .7152 * g + .0722 * b;
+};
+const contrast = (a, b) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p); return (x + .05) / (y + .05); };
+function readable(color, bgs){
+  const c = hexRgb(color), to = luminance(bgs[0]) < .2 ? [255, 255, 255] : [0, 0, 0];
+  for(let t = 0; t <= 1; t += .05){ const m = mixRgb(c, to, t); if(bgs.every(b => contrast(m, b) >= 4.5)) return rgbHex(m); }
+  return rgbHex(to);
+}
+const darkMode = matchMedia("(prefers-color-scheme: dark)");
+const BRAND_PROPS = ["--accent", "--accent-soft", "--region", "--region-2", "--region-3", "--on-region"];
+function applyBrand(){
+  const root = document.documentElement;
+  BRAND_PROPS.forEach(p => root.style.removeProperty(p));   // zuerst die Grundfarben aus css/basis.css lesen
+  document.body.classList.toggle("region", !!REGION);
+  document.querySelector('meta[name="theme-color"]').content = REGION ? REGION.color : "#2f6b3a";
+  searchEl.placeholder = REGION ? `Suchen im ${REGION.title}: Name oder lateinischer Name` : "Suchen: Name oder lateinischer Name";
+  showRegionSwitch();
+  if(!REGION) return;
+  const css = getComputedStyle(root);
+  const bg = hexRgb(css.getPropertyValue("--bg").trim()), card = hexRgb(css.getPropertyValue("--card").trim());
+  const soft = mixRgb(hexRgb(REGION.color), card, darkMode.matches ? .8 : .88);
+  root.style.setProperty("--accent-soft", rgbHex(soft));
+  root.style.setProperty("--accent", readable(REGION.color, [bg, card, soft]));
+  root.style.setProperty("--region", REGION.color);
+  root.style.setProperty("--region-2", REGION.color2);
+  root.style.setProperty("--region-3", REGION.color3);
+  root.style.setProperty("--on-region", REGION.on_color);
+}
+darkMode.addEventListener("change", () => { if(REGION) applyBrand(); });
+
+// Knopf im Kopf: zeigt den gewählten Kanton (bzw. «Ganze Schweiz») und klappt die Auswahl auf
+const regionWrap = document.getElementById("regionWrap");
+const regionBtn = document.getElementById("regionBtn");
+const regionMenu = document.getElementById("regionMenu");
+const SWISS = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#d52b1e"/><path fill="#fff" d="M13 6h6v7h7v6h-7v7h-6v-7H6v-6h7z"/></svg>`;
+const regionIcon = g => g ? (g.emblem ? `<img src="${esc(g.emblem)}" alt="">` : `<span class="region-code">${esc(g.code || g.name.slice(0, 2).toUpperCase())}</span>`) : SWISS;
+function showRegionSwitch(){
+  regionWrap.hidden = !REGIONS.length;
+  regionBtn.innerHTML = `${regionIcon(REGION)}<span>${esc(REGION ? REGION.title : "Ganze Schweiz")}</span><small aria-hidden="true">▾</small>`;
+  regionBtn.title = "Kanton wählen: nur Einträge aus diesem Kanton zeigen, oder die ganze Schweiz";
+  regionMenu.innerHTML = [null, ...REGIONS].map(g => `<button type="button" class="region-item${g === REGION ? " current" : ""}"
+      data-region="${g ? esc(g.id) : "schweiz"}" ${g === REGION ? 'aria-current="true"' : ""}>${regionIcon(g)}
+      <span>${esc(g ? g.title : "Ganze Schweiz")}<small>${g ? `nur Einträge aus dem ${esc(g.title)}` : "alle Einträge"}</small></span></button>`).join("")
+    + `<p class="region-hint">Die Wahl bleibt auf diesem Gerät gespeichert.</p>`;
+}
+function setRegionMenu(open){
+  regionMenu.hidden = !open;
+  regionBtn.setAttribute("aria-expanded", open);
+}
+regionBtn.addEventListener("click", () => setRegionMenu(regionMenu.hidden));
+regionMenu.addEventListener("click", e => {
+  const b = e.target.closest("[data-region]");
+  if(!b) return;
+  setRegionMenu(false);
+  const id = b.dataset.region === "schweiz" ? null : b.dataset.region;
+  if((REGION?.id || null) === id && savedRegion() === id) return;
+  setRegion(id);
+  searchEl.value = "";
+  // In der Kategorie bleiben, wenn es sie im neuen Bereich gibt, sonst zur Übersicht
+  const first = location.hash.replace(/^#\/?/, "").split("/")[0];
+  if(first && !PAGES[first] && first !== "spiele" && first !== "jetzt" && !CATS.some(c => c.id === first)) location.hash = "#/";
+  else render();
+  toast(REGION ? `${REGION.title}: ${CATS.reduce((n, c) => n + c.items.length, 0)} Einträge` : "Ganze Schweiz");
+});
+document.addEventListener("click", e => { if(!regionMenu.hidden && !e.target.closest(".region-wrap")) setRegionMenu(false); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && !regionMenu.hidden){ setRegionMenu(false); regionBtn.focus(); } });
+
+// Startseite im Kanton: Zeichen, Name und Einleitung
+function showRegionHero(){
+  const el = document.getElementById("regionHero");
+  el.hidden = !REGION;
+  if(!REGION) return;
+  const n = CATS.reduce((s, c) => s + c.items.length, 0);
+  el.innerHTML = `${REGION.emblem ? `<img src="${esc(REGION.emblem)}" alt="">` : ""}
+    <div><b>${esc(REGION.title)}</b><span>${esc(REGION.intro || "")} ${n} Einträge in ${CATS.length} Kategorien.</span></div>`;
+}
+
+/* ------------------------------------------------------------------
    ANSICHTEN: Übersicht und Kategorie
 ------------------------------------------------------------------- */
 const grid = document.getElementById("grid");
@@ -626,7 +759,7 @@ const PAGES = {
 // zugeschnittene Bilder bekommen einen Hinweis (CC-Lizenzen verlangen ihn).
 const ownSource = i => (i.file || "").trim() || "eigenes Foto";
 function buildCredits(){
-  document.getElementById("credits").innerHTML = CATS.map(cat => `
+  document.getElementById("credits").innerHTML = ALL.map(cat => `
     <h3>${esc(cat.name)}</h3>
     <ul class="credits">${cat.items.map(it => {
       const parts = it.img.map((i, k) => {
@@ -761,7 +894,7 @@ async function printCategory(cat, mode = "text", chosen = cat.items){
   btn.disabled = false;
   // Der Titel wird im Druckdialog zum Dateinamen des PDFs
   const oldTitle = document.title;
-  document.title = "Natur und Schweiz – " + title;
+  document.title = "Natur und Schweiz – " + (REGION ? REGION.name + " – " : "") + title;
   window.addEventListener("afterprint", () => { document.title = oldTitle; printBox.replaceChildren(); }, { once:true });
   window.print();
 }
@@ -817,17 +950,21 @@ function lernSave(){
   lernStore.active = lern ? lern.id : null;
   try{ localStorage.setItem(LERN_KEY, JSON.stringify(lernStore)); }catch(e){}
 }
-// Name einer Session aus ihren Kategorien, z. B. «Bäume, Pilze» oder «Bäume, Pilze, Vögel +2»
+// Kategorien einer Session: Eine Session gehört zu einem Kanton (region, 022) oder zur ganzen Schweiz (ohne region)
+// und behält ihre Einträge, auch wenn gerade ein anderer Bereich gewählt ist
+const lernCats = s => regionView(findRegion(s.region)?.id);
+// Name einer Session aus ihren Kategorien, z. B. «Bäume, Pilze» oder «Glarus: Bäume, Pilze, Vögel +2»
 function lernName(s){
-  const names = s.cats.map(id => CATS.find(c => c.id === id)?.name).filter(Boolean);
-  return names.length > 3 ? names.slice(0, 3).join(", ") + " +" + (names.length - 3) : names.join(", ") || "(Kategorien entfernt)";
+  const names = s.cats.map(id => lernCats(s).find(c => c.id === id)?.name).filter(Boolean);
+  const where = s.region && findRegion(s.region) ? findRegion(s.region).name + ": " : "";
+  return where + (names.length > 3 ? names.slice(0, 3).join(", ") + " +" + (names.length - 3) : names.join(", ") || "(Kategorien entfernt)");
 }
 // Was eine Session heute anbietet, ohne etwas zu verändern: fällige und neue Begriffe (neue höchstens so viele, wie heute noch dazukommen)
 function lernToday(s){
   const now = Date.now(), today = startOfToday();
   let due = 0, neu = 0, total = 0, richtig = 0;
   for(const id of s.cats){
-    for(const it of CATS.find(c => c.id === id)?.items || []){
+    for(const it of lernCats(s).find(c => c.id === id)?.items || []){
       const c = s.cards[it.id];
       total++;
       if(!c || c.box === 0) neu++;
@@ -848,7 +985,7 @@ const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); retur
 
 // Karten mit den aktuellen Einträgen abgleichen: neue warten als «neu» (Fach 0), verschwundene fallen weg
 function lernSync(){
-  const items = lern.cats.map(id => CATS.find(c => c.id === id)).filter(Boolean)
+  const items = lern.cats.map(id => lernCats(lern).find(c => c.id === id)).filter(Boolean)
     .flatMap(cat => cat.items.map(item => ({ cat, item })));
   const cards = {};
   for(const { item } of items) cards[item.id] = lern.cards[item.id] || { box:0, due:0 };
@@ -1031,6 +1168,12 @@ function lernCardHtml({ cat, item }){
 }
 
 function renderLern(){
+  // Zum gewählten Bereich passende Session zuerst (Kanton bzw. ganze Schweiz), sofern es eine gibt
+  const here = REGION?.id || null;
+  if(lern && (lern.region || null) !== here){
+    const match = lernStore.sessions.find(s => (s.region || null) === here);
+    if(match) lernSwitch(match);
+  }
   if(lern && lernSync().length) renderLernQuiz();
   else if(lernStore.sessions.length) renderLernSessions();
   else renderLernSetup();
@@ -1100,8 +1243,11 @@ function renderLernSetup(){
   const used = new Set(lernStore.sessions.map(s => s.color % LERN_FARBEN.length));
   const free = LERN_FARBEN.findIndex((f, i) => !used.has(i));
   const color = free >= 0 ? free : lernStore.sessions.length % LERN_FARBEN.length;
+  const here = REGION?.id || null;
   lernEl.innerHTML = `
-    <h2>Neue Lernsession</h2>
+    <h2>Neue Lernsession${REGION ? ` · ${esc(REGION.title)}` : ""}</h2>
+    ${REGION ? `<p class="lern-hint">Die Session enthält nur Einträge aus dem ${esc(REGION.title)}. Für die ganze Schweiz oben
+      «Ganze Schweiz» wählen.</p>` : ""}
     <p>Wähle eine oder mehrere Kategorien. Die LernApp zeigt ein Bild, und du tippst den Namen ein.
       Nach dem Leitner-System kommen Begriffe, die du gut kannst, immer seltener dran, schwierige öfter.
       So bleiben sie dauerhaft im Gedächtnis. Du kannst mehrere Lernsessions nebeneinander haben, jede mit eigenem
@@ -1118,7 +1264,8 @@ function renderLernSetup(){
     </div>`;
   const boxes = [...lernEl.querySelectorAll(".lern-cats input")];
   const chosen = () => boxes.filter(b => b.checked).map(b => b.value);
-  const sameAs = ids => lernStore.sessions.find(s => s.cats.length === ids.length && ids.every(id => s.cats.includes(id)));
+  const sameAs = ids => lernStore.sessions.find(s => (s.region || null) === here
+    && s.cats.length === ids.length && ids.every(id => s.cats.includes(id)));
   const sum = () => {
     const ids = chosen();
     const n = CATS.filter(c => ids.includes(c.id)).reduce((s, c) => s + c.items.length, 0);
@@ -1137,6 +1284,7 @@ function renderLernSetup(){
     if(!s){
       const nr = Math.max(0, ...lernStore.sessions.map(x => parseInt(String(x.id).slice(1), 10) || 0)) + 1;
       s = { id:"s" + nr, color:+lernEl.querySelector("[name=lernColor]:checked").value, cats:ids, cards:{} };
+      if(here) s.region = here;
       lernStore.sessions.push(s);
     }
     lernSwitch(s);
@@ -1348,7 +1496,7 @@ const SPIEL_NAME = { memo:"Memory", duel:"Duell", det:"Detektiv" };
 function gameRecord(game, catId, value, lowerWins, of){
   let all = {};
   try{ all = JSON.parse(localStorage.getItem(REKORD_KEY)) || {}; }catch{}
-  const key = game + "|" + catId;
+  const key = game + "|" + (REGION ? REGION.id + ":" : "") + catId;   // im Kanton eigene Rekorde (022)
   let r = all[key] || { best:null, last:[] };
   if(of !== undefined && r.of !== undefined && r.of !== of) r = { best:null, last:[] };
   if(of !== undefined) r.of = of;
@@ -1696,7 +1844,8 @@ const cardOf = (cat, item) => cardsOf(cat)[cat.items.indexOf(item)];
 // Ansicht vorbereiten: Lightbox zu, Hinweise der Übersicht weg, Menüseiten ausblenden
 function resetView(pageId){
   if(lightbox.open) lightbox.close();
-  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily"), catBar, taskBar]) if(el) el.hidden = true;
+  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily"), document.getElementById("regionHero"), catBar, taskBar]) if(el) el.hidden = true;
+  setRegionMenu(false);
   quickLearn.hidden = false;
   closeHelp();
   grid.replaceChildren();
@@ -1823,10 +1972,31 @@ document.getElementById("introSkip").addEventListener("click", () => introDlg.cl
 document.getElementById("introAgain").addEventListener("click", openIntro);
 
 function render(){
-  const id = location.hash.replace(/^#\/?/, "");
+  let id = location.hash.replace(/^#\/?/, "");
+  // Einstieg über einen Kanton (#/glarus, auch je-net.ch/sff/glarus über .htaccess) oder #/schweiz:
+  // Bereich wählen und merken, dann die Übersicht (die Adresse wird zu #/, damit «Zurück» nicht nochmals wählt)
+  if(id.toLowerCase() === "schweiz" || findRegion(id)){
+    setRegion(id.toLowerCase() === "schweiz" ? null : id);
+    history.replaceState(null, "", "#/");
+    id = "";
+  }
+  // Zurück auf der Übersicht gilt wieder die gespeicherte Wahl (nach einem Direktlink ausserhalb des Kantons)
+  const saved = findRegion(savedRegion());
+  if(!id && REGION !== saved) setRegion(saved?.id, false);
   const [first, second] = id.split("/");
   const pageId = PAGES[id] ? id : first === "spiele" ? "spiele" : null;   // #/spiele/<spiel> springt zum Spiel
   const page = pageId && PAGES[pageId];
+  // Direktlink (z. B. QR-Code) auf eine Kategorie oder einen Eintrag, den es im gewählten Kanton nicht gibt:
+  // vorübergehend die ganze Schweiz zeigen (die gespeicherte Wahl bleibt)
+  if(!page && REGION && first && first !== "jetzt"){
+    const here = CATS.find(c => c.id === first), whole = ALL.find(c => c.id === first);
+    if(whole && (!here || (second && !here.items.some(it => slugify(it.n) === second)
+      && whole.items.some(it => slugify(it.n) === second)))){
+      const was = REGION.title;
+      setRegion(null, false);
+      setTimeout(() => toast(`Nicht im ${was}: Angezeigt wird die ganze Schweiz.`), 300);
+    }
+  }
   const cat = page ? null : CATS.find(c => c.id === first);
   resetView(pageId);
   if(page){
@@ -1855,6 +2025,7 @@ function render(){
     overviewCards.forEach((b, i) => { b.querySelector(".cat-day").hidden = i !== di; b.classList.toggle("today", i === di); });
     grid.append(...(di < 0 ? overviewCards : [overviewCards[di], ...overviewCards.filter((_, i) => i !== di)]));
     showCatProgress();
+    showRegionHero();
     showLernBanner();
     showDaily();
     showTaskBar();
@@ -2445,7 +2616,7 @@ const OFFLINE_OK = "serviceWorker" in navigator && "caches" in window;
 if(OFFLINE_OK) navigator.serviceWorker.register("sw.js", { updateViaCache:"none" }).catch(() => {});
 
 // Nur die eigenen Bilder; Tierstimmen lädt der Browser immer aus dem Netz (sw.js)
-const allImageUrls = () => CATS.flatMap(c => c.items.flatMap(it => it.img.filter(Boolean).map(i => i.src)));
+const allImageUrls = () => ALL.flatMap(c => c.items.flatMap(it => it.img.filter(Boolean).map(i => i.src)));
 
 /* App installieren (Einstellungen): Chrome, Edge und Android melden mit «beforeinstallprompt», dass sie die Seite
    installieren können; dann erscheint der Knopf. iPhone/iPad kennen das nicht (Anleitung in index.html). */
@@ -2535,14 +2706,14 @@ document.addEventListener("keydown", e => { if(e.key === "Escape" && !menu.hidde
    wird nur beim Bildnachweis neu gezeichnet, damit nichts unter dem Finger springt. */
 let lastData = "";
 async function refresh(){
-  let cats;
-  try{ cats = await loadCats(); }catch(e){ return; }
-  const json = JSON.stringify(cats);
+  let data;
+  try{ data = await loadAll(); }catch(e){ return; }
+  const json = JSON.stringify(data);
   if(json === lastData) return;
   lastData = json;
-  CATS = cats;
-  catCards.clear();
-  overviewCards = null;
+  [ALL, REGIONS] = data;
+  views.clear();
+  setRegion(REGION?.id, false);   // verwirft auch die gebauten Karten
   const id = location.hash.replace(/^#\/?/, "");
   if(id === "copyright") buildCredits();
   if(id === "pdf") fillPdfSelect();
@@ -2552,9 +2723,10 @@ document.addEventListener("visibilitychange", () => { if(document.visibilityStat
 // «Übersicht»: auch eine laufende Suche beenden (die Adresse ändert sich dann nicht)
 document.getElementById("back").addEventListener("click", () => { searchEl.value = ""; if(location.hash.replace(/^#\/?/, "")) location.hash = ""; else render(); });
 introEl.textContent = "Inhalte werden geladen …";
-loadCats().then(cats => {
-  CATS = cats;
-  lastData = JSON.stringify(cats);
+loadAll().then(data => {
+  [ALL, REGIONS] = data;
+  lastData = JSON.stringify(data);
+  setRegion(savedRegion(), false);   // gewählter Kanton von früher (sonst ganze Schweiz)
   window.addEventListener("hashchange", () => { searchEl.value = ""; render(); });
   render();
   // Einführung nur auf der Startseite, nicht bei Direktlinks (z. B. über einen QR-Code); danach der Forscherauftrag des Tages

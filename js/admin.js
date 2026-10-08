@@ -11,6 +11,7 @@ const DEFAULT_LABELS = ["Bild 1","Bild 2","Bild 3","Bild 4"];
 
 let cats = [];   // alle Kategorien mit Einträgen und Bildern
 let tasks = [];  // Forscheraufträge (021), leer, wenn die Tabelle fehlt
+let regions = [];   // Kantone (022), leer, wenn die Tabelle fehlt
 
 /* ------------------------------------------------------------------
    HILFSFUNKTIONEN
@@ -53,16 +54,26 @@ async function loadSchemaVersion(){
 const schemaMissing = () => dbSchema !== null && dbSchema < VERSION.schema;
 
 async function reload(){
-  cats = await must(sb.from("categories")
-    .select("*, entries!entries_category_id_fkey(*, images(*))")
+  // Mit der Zuordnung zu den Kantonen (022); fehlt die Tabelle noch, ohne sie
+  const query = withRegions => sb.from("categories")
+    .select(`*, entries!entries_category_id_fkey(*, images(*)${withRegions ? ", entry_regions(*)" : ""})`)
     .order("sort").order("name")
-    .order("sort", { referencedTable:"entries" }).order("name", { referencedTable:"entries" }));
-  await Promise.all([loadReports(), loadTasks()]);
+    .order("sort", { referencedTable:"entries" }).order("name", { referencedTable:"entries" });
+  let r = await query(true);
+  if(r.error) r = await query(false);
+  if(r.error) throw new Error(r.error.message);
+  cats = r.data;
+  cats.forEach(c => c.entries.forEach(e => { e.entry_regions = e.entry_regions || []; }));
+  await Promise.all([loadReports(), loadTasks(), loadRegions()]);
   renderSidebar();
 }
 async function loadTasks(){
   const { data, error } = await sb.from("tasks").select("*").order("sort").order("id");
   tasks = error ? [] : data;
+}
+async function loadRegions(){
+  const { data, error } = await sb.from("regions").select("*").order("sort").order("name");
+  regions = error ? [] : data;
 }
 
 /* Gemeldete Bilder (016) und Textfehler (018): Meldungen aus der Anzeige («Melden» bzw. «Fehler im Text melden» in der Grossansicht).
@@ -135,8 +146,8 @@ function commonsFile(page){
    SEITENLEISTE
 ------------------------------------------------------------------- */
 function route(){
-  const [, type, id, extra] = location.hash.split("/");
-  return { type, id, extra };
+  const [, type, id, extra, more] = location.hash.split("/");
+  return { type, id, extra, more };
 }
 
 function renderSidebar(){
@@ -156,11 +167,15 @@ function renderSidebar(){
     </li>`;
   }).join("");
   // Hauptbereiche oben: aktiven markieren, Zahl der offenen Punkte bei «Zu erledigen»
-  const nav = !r.type ? "home" : r.type === "erledigen" ? "todo" : r.type === "werkzeuge" ? "tools" : "";
+  const nav = !r.type ? "home" : r.type === "erledigen" ? "todo" : r.type === "werkzeuge" ? "tools"
+    : r.type === "kantone" || r.type === "r" ? "regions" : "";
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("active", a.dataset.nav === nav));
   const open = todoCount();
   $("todoCount").textContent = open;
   $("todoCount").hidden = !open;
+  const prop = proposalCount();
+  $("regionCount").textContent = prop;
+  $("regionCount").hidden = !prop;
 }
 // Hinweise pro Kategorie: offene Meldungen (Bild und Text), fehlende Bilder, Bilder ohne Quelle
 function catIssues(c){
@@ -171,7 +186,8 @@ function catIssues(c){
     noSource:c.entries.reduce((s, e) => s + e.images.filter(i => !i.source_page && !i.source_file).length, 0)
   };
 }
-const todoCount = () => reports.length + (cats.some(c => c.entries.some(e => openSlots(e).length)) ? 1 : 0) + (schemaMissing() ? 1 : 0);
+const todoCount = () => reports.length + (cats.some(c => c.entries.some(e => openSlots(e).length)) ? 1 : 0) + (schemaMissing() ? 1 : 0)
+  + (proposalCount() ? 1 : 0);
 $("catList").addEventListener("click", e => {
   const b = e.target.closest("[data-move]");
   if(b) move("categories", cats, +b.dataset.move, +b.dataset.dir);
@@ -210,6 +226,9 @@ function renderCategory(cat, host = $("main")){
       </div>
       ${isNew ? `<div class="ai">
         <h3>Einträge mit Claude erstellen</h3>
+        ${regions.length ? `<label>Für einen Kanton (freiwillig: die Einträge kommen dann auch in seinen Bereich)
+          <select name="region"><option value="">ganze Schweiz</option>${regions.map(g =>
+            `<option value="${esc(g.id)}">${esc(regionTitle(g))}</option>`).join("")}</select></label>` : ""}
         <div class="ai-row">
           <label>Anzahl Einträge <input type="number" name="aiCount" min="1" value="16"></label>
           <button type="button" class="ghost" id="aiCopy">1. Auftrag für Claude kopieren</button>
@@ -250,6 +269,8 @@ function renderCategory(cat, host = $("main")){
       id:F.id.value.trim(), name:F.name.value.trim(), description:F.description.value.trim(), goal:F.goal.value.trim(),
       latin:F.latin.checked, visible:F.visible.checked, labels:[0,1,2,3].map(i => F["label" + i].value.trim())
     };
+    const taken = row.id !== c.id && slugTaken(row.id);
+    if(taken){ msg(taken, true); F.id.focus(); return; }
     const chosen = isNew ? aiChosen() : [];
     if(chosen.length){
       await createWithAi(form, row, chosen);
@@ -584,11 +605,18 @@ const AI_EXAMPLE = `{
       "wp": ""
     }`;
 const allEntryNames = () => cats.flatMap(c => c.entries.map(e => e.name)).join(", ");
+// Auftrag für einen Kanton (022): Bezug zum Kanton und pro Eintrag ein Hinweis «kanton» für die Textseite
+const aiRegionText = (g, lead) => !g ? "" : `
+${lead} «${regionTitle(g)}»: Wähle bzw. beschreibe, was im ${regionTitle(g)} vorkommt oder für ihn wichtig ist.
+Schreibe in «kanton» einen kurzen Satz (höchstens 200 Zeichen), was den Eintrag im ${regionTitle(g)} besonders macht
+(Ort, Vorkommen, Geschichte). Nur sichere Angaben, sonst «kanton» leer lassen.`;
+const aiExample = g => !g ? AI_EXAMPLE
+  : AI_EXAMPLE.replace(`"wp": ""`, `"wp": "",\n      "kanton": "Kurzer Satz, was den Eintrag im Kanton besonders macht, z. B. wo er dort häufig ist."`);
 
-function aiPrompt(name, count){
+function aiPrompt(name, count, region){
   return `${AI_INTRO}
 
-Neue Kategorie: «${name}», mit ${count} Einträgen (die bekanntesten zuerst).
+Neue Kategorie: «${name}», mit ${count} Einträgen (die bekanntesten zuerst).${aiRegionText(region, "Die Kategorie ist für den Bereich")}
 
 1. Prüfe, ob sich die Kategorie mit bestehenden Kategorien oder Einträgen überschneidet.
    Keine Einträge, die es schon gibt. (Ob die Kategorie zur Seite passt, entscheidet die Lehrperson; nicht prüfen.)
@@ -614,7 +642,7 @@ Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel-Eintrag aus
   "latin": true,
   "labels": ["Baum", "Blätter", "Früchte", "Rinde"],
   "entries": [
-    ${AI_EXAMPLE}
+    ${aiExample(region)}
   ]
 }
 \`\`\``;
@@ -635,7 +663,8 @@ function aiEntry(e){
     name:aiStr(e?.name, 100), subtitle:aiStr(e?.subtitle, 100), description:aiStr(e?.description),
     facts:(Array.isArray(e?.facts) ? e.facts : []).map(f => ({ k:aiStr(f?.k, 60), v:aiStr(f?.v, 200) })).filter(f => f.k && f.v).slice(0, 6),
     search_terms:(Array.isArray(e?.search_terms) ? e.search_terms : []).map(t => aiStr(t, 120)).filter(Boolean).slice(0, 3),
-    wp:aiStr(e?.wp, 200) || null
+    wp:aiStr(e?.wp, 200) || null,
+    kanton:aiStr(e?.kanton, 200)   // Hinweis «Im Kanton …» (022), nur wenn der Auftrag einen Kanton nennt
   };
 }
 
@@ -674,11 +703,11 @@ function setupAi(form){
     if(!name){ F.name.focus(); msg("Zuerst den Namen der Kategorie eingeben.", true); return; }
     const count = Math.max(1, Math.round(+F.aiCount.value) || 16);
     try{
-      await navigator.clipboard.writeText(aiPrompt(name, count));
+      await navigator.clipboard.writeText(aiPrompt(name, count, findRegion(F.region?.value)));
       msg("Auftrag kopiert. Jetzt auf claude.ai einfügen und senden.");
     }catch(e){
       // Ohne Zugriff auf die Zwischenablage: Auftrag ins Feld schreiben und markieren
-      F.aiAnswer.value = aiPrompt(name, count);
+      F.aiAnswer.value = aiPrompt(name, count, findRegion(F.region?.value));
       F.aiAnswer.select();
       msg("Kopieren nicht erlaubt: Auftrag steht im Feld und ist markiert (Strg+C).", true);
     }
@@ -704,7 +733,7 @@ function setupAi(form){
         <input type="checkbox" checked title="Eintrag anlegen">
         <input type="text" value="${esc(e.name)}" data-n aria-label="Name">
         <input type="text" value="${esc(e.subtitle)}" data-s aria-label="Untertitel">
-        <p class="hint">${esc(e.description)}<br>${e.facts.map(f => `${esc(f.k)}: ${esc(f.v)}`).join(" · ")}</p></div>`).join("")}</div>`;
+        <p class="hint">${esc(e.description)}<br>${e.facts.map(f => `${esc(f.k)}: ${esc(f.v)}`).join(" · ")}${e.kanton ? `<br><b>Im Kanton:</b> ${esc(e.kanton)}` : ""}</p></div>`).join("")}</div>`;
     updateSubmit();
   });
 }
@@ -730,10 +759,14 @@ async function createWithAi(form, row, chosen){
   row.sort = cats.length;
   try{
     await must(sb.from("categories").insert(row));
-    await must(sb.from("entries").insert(chosen.map((e, i) => ({
+    const saved = await must(sb.from("entries").insert(chosen.map((e, i) => ({
       category_id:row.id, name:e.name, subtitle:e.subtitle, description:e.description, facts:e.facts,
       search_terms:e.search_terms, wp:e.wp, visible:true, sort:i
-    }))));
+    }))).select("id,name"));
+    // Für einen Kanton erstellt: alle Einträge dort zuordnen, mit dem Hinweis aus der Antwort (022)
+    const region = findRegion(form.elements.region?.value);
+    if(region) await must(sb.from("entry_regions").insert(saved.map(s => ({ entry_id:s.id, region_id:region.id,
+      note:chosen.find(e => e.name === s.name)?.kanton || "", confirmed:true }))));
   }catch(err){
     // Kategorie gespeichert, Einträge nicht: auf die Kategorieseite wechseln, sonst im Formular bleiben
     await reload().catch(() => {});
@@ -784,7 +817,7 @@ async function createWithAi(form, row, chosen){
 let aiPhoto = null;     // gewähltes Foto (File)
 let aiFilled = false;   // Formular mit einer Antwort von Claude gefüllt
 
-function aiEntryPrompt(cat, name, photo){
+function aiEntryPrompt(cat, name, photo, region){
   const others = cat.entries.map(e => e.name).join(", ") || "noch keine";
   return `${AI_INTRO}
 
@@ -794,7 +827,7 @@ ${cat.latin ? "Der Untertitel eines Eintrags ist der lateinische Name." : "Der U
 ${photo
   ? `Neuer Eintrag über ein Foto: Bestimme so genau wie möglich, was auf dem beigefügten Foto zu sehen ist${name ? ` (Vermutung: «${name}»)` : ""}.
 Schreibe in «pruefung», wie sicher die Bestimmung ist, woran du sie erkennst und welche ähnlichen Arten in Frage kommen.`
-  : `Neuer Eintrag: «${name}».`}
+  : `Neuer Eintrag: «${name}».`}${aiRegionText(region, "Der Eintrag gehört auch in den Bereich")}
 
 1. Prüfe, ob der Eintrag in diese Kategorie passt und ob es ihn auf der Seite schon gibt.
 2. Schreibe den Eintrag: ${AI_ENTRY_TASK}
@@ -809,7 +842,7 @@ Antworte nur mit einem JSON-Codeblock in genau dieser Form (Beispiel aus der Kat
 {
   "passt": true,
   "pruefung": "1–3 Sätze: Passt der Eintrag? Gibt es ihn schon?${photo ? " Wie sicher ist die Bestimmung?" : ""}",
-  "entry": ${AI_EXAMPLE}
+  "entry": ${aiExample(region)}
 }
 \`\`\``;
 }
@@ -849,7 +882,8 @@ function setupAiEntry(form, cat){
     const name = F.name.value.trim();
     if(isPhoto() && !aiPhoto){ msg("Zuerst ein Foto wählen.", true); return; }
     if(!isPhoto() && !name){ F.name.focus(); msg("Zuerst den Namen eintragen.", true); return; }
-    const text = aiEntryPrompt(cat, name, isPhoto());
+    const reg = findRegion(form.querySelector("[data-reg]:checked")?.dataset.reg);
+    const text = aiEntryPrompt(cat, name, isPhoto(), reg);
     try{
       await navigator.clipboard.writeText(text);
       msg(isPhoto() ? "Auftrag kopiert. Auf claude.ai einfügen, dann «Foto kopieren»." : "Auftrag kopiert. Jetzt auf claude.ai einfügen und senden.");
@@ -882,6 +916,10 @@ function setupAiEntry(form, cat){
     $("facts").innerHTML = e.facts.map(f => factRow(f.k, f.v)).join("");
     [0,1,2].forEach(i => { F["q" + i].value = e.search_terms[i] || ""; });
     F.wp.value = e.wp || "";
+    // Hinweis für den angehakten Kanton (022), falls dort noch keiner steht
+    const reg = form.querySelector("[data-reg]:checked");
+    const note = reg && form.querySelector(`[data-regnote="${CSS.escape(reg.dataset.reg)}"]`);
+    if(note && e.kanton && !note.value.trim()) note.value = e.kanton;
     aiFilled = true;
     out.innerHTML = `<p class="ai-verdict ${r.passt ? "" : "warn"}">${r.passt ? "✓" : "⚠"} ${esc(r.pruefung || "Keine Prüfung in der Antwort.")}</p>
       <p class="hint">Die Angaben stehen unten im Formular. Prüfen und nach Bedarf ändern, dann «Anlegen» (mit Bildern${aiPhoto ? ", das Foto wird Bild 1" : ""}) oder «Abbrechen».</p>`;
@@ -894,7 +932,11 @@ async function createEntryWithAi(form, cat, row){
   setDisabled(true);
   status("Eintrag wird gespeichert …");
   let saved;
-  try{ saved = await act(() => must(sb.from("entries").insert(row).select("id").single()), null); }
+  try{ saved = await act(async () => {
+    const s = await must(sb.from("entries").insert(row).select("id").single());
+    await saveEntryRegions(s.id, form);
+    return s;
+  }, null); }
   catch(err){ setDisabled(false); return; }   // act zeigt den Fehler
 
   let failed = [], err = null;
@@ -969,7 +1011,10 @@ async function selectAll(table){
 async function downloadBackup(){
   const [categories, entries, images] = await Promise.all(["categories", "entries", "images"].map(selectAll));
   const taskRows = await selectAll("tasks").catch(() => []);   // Forscheraufträge (021); fehlt die Tabelle, leer
-  const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket, categories, entries, images, tasks:taskRows };
+  const regionRows = await selectAll("regions").catch(() => []);         // Kantone (022)
+  const entryRegions = await selectAll("entry_regions").catch(() => []);
+  const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket,
+    categories, entries, images, tasks:taskRows, regions:regionRows, entry_regions:entryRegions };
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
   a.download = `natur-und-schweiz-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
@@ -977,7 +1022,7 @@ async function downloadBackup(){
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-  return { categories:categories.length, entries:entries.length, images:images.length, tasks:taskRows.length };
+  return { categories:categories.length, entries:entries.length, images:images.length, tasks:taskRows.length, regions:regionRows.length };
 }
 
 /* ------------------------------------------------------------------
@@ -1092,6 +1137,8 @@ function renderEntry(cat, entry){
         Gilt nur für diesen Eintrag; beim anderen bei Bedarf ebenfalls eintragen.</p>
       </details>
 
+      ${entryRegionsHtml(e, isNew ? route().more : null)}
+
       ${isNew ? "" : `<details class="sec" ${e.sound_path ? "open" : ""}><summary>Tierstimme${e.sound_path ? " ✓" : ""}</summary>
       ${e.sound_path ? `<audio controls preload="none" src="${esc(publicUrl(e.sound_path))}"></audio>
         <p class="hint">Quelle: ${e.sound_page ? `<a href="${esc(e.sound_page)}" target="_blank" rel="noopener">${esc(e.sound_file || e.sound_page)}</a>` : "eigene Aufnahme"}</p>`
@@ -1182,7 +1229,11 @@ function renderEntry(cat, entry){
     if(isNew){
       row.sort = cat.entries.length;
       if(aiFilled || aiPhoto){ await createEntryWithAi(form, cat, row); return; }
-      const saved = await act(() => must(sb.from("entries").insert(row).select("id").single()), "Eintrag angelegt.");
+      const saved = await act(async () => {
+        const s = await must(sb.from("entries").insert(row).select("id").single());
+        await saveEntryRegions(s.id, form);
+        return s;
+      }, "Eintrag angelegt.");
       location.hash = "#/e/" + saved.id;
       return;
     }
@@ -1204,6 +1255,7 @@ function renderEntry(cat, entry){
       }));
       await must(sb.from("entries").update(row).eq("id", e.id));
       if(imgRows.length) await must(sb.from("images").upsert(imgRows));
+      await saveEntryRegions(e.id, form, e.entry_regions);
       // War er das Titelbild der alten Kategorie, nimmt diese wieder ihren ersten Eintrag
       if(moving && cat.cover_entry_id === e.id) await must(sb.from("categories").update({ cover_entry_id:null }).eq("id", cat.id));
     }, moving ? `Nach «${target.name}» verschoben.` : "Gespeichert.");
@@ -1703,6 +1755,322 @@ async function importAll(todo){
 }
 
 /* ------------------------------------------------------------------
+   KANTONE (022): eigener Bereich pro Kanton auf der Seite (Adresse …/sff/<id>), mit Farben aus dem Wappen und
+   Kantonszeichen. Einträge gehören über entry_regions zu einem oder mehreren Kantonen; confirmed = false ist ein
+   Vorschlag (z. B. aus 022_kantone.sql), der hier bestätigt oder entfernt wird.
+   #/kantone Liste, #/r/<id>[/eintraege|einstellungen|einstieg] ein Kanton, #/r/neu neuer Kanton
+------------------------------------------------------------------- */
+const findRegion = id => regions.find(g => g.id === id) || null;
+const regionTitle = g => g.title || "Kanton " + g.name;
+const emblemUrl = g => !g?.emblem ? null : g.emblem.startsWith("icons/") ? g.emblem : publicUrl(g.emblem);
+const proposalCount = () => cats.reduce((s, c) => s + c.entries.reduce((n, e) => n + e.entry_regions.filter(r => !r.confirmed).length, 0), 0);
+const regionLinks = id => cats.flatMap(c => c.entries.flatMap(e => e.entry_regions.filter(r => r.region_id === id).map(r => ({ cat:c, e, r }))));
+const regionShort = g => siteUrl() + g.id;   // .htaccess leitet /sff/<id> auf /sff/#/<id> weiter
+// Adressen der Anzeige: Kantone, Kategorien und Seiten teilen sich #/<id>, darum darf keine doppelt vorkommen
+const PAGE_SLUGS = ["lernapp", "auftraege", "spiele", "jetzt", "quiz", "pdf", "hilfe", "einstellungen", "admin", "copyright", "schweiz"];
+function slugTaken(id){
+  if(PAGE_SLUGS.includes(id)) return "Diese Adresse braucht schon eine Seite.";
+  if(findCat(id)) return "Es gibt schon eine Kategorie mit dieser ID.";
+  if(findRegion(id)) return "Es gibt schon einen Kanton mit dieser ID.";
+  return "";
+}
+
+// Liste aller Kantone: sichtbar, Reihenfolge, Zahl der Einträge und offenen Vorschläge
+function renderRegions(){
+  $("main").innerHTML = `<h2>Kantone</h2>
+    <p class="hint">Jeder Kanton hat auf der Seite einen eigenen Bereich mit seinen Farben und Einträgen, erreichbar über den
+      Knopf oben auf der Seite oder direkt über die Adresse <code>${esc(siteUrl())}&lt;id&gt;</code>. Ein Eintrag kann zu mehreren
+      Kantonen gehören (z. B. der Steinbock). <b>Vorschläge</b> sind schon sichtbar; im Kanton bestätigen oder entfernen.</p>
+    ${regions.length ? `<ul class="list region-list" id="regionList">${regions.map((g, i) => {
+      const links = regionLinks(g.id), open = links.filter(l => !l.r.confirmed).length;
+      return `<li class="${g.visible ? "" : "off"}">
+        <input type="checkbox" data-rvis="${esc(g.id)}" ${g.visible ? "checked" : ""} title="Auf der Seite sichtbar">
+        ${emblemUrl(g) ? `<img src="${esc(emblemUrl(g))}" alt="">` : `<span class="region-dot" data-c="${esc(g.color)}"></span>`}
+        <a href="#/r/${esc(g.id)}">${esc(regionTitle(g))} <small>${links.length} Einträge</small>${open ? ` <span class="badge warn">${open} Vorschläge offen</span>` : ""}</a>
+        <button class="icon" data-rmove="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
+        <button class="icon" data-rmove="${i}" data-dir="1" title="Nach unten" ${i < regions.length - 1 ? "" : "disabled"}>↓</button>
+      </li>`;
+    }).join("")}</ul>` : `<p>Noch kein Kanton angelegt.${schemaMissing() ? " Zuerst das Datenbank-Update ausführen (siehe Zu erledigen)." : ""}</p>`}
+    <p><button class="ghost" id="newRegion" ${schemaMissing() ? "disabled" : ""}>+ Neuer Kanton</button></p>`;
+  $("main").querySelectorAll(".region-dot").forEach(el => { el.style.background = el.dataset.c; });
+  $("regionList")?.addEventListener("click", ev => {
+    const b = ev.target.closest("[data-rmove]");
+    if(b) move("regions", regions, +b.dataset.rmove, +b.dataset.dir);
+  });
+  $("regionList")?.addEventListener("change", async ev => {
+    const box = ev.target.closest("[data-rvis]");
+    if(!box) return;
+    await act(() => must(sb.from("regions").update({ visible:box.checked }).eq("id", box.dataset.rvis)),
+      box.checked ? "Eingeblendet." : "Ausgeblendet.").catch(() => {});
+    render();
+  });
+  $("newRegion").addEventListener("click", () => { location.hash = "#/r/neu"; });
+}
+
+const REGION_TABS = [["eintraege", "Einträge"], ["einstellungen", "Name und Farben"], ["einstieg", "Einstieg und QR-Code"]];
+function renderRegion(g, tab){
+  if(!g){ $("main").innerHTML = `<p class="hint"><a href="#/kantone">← Kantone</a></p><h2>Neuer Kanton</h2><div id="tabBody"></div>`;
+    return renderRegionForm(null, $("tabBody")); }
+  if(!REGION_TABS.some(([id]) => id === tab)) tab = "eintraege";
+  const links = regionLinks(g.id), open = links.filter(l => !l.r.confirmed).length;
+  $("main").innerHTML = `<p class="hint"><a href="#/kantone">← Kantone</a></p>
+    <h2 class="region-title">${emblemUrl(g) ? `<img src="${esc(emblemUrl(g))}" alt="">` : ""}${esc(regionTitle(g))}</h2>
+    <p class="hint">${g.visible ? "" : `<span class="badge">ausgeblendet</span> `}${links.length} Einträge${open ? ` · <span class="warn">${open} Vorschläge offen</span>` : ""}
+      · <a href="index.html#/${esc(g.id)}" target="_blank" rel="noopener">auf der Seite ansehen ↗</a></p>
+    <nav class="tabs">${REGION_TABS.map(([id, label]) => `<a href="#/r/${esc(g.id)}${id === "eintraege" ? "" : "/" + id}"
+      class="${id === tab ? "active" : ""}">${label}${id === "eintraege" ? ` <small>${links.length}</small>` : ""}</a>`).join("")}</nav>
+    <div id="tabBody"></div>`;
+  const body = $("tabBody");
+  if(tab === "einstellungen") return renderRegionForm(g, body);
+  if(tab === "einstieg") return renderRegionEntry(g, body);
+  renderRegionEntries(g, body);
+}
+
+/* Register «Einträge»: alle Einträge nach Kategorie, angehakt = gehört zum Kanton, daneben der Hinweis für die Textseite.
+   Änderungen sammeln sich, bis «Speichern»; «Bestätigen» macht aus einem Vorschlag eine feste Zuordnung. */
+let regionFilter = "zugeordnet";   // «zugeordnet», «vorschlaege» oder «alle»
+function renderRegionEntries(g, body){
+  const map = new Map(regionLinks(g.id).map(l => [l.e.id, l.r]));
+  const open = [...map.values()].filter(r => !r.confirmed).length;
+  if(regionFilter === "vorschlaege" && !open) regionFilter = "zugeordnet";
+  body.innerHTML = `<div class="filter">
+      ${[["zugeordnet", `Zugeordnet (${map.size})`], ["vorschlaege", `Nur Vorschläge (${open})`], ["alle", "Alle Einträge zum Auswählen"]]
+        .map(([v, l]) => `<label class="inline"><input type="radio" name="rfilter" value="${v}" ${regionFilter === v ? "checked" : ""}> ${l}</label>`).join("")}
+    </div>
+    <p class="hint">Angehakt = erscheint im Bereich «${esc(regionTitle(g))}». Der Hinweis (freiwillig) steht dort auf der Textseite unter
+      «Im ${esc(regionTitle(g))}: …». <b>Vorschlag</b> = von Claude vorgeschlagen, auf der Seite schon sichtbar: bestätigen oder Haken entfernen.</p>
+    <div class="ai-row reg-new"><label>Neuer Eintrag für den ${esc(regionTitle(g))} in der Kategorie
+      <select id="regNewCat">${cats.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}</select></label>
+      <button type="button" class="ghost" id="regNewEntry">+ Neuer Eintrag</button></div>
+    ${cats.map(c => `<div class="reg-cat" data-cat="${esc(c.id)}"><h3>${esc(c.name)} <small class="hint" data-catcount></small></h3>
+      <table class="reg-table">${c.entries.map(e => {
+        const r = map.get(e.id);
+        return `<tr data-entry="${e.id}" class="${r ? "on" : ""}${r && !r.confirmed ? " proposal" : ""}">
+          <td><input type="checkbox" data-on ${r ? "checked" : ""} aria-label="${esc(e.name)} gehört zum Kanton"></td>
+          <td><a href="#/e/${e.id}">${esc(e.name)}</a>${e.visible ? "" : ` <span class="badge">ausgeblendet</span>`}<br><small class="hint">${esc(e.subtitle)}</small></td>
+          <td><input type="text" data-note maxlength="200" value="${esc(r?.note || "")}" placeholder="Hinweis «Im ${esc(regionTitle(g))}: …» (freiwillig)"></td>
+          <td class="reg-state">${r && !r.confirmed ? `<span class="badge warn">Vorschlag</span> <button type="button" class="ghost small" data-confirm>Bestätigen</button>`
+            : r ? `<span class="badge ok">✓</span>` : ""}</td></tr>`;
+      }).join("")}</table></div>`).join("")}
+    <div class="actions sticky">
+      <button type="button" id="regSave">Änderungen speichern</button>
+      ${open ? `<button type="button" class="ghost" id="regConfirmAll">Alle ${open} Vorschläge bestätigen und speichern</button>` : ""}
+      <span class="hint" id="regDirty"></span>
+    </div>`;
+  const rows = [...body.querySelectorAll("tr[data-entry]")];
+  const filterRows = () => {
+    rows.forEach(tr => {
+      const on = tr.querySelector("[data-on]").checked, was = map.get(tr.dataset.entry);
+      tr.hidden = regionFilter === "zugeordnet" ? !(on || was) : regionFilter === "vorschlaege" ? !(was && !was.confirmed) : false;
+    });
+    body.querySelectorAll(".reg-cat").forEach(box => {
+      const vis = box.querySelectorAll("tr[data-entry]:not([hidden])").length;
+      box.hidden = !vis;
+      box.querySelector("[data-catcount]").textContent = `${box.querySelectorAll("[data-on]:checked").length} von ${box.querySelectorAll("tr[data-entry]").length}`;
+    });
+  };
+  // Was sich gegenüber der Datenbank geändert hat
+  const changes = () => {
+    const up = [], del = [];
+    for(const tr of rows){
+      const id = tr.dataset.entry, old = map.get(id);
+      const on = tr.querySelector("[data-on]").checked, note = tr.querySelector("[data-note]").value.trim();
+      const confirmed = old ? old.confirmed || tr.dataset.confirm === "1" : true;
+      if(on && (!old || old.note !== note || old.confirmed !== confirmed)) up.push({ entry_id:id, region_id:g.id, note, confirmed });
+      if(!on && old) del.push(id);
+    }
+    return { up, del };
+  };
+  const showDirty = () => {
+    const { up, del } = changes();
+    $("regDirty").textContent = up.length + del.length ? `${up.length + del.length} ungespeicherte Änderungen` : "";
+  };
+  const save = async () => {
+    const { up, del } = changes();
+    if(!up.length && !del.length){ msg("Keine Änderungen."); return; }
+    await act(async () => {
+      if(up.length) await must(sb.from("entry_regions").upsert(up));
+      if(del.length) await must(sb.from("entry_regions").delete().eq("region_id", g.id).in("entry_id", del));
+    }, `Gespeichert: ${up.length} zugeordnet oder geändert, ${del.length} entfernt.`).catch(() => {});
+    render();
+  };
+  body.querySelector(".filter").addEventListener("change", ev => { regionFilter = ev.target.value; filterRows(); });
+  body.addEventListener("input", showDirty);
+  body.addEventListener("change", ev => {
+    const tr = ev.target.closest("tr[data-entry]");
+    if(tr && ev.target.matches("[data-on]")) tr.classList.toggle("on", ev.target.checked);
+    showDirty();
+  });
+  body.addEventListener("click", ev => {
+    const b = ev.target.closest("[data-confirm]");
+    if(!b) return;
+    const tr = b.closest("tr");
+    tr.dataset.confirm = "1";
+    tr.classList.remove("proposal");
+    tr.querySelector("[data-on]").checked = true;
+    tr.querySelector(".reg-state").innerHTML = `<span class="badge ok">✓ bestätigt</span>`;
+    showDirty();
+  });
+  $("regSave").addEventListener("click", save);
+  // Neuer Eintrag mit diesem Kanton vorgewählt (#/e/neu/<kategorie>/<kanton>), auch mit Claude
+  $("regNewEntry").addEventListener("click", () => {
+    if(changes().up.length + changes().del.length && !confirm("Ungespeicherte Änderungen verwerfen?")) return;
+    location.hash = "#/e/neu/" + $("regNewCat").value + "/" + g.id;
+  });
+  $("regConfirmAll")?.addEventListener("click", () => {
+    rows.forEach(tr => { const old = map.get(tr.dataset.entry); if(old && !old.confirmed && tr.querySelector("[data-on]").checked) tr.dataset.confirm = "1"; });
+    save();
+  });
+  filterRows();
+}
+
+// Register «Name und Farben» (auch für einen neuen Kanton): Angaben, Farben aus dem Wappen, Kantonszeichen, Vorschau
+function renderRegionForm(g, body){
+  const isNew = !g;
+  const v = g || { id:"", name:"", title:"", code:"", intro:"", color:"#d7261e", color2:"#1b1b1b", color3:"#f0b323", on_color:"#ffffff", emblem:null, visible:true };
+  const colors = [["color", "Hauptfarbe (Grund des Wappens)"], ["color2", "Zweitfarbe"], ["color3", "Akzentfarbe"], ["on_color", "Schrift auf der Hauptfarbe"]];
+  body.innerHTML = `<form id="regionForm">
+      <div class="row">
+        <label>Name <input type="text" name="name" required maxlength="60" value="${esc(v.name)}" placeholder="z. B. Glarus"></label>
+        <label>ID = Adresse (…/sff/<b>id</b>) <input type="text" name="id" required pattern="[a-z0-9]+(-[a-z0-9]+)*" value="${esc(v.id)}"
+          ${isNew ? "" : "readonly title=\"Fest, weil Geräte die Wahl darunter speichern und Links darauf zeigen\""}></label>
+        <label>Kürzel <input type="text" name="code" maxlength="3" pattern="[A-Z]{0,3}" value="${esc(v.code)}" placeholder="GL"></label>
+      </div>
+      <label>Titel (für «Im …» und den Knopf) <input type="text" name="title" maxlength="80" value="${esc(v.title)}" placeholder="Kanton ${esc(v.name || "…")}"></label>
+      <label>Einleitung auf der Startseite <textarea name="intro" maxlength="400" rows="2">${esc(v.intro)}</textarea></label>
+      <h3>Farben aus dem Wappen</h3>
+      <div class="row colors">${colors.map(([k, l]) => `<label>${l} <input type="color" name="${k}" value="${esc(v[k])}"></label>`).join("")}</div>
+      <p class="hint">Schrift und Knöpfe in der Hauptfarbe passt die Seite automatisch an, damit sie hell und dunkel gut lesbar bleiben.</p>
+      <div class="region-preview" id="regionPreview"></div>
+      ${isNew ? `<p class="hint">Das Kantonszeichen lässt sich nach dem Anlegen hochladen. Ohne Zeichen zeigt die Seite das Kürzel in der Hauptfarbe.</p>` : `
+      <h3>Kantonszeichen</h3>
+      <div class="emblem-row">
+        ${emblemUrl(v) ? `<img class="emblem" src="${esc(emblemUrl(v))}" alt="Kantonszeichen">` : `<span class="hint">Kein Zeichen: Die Seite zeigt das Kürzel.</span>`}
+        <div>
+          <label>Bild hochladen (PNG mit durchsichtigem Hintergrund, quadratisch) <input type="file" accept="image/png,image/jpeg,image/svg+xml" name="emblemFile"></label>
+          ${v.emblem ? `<button type="button" class="ghost small" id="emblemDel">Zeichen entfernen</button>` : ""}
+          <p class="hint">Eine eigene, vereinfachte Zeichnung nach Farben und Merkmalen des Wappens, kein offizielles Wappen
+            (Kantonswappen sind geschützt). Wird auf 512 px verkleinert.</p>
+        </div>
+      </div>`}
+      <label class="inline"><input type="checkbox" name="visible" ${v.visible ? "checked" : ""}> Auf der Seite sichtbar</label>
+      <div class="actions">
+        <button>${isNew ? "Anlegen" : "Speichern"}</button>
+        ${isNew ? "" : `<button type="button" class="danger" id="delRegion">Kanton löschen</button>`}
+      </div>
+    </form>`;
+  const form = $("regionForm"), F = form.elements;
+  if(isNew) F.name.addEventListener("input", () => { F.id.value = slug(F.name.value); });
+  const preview = () => {
+    const box = $("regionPreview"), t = F.title.value.trim() || "Kanton " + (F.name.value.trim() || "…");
+    box.innerHTML = `<div class="rp-band"></div><div class="rp-body"><span class="rp-chip">${emblemUrl(v) ? `<img src="${esc(emblemUrl(v))}" alt="">`
+      : `<span class="rp-code">${esc(F.code.value || "?")}</span>`}${esc(t)} ▾</span>
+      <span class="rp-button">Lernsession starten</span><small>Vorschau</small></div>`;
+    box.style.setProperty("--r1", F.color.value);
+    box.style.setProperty("--r2", F.color2.value);
+    box.style.setProperty("--r3", F.color3.value);
+    box.style.setProperty("--ron", F.on_color.value);
+  };
+  form.addEventListener("input", preview);
+  preview();
+  form.addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const row = { name:F.name.value.trim(), title:F.title.value.trim(), code:F.code.value.trim().toUpperCase(), intro:F.intro.value.trim(),
+      color:F.color.value, color2:F.color2.value, color3:F.color3.value, on_color:F.on_color.value, visible:F.visible.checked };
+    if(isNew){
+      row.id = F.id.value.trim();
+      const taken = slugTaken(row.id);
+      if(taken){ msg(taken, true); F.id.focus(); return; }
+      row.sort = Math.max(0, ...regions.map(x => x.sort + 10));
+      await act(() => must(sb.from("regions").insert(row)), "Kanton angelegt.").catch(() => {});
+      if(findRegion(row.id)) location.hash = "#/r/" + row.id + "/einstellungen";
+      return;
+    }
+    await act(() => must(sb.from("regions").update(row).eq("id", g.id)), "Gespeichert.").catch(() => {});
+    render();
+  });
+  if(isNew) return;
+  F.emblemFile.addEventListener("change", async () => {
+    const file = F.emblemFile.files[0];
+    if(!file) return;
+    await act(async () => {
+      const blob = await resizeImage(file, 512, "image/png");
+      const path = `kantone/${g.id}-${Date.now()}.png`;
+      await must(sb.storage.from(CFG.bucket).upload(path, blob, { contentType:"image/png" }));
+      await must(sb.from("regions").update({ emblem:path }).eq("id", g.id));
+      if(g.emblem && !g.emblem.startsWith("icons/")) await sb.storage.from(CFG.bucket).remove([g.emblem]);
+    }, "Kantonszeichen gespeichert.").catch(() => {});
+    render();
+  });
+  $("emblemDel")?.addEventListener("click", async () => {
+    if(!confirm("Kantonszeichen entfernen? Die Seite zeigt dann das Kürzel.")) return;
+    await act(async () => {
+      await must(sb.from("regions").update({ emblem:null }).eq("id", g.id));
+      if(!g.emblem.startsWith("icons/")) await sb.storage.from(CFG.bucket).remove([g.emblem]);
+    }, "Zeichen entfernt.").catch(() => {});
+    render();
+  });
+  $("delRegion").addEventListener("click", async () => {
+    const n = regionLinks(g.id).length;
+    if(!confirm(`Kanton «${regionTitle(g)}» löschen? Die Einträge selbst bleiben, nur ihre Zuordnung zu diesem Kanton (${n}) fällt weg.`)) return;
+    await act(async () => {
+      await must(sb.from("regions").delete().eq("id", g.id));
+      if(g.emblem && !g.emblem.startsWith("icons/")) await sb.storage.from(CFG.bucket).remove([g.emblem]);
+    }, "Kanton gelöscht.").catch(() => {});
+    location.hash = "#/kantone";
+  });
+}
+
+// Register «Einstieg und QR-Code»: kurze Adresse, QR-Code und Plakat zum Drucken
+function renderRegionEntry(g, body){
+  const url = regionShort(g);
+  body.innerHTML = `<p>Direkter Einstieg in den Bereich «${esc(regionTitle(g))}»: Wer diese Adresse öffnet, hat den Kanton gewählt;
+      die Wahl bleibt auf dem Gerät gespeichert, bis jemand oben auf der Seite etwas anderes wählt.</p>
+    <div class="qr-box">${qrSvg(url)}
+      <p><a href="${esc(url)}" target="_blank" rel="noopener"><b>${esc(url)}</b></a><br>
+        <span class="hint">Gleichwertig: <code>${esc(siteUrl() + "#/" + g.id)}</code> (geht auch ohne die Weiterleitung in .htaccess).</span><br>
+        <button type="button" class="ghost small" id="qrRegion">Plakat mit QR-Code drucken</button></p>
+    </div>`;
+  $("qrRegion").addEventListener("click", () => {
+    const box = $("adminPrint");
+    box.innerHTML = `<div class="qr-poster">${emblemUrl(g) ? `<img src="${esc(emblemUrl(g))}" alt="">` : ""}
+      <h1>${esc(regionTitle(g))}</h1><p>Natur und Schweiz: Pflanzen, Tiere und Landschaften</p>
+      ${qrSvg(url)}<b>${esc(url.replace(/^https?:\/\//, ""))}</b></div>`;
+    window.addEventListener("afterprint", () => box.replaceChildren(), { once:true });
+    window.print();
+  });
+}
+
+// Abschnitt «Kantone» im Eintrag: angehakt = gehört zum Kanton, mit Hinweis; preset = Kanton für einen neuen Eintrag
+function entryRegionsHtml(e, preset){
+  if(!regions.length) return "";
+  const links = e.entry_regions || [];
+  const on = g => links.some(r => r.region_id === g.id) || g.id === preset;
+  const n = regions.filter(on).length;
+  return `<details class="sec" ${n ? "open" : ""}><summary>Kantone${n ? ` (${regions.filter(on).map(g => esc(g.code || g.name)).join(", ")})` : ""}</summary>
+    <p class="hint">Angehakt = der Eintrag erscheint auch im Bereich dieses Kantons. Der Hinweis steht dort auf der Textseite (freiwillig).</p>
+    ${regions.map(g => {
+      const r = links.find(x => x.region_id === g.id);
+      return `<div class="reg-row"><label class="inline"><input type="checkbox" data-reg="${esc(g.id)}" ${on(g) ? "checked" : ""}> ${esc(regionTitle(g))}</label>
+        ${r && !r.confirmed ? `<span class="badge warn" title="Wird beim Speichern bestätigt">Vorschlag</span>` : ""}
+        <input type="text" data-regnote="${esc(g.id)}" maxlength="200" value="${esc(r?.note || "")}" placeholder="Hinweis «Im ${esc(regionTitle(g))}: …»"></div>`;
+    }).join("")}
+  </details>`;
+}
+// Kantone eines Eintrags speichern (Eintrag gespeichert = vom Menschen geprüft, darum confirmed)
+async function saveEntryRegions(entryId, form, links = []){
+  const up = [], del = [];
+  form.querySelectorAll("[data-reg]").forEach(box => {
+    const id = box.dataset.reg, old = links.find(r => r.region_id === id);
+    const note = form.querySelector(`[data-regnote="${CSS.escape(id)}"]`).value.trim();
+    if(box.checked && (!old || old.note !== note || !old.confirmed)) up.push({ entry_id:entryId, region_id:id, note, confirmed:true });
+    if(!box.checked && old) del.push(id);
+  });
+  if(up.length) await must(sb.from("entry_regions").upsert(up));
+  if(del.length) await must(sb.from("entry_regions").delete().eq("entry_id", entryId).in("region_id", del));
+}
+
+/* ------------------------------------------------------------------
    ANSICHT WÄHLEN
 ------------------------------------------------------------------- */
 function render(){
@@ -1718,6 +2086,9 @@ function render(){
   if(task && findCat(task.category_id)) return renderTask(findCat(task.category_id), task);
   if(r.type === "werkzeuge") return renderTools();
   if(r.type === "erledigen") return renderTodo();
+  if(r.type === "kantone") return renderRegions();
+  if(r.type === "r" && r.id === "neu") return renderRegion(null, "einstellungen");
+  if(r.type === "r" && findRegion(r.id)) return renderRegion(findRegion(r.id), r.extra || "eintraege");
   renderDashboard();
 }
 
@@ -1763,6 +2134,8 @@ function renderDashboard(){
       ${tile(all.reduce((s, { e }) => s + (e.confusions || []).length, 0), "Verwechslungshinweise")}
       ${tile(`${goals}/${cats.length}`, "Lernziele", goals < cats.length ? `${cats.length - goals} fehlen` : "alle gesetzt", "", goals < cats.length)}
       ${tile(tasks.length, "Forscheraufträge", `${tasks.filter(x => x.visible).length} sichtbar`)}
+      ${tile(regions.length, regions.length === 1 ? "Kanton" : "Kantone", proposalCount() ? `${proposalCount()} Vorschläge offen`
+        : regions.map(g => `${esc(g.code || g.name)}: ${regionLinks(g.id).length}`).join(" · ") || "noch keiner", "#/kantone", proposalCount() > 0)}
       ${tile(esc(VERSION.app), "Website", `Datenbank ${dbSchema ?? "?"}${schemaMissing() ? ` (benötigt ${VERSION.schema})` : ""}`, "#/werkzeuge", schemaMissing())}
     </div>
     <h3>Pro Kategorie</h3>
@@ -1794,7 +2167,8 @@ function renderTodo(){
     const f = findEntry(r.entry_id);
     return f && { r, cat:f.cat, e:f.entry };
   }).filter(Boolean);
-  const nothing = !schemaMissing() && !reported.length && !textReported.length && !todo.length && !bulk;
+  const nothing = !schemaMissing() && !reported.length && !textReported.length && !todo.length && !bulk && !proposalCount();
+  const propRegions = regions.map(g => ({ g, n:regionLinks(g.id).filter(l => !l.r.confirmed).length })).filter(x => x.n);
   main.innerHTML = `<h2>Zu erledigen</h2>
     <p class="hint">${cats.length} Kategorien · ${total} Einträge · ${imgs} Bilder · ${tasks.length} Forscheraufträge.
       Zum Prüfen einer Kategorie links die Kategorie wählen: Das Register «Prüfen» zeigt alle Einträge mit Text und Bildern.</p>
@@ -1802,6 +2176,9 @@ function renderTodo(){
       diese Website braucht Version ${VERSION.schema}. Im Supabase-Dashboard unter «SQL Editor» die fehlenden Dateien
       bis <code>supabase/${String(VERSION.schema).padStart(3, "0")}_…</code> der Reihe nach ausführen.</p>` : ""}
     ${nothing ? `<p class="done-box">✓ Alles erledigt: keine Meldungen, keine fehlenden Bilder.</p>` : ""}
+    ${propRegions.length ? `<h3>Vorschläge für Kantone prüfen</h3>
+      <p class="hint">Diese Einträge sind einem Kanton vorgeschlagen und dort schon sichtbar. Bestätigen oder entfernen.</p>
+      <ul>${propRegions.map(({ g, n }) => `<li><a href="#/r/${esc(g.id)}">${esc(regionTitle(g))}</a>: ${n} ${n === 1 ? "Vorschlag" : "Vorschläge"}</li>`).join("")}</ul>` : ""}
     ${reported.length ? `<h3>Gemeldete Bilder (${reported.length})</h3>
       <p class="hint">Ein neues Bild an diesem Platz oder «Bild entfernen» erledigt die Meldung automatisch.</p>
       <div class="reports">${reported.map(({ r, cat, e, img }, i) => `<div class="report-row">
@@ -1866,7 +2243,7 @@ function renderTools(){
         ${empty === 1 ? "wird" : "werden"} beim Übernehmen fehlender Bilder nicht gefüllt (im Eintrag änderbar).</p>` : ""}
     </details>
     <details class="sec" open><summary>Sicherung</summary>
-      <p class="hint">Lädt alle Kategorien, Einträge, Bildangaben und Forscheraufträge als Datei herunter (JSON). Die Bild- und
+      <p class="hint">Lädt alle Kategorien, Einträge, Bildangaben, Forscheraufträge und Kantone als Datei herunter (JSON). Die Bild- und
         Tondateien selbst liegen im Supabase-Speicher, ihre Quellen auf Wikimedia Commons. Am besten regelmässig und vor
         grossen Änderungen sichern.</p>
       <p><button type="button" class="ghost" id="backupBtn">Sicherung herunterladen</button></p>
@@ -1881,7 +2258,7 @@ function renderTools(){
     ev.target.disabled = true;
     try{
       const n = await downloadBackup();
-      msg(`Sicherung erstellt: ${n.categories} Kategorien, ${n.entries} Einträge, ${n.images} Bilder, ${n.tasks} Forscheraufträge.`);
+      msg(`Sicherung erstellt: ${n.categories} Kategorien, ${n.entries} Einträge, ${n.images} Bilder, ${n.tasks} Forscheraufträge, ${n.regions} Kantone.`);
     }catch(err){ msg("Sicherung fehlgeschlagen: " + err.message, true); }
     ev.target.disabled = false;
   });

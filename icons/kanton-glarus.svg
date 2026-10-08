@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Kantonszeichen Glarus für «Natur und Schweiz»: eigene, vereinfachte Zeichnung nach den Merkmalen des Wappens
+       (Rot, schwarz gekleideter Pilger Fridolin mit goldenem Heiligenschein, Pilgerstab und Buch). Kein offizielles Wappen. -->
+  <circle cx="32" cy="32" r="31" fill="#d7261e"/>
+  <circle cx="32" cy="32" r="28.5" fill="none" stroke="#f0b323" stroke-width="1.6"/>
+  <circle cx="31" cy="16.5" r="7" fill="#f0b323"/>
+  <path d="M41.5 11 L35.5 55" stroke="#f0b323" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M24.5 24.5 Q31 21.5 37.5 24.5 L39.5 34 L41.5 50.5 L36 52 L32 43 L28.5 52.5 L22 50.5 L24.5 37 Z" fill="#1b1b1b"/>
+  <path d="M37 26 L40.5 30.5" stroke="#1b1b1b" stroke-width="4.2" stroke-linecap="round"/>
+  <circle cx="40.6" cy="30.8" r="1.9" fill="#fff"/>
+  <rect x="19.5" y="31" width="6.5" height="8.5" rx=".8" fill="#f0b323" transform="rotate(-10 22.75 35.25)"/>
+  <circle cx="25.6" cy="36.2" r="1.8" fill="#fff"/>
+  <circle cx="31" cy="17.5" r="4.6" fill="#fff"/>
+  <path d="M26 53 L30 53.6 M34 53 L38 53.6" stroke="#1b1b1b" stroke-width="2.6" stroke-linecap="round"/>
+</svg>

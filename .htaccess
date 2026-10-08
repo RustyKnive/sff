@@ -8,6 +8,13 @@ RewriteEngine On
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
+# Kurze Adressen ohne «#»: /sff/glarus → /sff/#/glarus (Kanton; geht auch für Kategorien und Seiten, z. B. /sff/baeume).
+# Nur ein Wort aus Buchstaben, Ziffern und «-», und nur, wenn es keine solche Datei und keinen solchen Ordner gibt.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^(.*/)([a-z0-9-]+)/?$ [NC]
+RewriteRule ^[a-z0-9-]+/?$ %1#/%2 [NC,NE,R=302,L]
+
 AddType application/manifest+json .webmanifest
 
 <IfModule mod_headers.c>

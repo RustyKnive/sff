@@ -4,8 +4,8 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. Oktober 2026 · Version 2.16.0 (Datenbank 21) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
-73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge
+**Stand:** 8. Oktober 2026 · Version 2.17.0 (Datenbank 22) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge · 1 Kanton (Glarus, 68 vorgeschlagene Einträge)
 
 ---
 
@@ -58,6 +58,12 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   hilft ein Tipp. Danach Lob, Erklärung, Vergleich mit der Vermutung und Link zum Eintrag. Menü → «Forscheraufträge»
   zeigt alle Aufträge mit Stand und eigenen Antworten (nur auf dem Gerät); der tägliche Auftrag lässt sich abschalten.
   Mit × oder Esc lässt sich jederzeit unterbrechen, nach einem gelösten Auftrag beendet «Fertig für heute».
+- **Kantone:** Über dem Titel wählt man die **ganze Schweiz** oder einen **Kanton** (zuerst Glarus). Im Kanton zeigt die Seite
+  nur seine Einträge, in den Farben seines Wappens (Farbband oben, Knöpfe, Kantonszeichen), mit eigener Startzeile und Einleitung.
+  Alles funktioniert gleich: Kategorien, Suche, LernApp (Lernsessions gehören zum Kanton), Forscheraufträge, Spiele (eigene Rekorde),
+  Quiz und Drucken. Auf der Textseite steht bei manchen Einträgen «Im Kanton Glarus: …». Ein Eintrag kann zu mehreren Kantonen gehören.
+  Direkter Einstieg über **je-net.ch/sff/glarus**; die Wahl bleibt auf dem Gerät gespeichert, bis man eine andere trifft.
+  Führt ein Direktlink (z. B. QR-Code) zu einem Eintrag ausserhalb des Kantons, zeigt die Seite dafür kurz die ganze Schweiz.
 - **Offline-App:** Die Seite lässt sich auf dem Handy installieren und funktioniert ohne Internet.
 - Hell- und Dunkelmodus nach Einstellung des Geräts.
 
@@ -81,7 +87,13 @@ Sie wird bei jeder neuen Möglichkeit ergänzt.
   Ein neues Bild oder «Bild entfernen» erledigt sie automatisch.
 - **Gemeldete Textfehler:** eigene Liste in der Übersicht mit Nummer, Eintrag, Anzahl und Beschreibung; «Erledigt»
   schliesst die Meldung. Im Eintrag steht die Meldung oben, mit «Meldung erledigt».
-- **Sicherung:** Ein Knopf lädt alle Kategorien, Einträge und Bildangaben als Datei herunter.
+- **Kantone** (oben «Kantone», Zahl = offene Vorschläge): Kantone anlegen, sortieren, ein- und ausblenden, löschen. Pro Kanton
+  **Einträge** (nach Kategorien, anhaken = gehört dazu, Hinweis «Im Kanton …», Vorschläge bestätigen oder entfernen, Filter
+  «Zugeordnet», «Nur Vorschläge», «Alle»), **Name und Farben** (Name, Kürzel, Titel, Einleitung, vier Farben aus dem Wappen mit
+  Vorschau, Kantonszeichen hochladen) und **Einstieg und QR-Code** (kurze Adresse, Plakat mit QR-Code). Im Eintrag ein Abschnitt
+  «Kantone». Neue Kategorien und Einträge mit Claude lassen sich für einen Kanton erstellen: Der Auftrag verlangt dann den
+  Bezug zum Kanton und einen Hinweis pro Eintrag.
+- **Sicherung:** Ein Knopf lädt alle Kategorien, Einträge und Bildangaben als Datei herunter. Seit 2.17.0 auch die Kantone.
 
 ### Technik in Kürze
 
@@ -438,6 +450,27 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   fehlende Bilder, Bilder ohne Quelle, offene Meldungen, Tierstimmen, Verwechslungshinweise, Lernziele, Forscheraufträge und
   Version (Warnfarbe, wo etwas zu tun ist), darunter eine Tabelle pro Kategorie mit Totalzeile.
 
+### 8. Oktober – Kantone, zuerst Glarus (Version 2.17.0)
+
+- Wunsch des Users (wohnt im Kanton Glarus): ein Bereich mit den Einträgen, die im Kanton Glarus wichtig sind, mit einem
+  direkten, einfachen Einstieg und einem eigenen Erscheinungsbild in den Farben und mit den Merkmalen des Wappens; in der
+  Verwaltung bearbeitbar; weitere Kantone sollen dazukommen können.
+- Entscheide mit dem User: Claude schlägt die Einträge vor, der User entscheidet danach. Alle Möglichkeiten der Seite gelten
+  auch im Kanton. Der gewählte Kanton bleibt gewählt, bis jemand den Kanton wechselt oder «Ganze Schweiz» wählt. Einstieg über
+  **je-net.ch/sff/glarus** (ohne «#»). Ein Eintrag kann zu mehreren Kantonen und wie bisher zu einer Kategorie gehören
+  (z. B. der Steinbock). Später können Kategorien wie Geschichte oder Politik dazukommen.
+- **Umsetzung:** Kantone und Zuordnung stehen in der Datenbank (Datenbank-Version 22), nichts ist fest auf Glarus programmiert:
+  Ein weiterer Kanton ist ein neuer Eintrag in der Verwaltung. Die Seite filtert im Kanton alle Inhalte auf seine Einträge,
+  darum funktionieren LernApp, Spiele, Forscheraufträge, Quiz, Druck, Suche und «Jetzt zu sehen» ohne eigene Anpassung.
+- **Erscheinungsbild Glarus:** Rot, Schwarz und Gold aus dem Wappen (Farbband oben, Knöpfe, Rahmen) und ein eigenes, vereinfachtes
+  **Kantonszeichen** nach Fridolin (Pilger mit goldenem Heiligenschein, Pilgerstab und Buch). Bewusst kein offizielles Wappen:
+  Kantonswappen sind gesetzlich geschützt, und die Seite soll nicht wie ein Angebot des Kantons wirken (Hinweis im Copyright).
+  Die Schriftfarbe passt die Seite automatisch an, damit Text in Kantonsfarbe hell und dunkel gut lesbar bleibt.
+- **68 Vorschläge** für Glarus aus den bestehenden Einträgen, z. B. Tödi, Martinsloch, Walensee, Verrucano, Flysch, Schiefer
+  (Landesplattenberg Engi), Föhn, Gämse (Freiberg Kärpf), Steinbock, Braunvieh, Alpenblumen, Bergwald, Alpentiere. Bei 10 steht
+  schon ein Hinweis «Im Kanton Glarus: …». Sie sind sofort sichtbar und in der Verwaltung als «Vorschlag» markiert.
+- Getestet mit den Daten der Sicherung vom 2.10. in einem Testbrowser (Anzeige und Verwaltung mit Testdaten, hell, dunkel, schmal).
+
 ---
 
 ## Versionen
@@ -472,6 +505,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.14.2 | 2.10.2026 | Forscheraufträge: kurze Antworten auch als Satz («Ich glaube, es ist ein Taubenschwänzchen», «Es sind 30'000 Liter»); Füllwörter zählen nicht, wer mit «oder» mehrere Möglichkeiten nennt, rät |
 | 2.15.0 | 2.10.2026 | Verwaltung neu gegliedert: «Zu erledigen», Kategorien mit Registern (Prüfen, Einträge, Aufträge, Einstellungen), «Werkzeuge»; Prüf-Tabelle mit Text und allen Bildern einer Kategorie; Forscheraufträge in der Verwaltung pflegen; Sicherung mit Aufträgen |
 | 2.16.0 | 2.10.2026 | Verwaltung: «Übersicht» mit den wichtigsten Kennzahlen als Startseite, oben in der Navigation und über den Titel von überall erreichbar; «Zu erledigen» unter eigener Adresse |
+| 2.17.0 | 8.10.2026 | Kantone: eigener Bereich pro Kanton mit Farben und Zeichen aus dem Wappen, Wahl im Kopf der Seite und über je-net.ch/sff/glarus, alle Möglichkeiten der Seite auch im Kanton; Verwaltung «Kantone» mit Zuordnung, Hinweisen, Vorschlägen und QR-Plakat; Glarus mit 68 vorgeschlagenen Einträgen (Datenbank-Version 22) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -501,6 +535,9 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | Forscheraufträge mit Antworten nur auf dem Gerät, einmal pro Tag und abschaltbar | Einstieg über eine echte Frage weckt Neugier; ohne Konto und ohne persönliche Daten, kein Zwang |
 | Rekorde nur gegen sich selbst, keine Ranglisten, Konfetti nur bei echtem Erfolg | motivieren, ohne vom Lernen abzulenken oder schwächere Lernende blosszustellen; kein Konto nötig |
 | Kategorie des Tages = Kategorie der Entdeckung des Tages | ein gemeinsamer Tagesschwerpunkt statt zwei verschiedener Hinweise |
+| Kanton als Filter über alle Inhalte statt eigener Kopien | ein Eintrag existiert nur einmal (Korrekturen gelten überall), gehört aber zu beliebig vielen Kantonen; alle Möglichkeiten der Seite funktionieren ohne Anpassung |
+| Eigenes Kantonszeichen statt offiziellem Wappen | Kantonswappen sind geschützt; Farben und Merkmale genügen für den Wiedererkennungswert |
+| Vorschläge sofort sichtbar, Bestätigen in der Verwaltung | der Bereich ist von Anfang an gefüllt; der User entscheidet in Ruhe, was bleibt |
 
 ## Änderungen an der Datenbank
 
@@ -523,6 +560,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `019_lernziele_verwechslungen.sql` | Lernziel pro Kategorie (Spalte `goal`, 22 Sätze) und 37 weitere Verwechslungspaare |
 | `020_textkorrekturen.sql` | Textkorrekturen aus der KI-Vorprüfung (Prüfliste vom 30.9.2026) in 11 Einträgen, nur die betroffenen Stellen |
 | `021_auftraege.sql` | Tabelle `tasks` für Forscheraufträge (Frage, Art, Antwortform, Auswahl, Antwort, Tipp, Erklärung) und 25 Aufträge |
+| `022_kantone.sql` | Tabellen `regions` (Kantone mit Farben und Zeichen) und `entry_regions` (Zuordnung mit Hinweis und Vorschlag), Glarus mit 68 Vorschlägen; der Speicher nimmt neu auch PNG an (Kantonszeichen) |
 
 ## Offen und geplant
 
@@ -535,6 +573,9 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
   - [ ] Verwaltung, Register «Aufträge»: Auftrag bearbeiten und speichern, neu anlegen, ein- und ausblenden, löschen
   - [ ] Verwaltung, Werkzeuge: «Sicherung herunterladen» (die Datei enthält auch die Forscheraufträge)
   - [ ] Seite: Beim allerersten Besuch erscheint nach dem Schliessen der Einführung der erste Forscherauftrag
+  - [ ] Kantone: je-net.ch/sff/glarus öffnet den Kanton Glarus (Weiterleitung in .htaccess, nur auf dem Webspace prüfbar)
+  - [ ] Kantone, Verwaltung: Vorschläge bestätigen und entfernen, Hinweis ändern, Kantonszeichen hochladen, Plakat drucken (mit echter Anmeldung)
+  - [ ] Kantone: auf dem Handy den Kanton wechseln, LernApp-Session im Kanton anlegen
 
 - Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
 - Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).

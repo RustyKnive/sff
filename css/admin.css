@@ -239,3 +239,49 @@ table.overview td.warn,table.overview .warn{color:var(--warn);font-weight:600}
 table.overview tr.off td{opacity:.6}
 table.overview tfoot td{font-weight:700;border-top:2px solid var(--line);border-bottom:none}
 table.overview a{color:var(--accent);font-weight:600}
+
+/* Kantone (022): Liste, Zuordnung der Einträge, Farben mit Vorschau, Kantonszeichen, Plakat */
+.region-list img,.region-dot{width:24px;height:24px;flex:none;border-radius:50%}
+.region-dot{display:inline-block}
+h2.region-title{display:flex;align-items:center;gap:10px}
+h2.region-title img{width:40px;height:40px}
+.badge.ok{color:var(--accent)}
+.filter{display:flex;flex-wrap:wrap;gap:4px 20px;margin-bottom:6px}
+.filter label{margin:0}
+.reg-cat h3{margin:18px 0 4px}
+table.reg-table{width:100%;border-collapse:collapse;font-size:.88rem}
+table.reg-table td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.reg-table td:first-child{width:28px}
+table.reg-table td:nth-child(2){width:30%}
+table.reg-table td:nth-child(2) a{color:var(--ink);font-weight:600}
+table.reg-table td.reg-state{width:170px;white-space:nowrap}
+table.reg-table td.reg-state .small{margin:0 0 0 4px}
+table.reg-table input[type=text]{margin:0;font-size:.85rem}
+table.reg-table tr:not(.on) input[type=text]{opacity:.45}
+table.reg-table tr.proposal{background:color-mix(in srgb, var(--warn) 9%, transparent)}
+table.reg-table input[type=checkbox]{accent-color:var(--accent);width:17px;height:17px;cursor:pointer}
+.reg-row{display:grid;grid-template-columns:minmax(150px,auto) auto 1fr;gap:8px;align-items:center;margin-bottom:6px}
+.reg-row label{margin:0}
+.reg-row input[type=text]{margin:0}
+.colors input[type=color]{display:block;width:100%;height:38px;margin-top:3px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer}
+.region-preview{overflow:hidden;margin:6px 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);max-width:520px}
+.rp-band{height:8px;background:linear-gradient(90deg,var(--r1) 0 62%,var(--r2) 62% 88%,var(--r3) 88%)}
+.rp-body{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px}
+.rp-chip{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border:1px solid var(--r1);border-radius:99px;background:var(--card);font-weight:600;font-size:.88rem}
+.rp-chip img,.rp-code{width:26px;height:26px;border-radius:50%}
+.rp-code{display:grid;place-items:center;background:var(--r1);color:var(--ron);font-size:.7rem;font-weight:800}
+.rp-button{padding:6px 14px;border-radius:99px;background:var(--r1);color:var(--ron);font-weight:600;font-size:.85rem}
+.rp-body small{color:var(--muted);margin-left:auto}
+.emblem-row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
+.emblem-row img.emblem{width:96px;height:96px}
+.emblem-row input[type=file]{display:block;margin-top:4px;font-weight:400}
+@media print{
+  .qr-poster{display:flex;flex-direction:column;align-items:center;gap:6mm;padding-top:20mm;text-align:center;color:#000}
+  .qr-poster img{width:45mm;height:45mm}
+  .qr-poster h1{margin:0;font-size:32pt}
+  .qr-poster p{margin:0;font-size:14pt}
+  .qr-poster svg{width:110mm;height:110mm}
+  .qr-poster b{font-size:18pt}
+}
+.reg-new{margin:4px 0 6px}
+.reg-new label{width:auto;min-width:260px}

@@ -35,9 +35,16 @@
       <a class="menu-item" href="#/copyright">Copyright</a>
     </nav>
   </div>
+  <!-- Kanton oder ganze Schweiz (js/index.js showRegionSwitch); Kantone kommen aus der Datenbank (022) -->
+  <div class="region-wrap" id="regionWrap" hidden>
+    <button type="button" class="region-btn" id="regionBtn" aria-expanded="false" aria-controls="regionMenu"></button>
+    <div class="region-menu" id="regionMenu" hidden></div>
+  </div>
   <button class="back" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Übersicht</button>
   <h1 id="title">Natur und Schweiz by toj-apps</h1>
   <p id="intro"></p>
+  <!-- Startseite im Kanton: Zeichen, Name und Einleitung (js/index.js showRegionHero) -->
+  <div class="region-hero" id="regionHero" hidden></div>
   <!-- Suche und direkte Wege zu LernApp und Druck (Übersicht, Kategorien, «Jetzt zu sehen») -->
   <div class="search-row" id="searchRow">
     <input type="search" id="search" class="search" placeholder="Suchen: Name oder lateinischer Name" aria-label="Suchen" autocomplete="off">
@@ -199,6 +206,18 @@
       <p>Bei vielen Tieren spielt <b>«Stimme anhören»</b> eine Aufnahme ihres Rufs oder Gesangs ab. Nochmals tippen hält sie an.</p>
     </details>
     <details>
+      <summary>Kanton oder ganze Schweiz</summary>
+      <p>Oben über dem Titel wählst du, ob die Seite die <b>ganze Schweiz</b> zeigt oder nur einen <b>Kanton</b>, z. B. Glarus.
+        Im Kanton erscheinen nur Einträge, die dort wichtig sind, in den Farben des Kantons. Alles funktioniert gleich:
+        Kategorien, Suche, LernApp, Forscheraufträge, Spiele, Quiz und Drucken nehmen dann nur die Einträge dieses Kantons.</p>
+      <ul>
+        <li><b>Direkt einsteigen:</b> Die Adresse mit dem Namen des Kantons, z. B. <b>je-net.ch/sff/glarus</b>, öffnet gleich den Kanton.</li>
+        <li><b>Gemerkt:</b> Die Wahl bleibt auf diesem Gerät gespeichert, bis du eine andere triffst.</li>
+        <li><b>Im Kanton:</b> Auf der Textseite einer Karte steht bei manchen Einträgen, was sie im Kanton besonders macht.</li>
+        <li><b>Lernsessions</b> gehören zum Bereich, in dem du sie angelegt hast; ihr Name beginnt dann mit dem Kanton.</li>
+      </ul>
+    </details>
+    <details>
       <summary>Suchen</summary>
       <p>Das Suchfeld oben findet Einträge in allen Kategorien, auch über den lateinischen Namen. Umlaute und
         Gross- und Kleinschreibung spielen keine Rolle («Aesche» findet «Äsche»). <kbd>Esc</kbd> leert das Feld.</p>
@@ -350,6 +369,8 @@
     Urheber und Lizenz findest du über «Quelle» im Bild oder in der Liste unten.</p>
   <p>Einzelne Infografiken wurden mit künstlicher Intelligenz erstellt (ChatGPT von OpenAI); sie sind in der Liste unten
     als «KI-generiert» gekennzeichnet. Bilder ohne Quelle sind eigene Fotos.</p>
+  <p>Die Kantonszeichen sind eigene, vereinfachte Zeichnungen nach den Farben und Merkmalen der Wappen. Sie sind keine
+    offiziellen Wappen, und die Seite ist kein Angebot der Kantone.</p>
   <h2>Bildnachweis</h2>
   <div id="credits"></div>
 </section>

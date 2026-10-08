@@ -405,6 +405,38 @@ dialog.beamer::backdrop{background:#000}
 /* Druck (PDF): nur der Druckbereich, A4 mit 5 mm Rand, 8 Einträge pro Seite (2 × 4) mit 2 mm weissem Abstand.
    Weiss und Schwarz sind hier fest, weil Papier immer weiss ist (auch im Dunkelmodus). */
 #print{display:none}
+/* Kantone (022): Auswahl im Kopf, Farbband, Startseite, Hinweis auf der Textseite.
+   Die Farben --region, --region-2, --region-3, --on-region und die angepassten --accent/--accent-soft setzt js/index.js (applyBrand) */
+.region-wrap{position:relative;display:block;width:max-content;max-width:100%;margin:0 0 10px;z-index:9}
+.region-btn{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:4px 12px 4px 4px;border:1px solid var(--accent-soft);border-radius:99px;
+  background:var(--card);color:var(--ink);font:inherit;font-size:.88rem;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.region-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.region-btn:hover{border-color:var(--accent)}
+.region-btn small{color:var(--muted)}
+.region-btn img,.region-btn svg,.region-item img,.region-item svg{width:28px;height:28px;flex:none;border-radius:6px}
+.region-btn img,.region-item img{border-radius:50%}
+.region-code{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;background:var(--region,var(--accent));
+  color:var(--on-region,var(--card));font-size:.7rem;font-weight:800}
+.region-menu{position:absolute;top:calc(100% + 6px);left:0;width:min(300px,calc(100vw - 32px));padding:6px;border-radius:12px;
+  background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column}
+.region-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border:none;border-radius:8px;background:none;color:var(--ink);
+  font:inherit;text-align:left;cursor:pointer}
+.region-item span{display:flex;flex-direction:column;font-weight:600}
+.region-item small{font-weight:400;color:var(--muted);font-size:.78rem}
+.region-item:hover,.region-item:focus-visible{background:var(--accent-soft);outline:none}
+.region-item.current{box-shadow:inset 3px 0 0 var(--accent)}
+.region-hint{margin:4px 10px 2px;font-size:.75rem;color:var(--muted)}
+body.region .region-btn{border-color:var(--region)}
+/* Farbband oben in den Farben des Wappens */
+body.region header::before{content:"";position:absolute;left:16px;right:16px;top:0;height:7px;border-radius:0 0 6px 6px;
+  background:linear-gradient(90deg,var(--region) 0 62%,var(--region-2) 62% 88%,var(--region-3) 88%)}
+.region-hero{display:flex;align-items:center;gap:14px;margin:14px -54px 0 0;padding:12px 16px;border-radius:14px;
+  background:var(--accent-soft);box-shadow:inset 5px 0 0 var(--region,var(--accent))}
+.region-hero img{width:60px;height:60px;flex:none}
+.region-hero b{display:block;font-size:1.2rem;color:var(--accent)}
+.region-hero span{font-size:.92rem}
+.text .region-note{padding:6px 10px;border-radius:0 8px 8px 0;background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--region,var(--accent));font-size:.86rem}
+
 @media print{
   @page{size:A4;margin:5mm}
   html,body{background:#fff;margin:0}

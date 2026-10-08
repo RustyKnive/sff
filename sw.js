@@ -13,7 +13,7 @@ const IMAGES = "sff-bilder";   // wird auch von js/index.js gefüllt (Knopf «F�
 const FILES = [
   "./", "index.html", "config.js", "manifest.webmanifest",
   "css/basis.css", "css/index.css", "js/version.js", "js/wikimedia.js", "js/index.js",
-  "icons/steinbock.svg", "icons/steinbock-192.png", "icons/steinbock-512.png"
+  "icons/steinbock.svg", "icons/steinbock-192.png", "icons/steinbock-512.png", "icons/kanton-glarus.svg"
 ];
 const WAIT = 4000;             // so lange auf das Netz warten, bevor der gespeicherte Stand kommt
 

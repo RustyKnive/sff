@@ -76,6 +76,10 @@ oder deutlich mehr Funktionen wären Module (ES-Module ohne Build) der nächste 
   bleibt), Suchbegriffe, bewusst leere Bildplätze, Verwechslungsgefahr (`jsonb` `[{name, diff}]`), Tierstimme, sichtbar.
 - `images` – Eintrag und Position 1–4, Pfad im Speicher, Quelle und Dateiname (für die Lizenz), Ausschnitt der Vorschau,
   «zugeschnitten».
+- `regions` (022) – Kantone: Kennung (zugleich Adresse `/sff/glarus`), Name, Kürzel, Titel, Einleitung, vier Farben aus
+  dem Wappen, Kantonszeichen, Reihenfolge, sichtbar.
+- `entry_regions` (022) – welcher Eintrag zu welchem Kanton gehört (n:m), mit Hinweis «Im Kanton …» und `confirmed`
+  (`false` = Vorschlag, schon sichtbar, in der Verwaltung zu bestätigen).
 - `admins` – Konten mit Schreibrecht.
 
 Änderungen am Schema kommen als **nummerierte SQL-Datei** (`002_…` bis `014_…`), die im Supabase-Dashboard ausgeführt
@@ -199,6 +203,28 @@ Dafür mussten der Speicher (erlaubte Dateitypen) und die CSP (`media-src`) erwe
 Die Direktlinks (`#/kategorie/eintrag`) werden mit einem Slug aus dem Namen gebildet (Kleinbuchstaben, Akzente weg,
 Leerzeichen → Bindestrich). Die QR-Codes erzeugt die Verwaltung mit der kleinen Bibliothek *qrcode-generator* als SVG;
 die Anzeige bleibt ohne Bibliothek. Gedruckt werden 12 Karten pro A4-Seite über Druck-CSS.
+
+### Kantone als Filter
+
+Ein Kanton ist **keine Kopie** der Inhalte, sondern ein Filter: Die Anzeige lädt wie bisher alle Kategorien (dazu pro Eintrag
+die Kantone aus `entry_regions`, eingebettet in dieselbe Anfrage) und bildet für den gewählten Kanton eine gefilterte Sicht
+(`regionView`): nur seine Einträge, Kategorien ohne Einträge fallen weg, Forscheraufträge nur zu seinen Einträgen. Diese Sicht
+ersetzt die Liste, mit der alle Teile der Seite arbeiten. So funktionieren Suche, LernApp, Spiele, Quiz, Druck, «Jetzt zu sehen»
+und Entdeckung des Tages ohne eigene Anpassung; ein Eintrag existiert nur einmal und kann zu beliebig vielen Kantonen gehören.
+Nur wo Daten über die Sicht hinaus Bestand haben, braucht es Kantonswissen: Lernsessions merken sich ihren Kanton (sonst würde
+der Abgleich beim Wechsel Karten verwerfen), Spielrekorde bekommen den Kanton im Schlüssel, Bildnachweis und Offline-Download
+nehmen immer alle Einträge.
+
+Die Wahl steht in `localStorage` (`sff-kanton`). Die Adresse `#/glarus` wählt den Kanton und wird zu `#/`; `.htaccess` leitet
+`/sff/glarus` (ein Wort, keine Datei, kein Ordner) dorthin weiter. Kantone, Kategorien und Seiten teilen sich darum die
+Adressen; die Verwaltung verhindert doppelte Kennungen. Ein Direktlink auf einen Eintrag ausserhalb des Kantons zeigt
+vorübergehend die ganze Schweiz; zurück auf der Übersicht gilt wieder die gespeicherte Wahl.
+
+Das Erscheinungsbild entsteht aus den gespeicherten Farben über CSS-Variablen. Weil die Hauptfarbe eines Wappens (z. B. Rot)
+als Schrift auf dem hellen oder dunklen Hintergrund nicht immer den Kontrast nach WCAG AA (4,5:1) erreicht, mischt `readable()`
+sie schrittweise mit Schwarz bzw. Weiss, bis der Kontrast zu Hintergrund, Karten und heller Fläche genügt; beim Wechsel
+zwischen hell und dunkel wird neu gerechnet. Das Kantonszeichen ist eine eigene Zeichnung (SVG in `icons/` oder hochgeladenes
+PNG), kein offizielles Wappen, weil Kantonswappen geschützt sind.
 
 ### KI ohne Schnittstelle
 

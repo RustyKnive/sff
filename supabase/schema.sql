@@ -138,9 +138,9 @@ create policy "lesen" on public.entries for select to anon, authenticated using 
 -- ------------------------------------------------------------------
 -- Storage: öffentlicher Bucket «bilder», nur Admins laden hoch
 -- ------------------------------------------------------------------
--- Nur JPEG (Bilder) und MP3 (Tierstimmen, 014), höchstens 5 MB pro Datei (der Admin verkleinert Bilder auf 1600 px)
+-- Nur JPEG (Bilder), PNG (Kantonszeichen, 022) und MP3 (Tierstimmen, 014), höchstens 5 MB pro Datei (der Admin verkleinert Bilder auf 1600 px)
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('bilder', 'bilder', true, 5242880, array['image/jpeg', 'audio/mpeg'])
+values ('bilder', 'bilder', true, 5242880, array['image/jpeg', 'image/png', 'audio/mpeg'])
 on conflict (id) do update set public = true, file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
@@ -259,6 +259,46 @@ end;
 $$;
 revoke all on function public.report_text(uuid, text) from public;
 grant execute on function public.report_text(uuid, text) to anon, authenticated;
+
+-- ------------------------------------------------------------------
+-- Kantone (022): eigener Bereich pro Kanton, Zuordnung der Einträge (Daten für Glarus in 022_kantone.sql)
+-- ------------------------------------------------------------------
+create table if not exists public.regions (
+  id         text primary key check (id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),   -- Adresse, z. B. glarus → /sff/glarus
+  name       text not null check (char_length(name) between 2 and 60),
+  title      text not null default '' check (char_length(title) <= 80),
+  code       text not null default '' check (code ~ '^[A-Z]{0,3}$'),
+  intro      text not null default '' check (char_length(intro) <= 400),
+  color      text not null default '#d7261e' check (color ~ '^#[0-9a-f]{6}$'),     -- Farben aus dem Wappen
+  color2     text not null default '#1b1b1b' check (color2 ~ '^#[0-9a-f]{6}$'),
+  color3     text not null default '#f0b323' check (color3 ~ '^#[0-9a-f]{6}$'),
+  on_color   text not null default '#ffffff' check (on_color ~ '^#[0-9a-f]{6}$'),
+  emblem     text,                                                                -- «icons/…» oder Pfad im Bucket
+  visible    boolean not null default true,
+  sort       integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create table if not exists public.entry_regions (
+  entry_id   uuid not null references public.entries(id) on delete cascade,
+  region_id  text not null references public.regions(id) on update cascade on delete cascade,
+  note       text not null default '' check (char_length(note) <= 200),          -- «Im Kanton …»
+  confirmed  boolean not null default true,                                       -- false = Vorschlag
+  created_at timestamptz not null default now(),
+  primary key (entry_id, region_id)
+);
+alter table public.regions enable row level security;
+alter table public.entry_regions enable row level security;
+drop policy if exists "lesen" on public.regions;
+create policy "lesen" on public.regions for select to anon, authenticated using (visible or public.is_admin());
+drop policy if exists "admin_schreiben" on public.regions;
+create policy "admin_schreiben" on public.regions for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "lesen" on public.entry_regions;
+create policy "lesen" on public.entry_regions for select to anon, authenticated using (true);
+drop policy if exists "admin_schreiben" on public.entry_regions;
+create policy "admin_schreiben" on public.entry_regions for all to authenticated using (public.is_admin()) with check (public.is_admin());
+grant select on public.regions, public.entry_regions to anon, authenticated;
+grant insert, update, delete on public.regions, public.entry_regions to authenticated;
 
 -- ------------------------------------------------------------------
 -- Danach: dein Konto zum Admin machen (E-Mail anpassen)
