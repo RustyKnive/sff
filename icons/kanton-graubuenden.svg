@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Kantonszeichen Graubünden für «Natur und Schweiz»: eigene, vereinfachte Zeichnung nach den Merkmalen des Wappens
+       (Steinbock des Gotteshausbundes, Blau und Gold des Zehngerichtenbundes). Kein offizielles Wappen. -->
+  <circle cx="32" cy="32" r="31" fill="#ffffff"/>
+  <circle cx="32" cy="32" r="29.5" fill="none" stroke="#1f4e9c" stroke-width="3"/>
+  <circle cx="32" cy="32" r="27" fill="none" stroke="#f4c400" stroke-width="1.2"/>
+  <g fill="#1b1b1b">
+    <ellipse cx="29" cy="37" rx="12" ry="6.5"/>
+    <path d="M37 34 L42 25 L47 26 L47.5 29.5 L44 31 L41 37 Z"/>
+    <path d="M21 41 L19.5 50 L22 50 L24 42 Z"/>
+    <path d="M25 42 L25 50.5 L27.5 50.5 L28 42 Z"/>
+    <path d="M33 42 L34 50.5 L36.5 50.5 L35.5 42 Z"/>
+    <path d="M37 40 L39.5 49.5 L42 49 L39.5 39 Z"/>
+    <path d="M17.5 35 L14.5 33 L17.5 37.5 Z"/>
+  </g>
+  <path d="M43 26 Q38 13 27 15 Q34 16 39 26" fill="none" stroke="#1b1b1b" stroke-width="3" stroke-linecap="round"/>
+  <path d="M46.5 30 L47 33.5" stroke="#1b1b1b" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

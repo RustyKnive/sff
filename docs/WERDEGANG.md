@@ -4,8 +4,8 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.18.0 (Datenbank 24) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
-73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge · 1 Kanton (Glarus, 101 Einträge, alle Vorschläge gesichtet)
+**Stand:** 8. Oktober 2026 · Version 2.19.0 (Datenbank 25) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 49 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen)
 
 ---
 
@@ -495,6 +495,19 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   widersprüchlichen Angaben steht nur, was sicher ist. Die Kategorien werden ausgeblendet angelegt, wie alle neuen Kategorien:
   zuerst Bilder übernehmen und durchsehen, dann einblenden. Am selben Abend vom User eingeblendet.
 
+### 8. Oktober – Vier weitere Kantone und Forscheraufträge (Version 2.19.0)
+
+- Wunsch des Users: Glarner Forscheraufträge und die Kantone Graubünden, St. Gallen, Zürich und Tessin, ebenfalls mit
+  Forscheraufträgen (Datenbank-Version 25). Die Kantone brauchten keinen neuen Code, nur Daten und je ein Kantonszeichen.
+- **Kantonszeichen** als eigene, vereinfachte Zeichnungen nach den Wappen: Graubünden mit Steinbock in Blau und Gold, St. Gallen
+  mit weissem Rutenbündel auf Grün, Zürich schräg geteilt Weiss und Blau, Tessin gespalten Rot und Blau. Das Farbband hat neu
+  einen feinen Rand in der Kantonsfarbe, damit weisse Abschnitte (St. Gallen, Zürich) sichtbar bleiben.
+- **Vorschläge:** Graubünden 35, St. Gallen 25, Zürich 39 und Tessin 19 bestehende Einträge, einige mit Hinweis «Im Kanton …».
+  Wie bei Glarus sind sie sofort sichtbar und in der Verwaltung zu bestätigen oder zu entfernen.
+- **24 Forscheraufträge:** 8 für Glarus (Rasterplan nach dem Brand, 500 Jahre Freiberg Kärpf, Schabziger, Lochsite, Martinsloch,
+  Näfelser Fahrt, Bergsturz von Elm, Stimmrecht ab 16) und je 4 für Graubünden, St. Gallen, Zürich und Tessin. Die Antwort steht
+  jeweils in einer Karte des Kantons; im Kanton erscheinen nur seine Aufträge, in der ganzen Schweiz alle.
+
 ---
 
 ## Versionen
@@ -532,6 +545,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.17.0 | 8.10.2026 | Kantone: eigener Bereich pro Kanton mit Farben und Zeichen aus dem Wappen, Wahl im Kopf der Seite und über je-net.ch/sff/glarus, alle Möglichkeiten der Seite auch im Kanton; Verwaltung «Kantone» mit Zuordnung, Hinweisen, Vorschlägen und QR-Plakat; Glarus mit 68 vorgeschlagenen Einträgen (Datenbank-Version 22) |
 | 2.17.1 | 8.10.2026 | 16 neue Glarner Einträge (Glärnisch, Klöntalersee, Linth, Freulerpalast, Landsgemeinde, Lochsite u. a.) und 6 weitere Vorschläge für Glarus; die ganze Schweiz bekommt oben ein rot-weisses Band wie die Kantone ihr Wappenband (Datenbank-Version 23) |
 | 2.18.0 | 8.10.2026 | Neue Kategorien Spezialitäten, Geschichte und Politik mit je 16 Einträgen aus der ganzen Schweiz und aus Glarus; Landsgemeinde zu Politik verschoben (Datenbank-Version 24) |
+| 2.19.0 | 8.10.2026 | Kantone Graubünden, St. Gallen, Zürich und Tessin mit Kantonszeichen und vorgeschlagenen Einträgen; 24 neue Forscheraufträge (8 für Glarus, je 4 für die neuen Kantone) (Datenbank-Version 25) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -589,6 +603,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `022_kantone.sql` | Tabellen `regions` (Kantone mit Farben und Zeichen) und `entry_regions` (Zuordnung mit Hinweis und Vorschlag), Glarus mit 68 Vorschlägen; der Speicher nimmt neu auch PNG an (Kantonszeichen) |
 | `023_glarus_eintraege.sql` | 16 neue Einträge aus dem Kanton Glarus (Berge, Gewässer, Sehenswürdigkeiten, Naturwunder), Glarus zugeordnet, und 6 weitere Vorschläge |
 | `024_spezialitaeten_geschichte_politik.sql` | Kategorien Spezialitäten, Geschichte, Politik (ausgeblendet angelegt) mit 47 Einträgen, Landsgemeinde zu Politik, 12 Glarner Zuordnungen |
+| `025_kantone_auftraege.sql` | Kantone Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen und 24 Forscheraufträge zu Kantonseinträgen |
 
 ## Offen und geplant
 

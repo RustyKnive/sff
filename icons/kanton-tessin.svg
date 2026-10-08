@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Kantonszeichen Tessin für «Natur und Schweiz»: eigene, vereinfachte Zeichnung nach den Farben des Wappens
+       (gespalten von Rot und Blau). Kein offizielles Wappen. -->
+  <defs><clipPath id="c"><circle cx="32" cy="32" r="31"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="32" height="64" fill="#d52b1e"/>
+    <rect x="32" width="32" height="64" fill="#1f5aa6"/>
+  </g>
+  <circle cx="32" cy="32" r="28.5" fill="none" stroke="#ffffff" stroke-width="1.6"/>
+</svg>
