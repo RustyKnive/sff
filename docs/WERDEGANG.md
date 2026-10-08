@@ -4,8 +4,8 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.17.0 (Datenbank 22) · 22 Kategorien mit 357 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
-73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge · 1 Kanton (Glarus, 68 vorgeschlagene Einträge)
+**Stand:** 8. Oktober 2026 · Version 2.17.1 (Datenbank 23) · 22 Kategorien mit 373 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 25 Forscheraufträge · 1 Kanton (Glarus, 90 Einträge, davon 16 eigene Glarner Einträge)
 
 ---
 
@@ -470,6 +470,14 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   (Landesplattenberg Engi), Föhn, Gämse (Freiberg Kärpf), Steinbock, Braunvieh, Alpenblumen, Bergwald, Alpentiere. Bei 10 steht
   schon ein Hinweis «Im Kanton Glarus: …». Sie sind sofort sichtbar und in der Verwaltung als «Vorschlag» markiert.
 - Getestet mit den Daten der Sicherung vom 2.10. in einem Testbrowser (Anzeige und Verwaltung mit Testdaten, hell, dunkel, schmal).
+- Am selben Tag (2.17.1, Datenbank 23) auf Wunsch des Users **16 neue Glarner Einträge**: Berge Glärnisch, Hausstock, Kärpf,
+  Ortstock; Gewässer Klöntalersee, Linth, Limmernsee, Obersee; Sehenswürdigkeiten Freulerpalast, Landsgemeinde, Landesplattenberg Engi,
+  Pantenbrücke, Escherkanal, Braunwald; Naturwunder Lochsite (Glarner Hauptüberschiebung) und Berglistüber. Die Fakten sind mit Quellen
+  geprüft (u. a. Historisches Lexikon der Schweiz, Bundesinventar, Axpo, Glarnerland Tourismus); unsichere Zahlen sind weggelassen.
+  Dazu 6 weitere Vorschläge, damit auch Insekten, Falter und Schädlinge im Kanton erscheinen. Die Landsgemeinde steht vorerst bei den
+  Sehenswürdigkeiten; kommt eine Kategorie Politik oder Geschichte dazu, lässt sie sich verschieben.
+- Ebenfalls auf Wunsch des Users: Auch die **ganze Schweiz** hat jetzt oben ein Farbband, in Rot und Weiss wie die Schweizer Fahne.
+  So erkennt man in jedem Bereich gleich, wo man ist.
 
 ---
 
@@ -506,6 +514,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.15.0 | 2.10.2026 | Verwaltung neu gegliedert: «Zu erledigen», Kategorien mit Registern (Prüfen, Einträge, Aufträge, Einstellungen), «Werkzeuge»; Prüf-Tabelle mit Text und allen Bildern einer Kategorie; Forscheraufträge in der Verwaltung pflegen; Sicherung mit Aufträgen |
 | 2.16.0 | 2.10.2026 | Verwaltung: «Übersicht» mit den wichtigsten Kennzahlen als Startseite, oben in der Navigation und über den Titel von überall erreichbar; «Zu erledigen» unter eigener Adresse |
 | 2.17.0 | 8.10.2026 | Kantone: eigener Bereich pro Kanton mit Farben und Zeichen aus dem Wappen, Wahl im Kopf der Seite und über je-net.ch/sff/glarus, alle Möglichkeiten der Seite auch im Kanton; Verwaltung «Kantone» mit Zuordnung, Hinweisen, Vorschlägen und QR-Plakat; Glarus mit 68 vorgeschlagenen Einträgen (Datenbank-Version 22) |
+| 2.17.1 | 8.10.2026 | 16 neue Glarner Einträge (Glärnisch, Klöntalersee, Linth, Freulerpalast, Landsgemeinde, Lochsite u. a.) und 6 weitere Vorschläge für Glarus; die ganze Schweiz bekommt oben ein rot-weisses Band wie die Kantone ihr Wappenband (Datenbank-Version 23) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -561,6 +570,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `020_textkorrekturen.sql` | Textkorrekturen aus der KI-Vorprüfung (Prüfliste vom 30.9.2026) in 11 Einträgen, nur die betroffenen Stellen |
 | `021_auftraege.sql` | Tabelle `tasks` für Forscheraufträge (Frage, Art, Antwortform, Auswahl, Antwort, Tipp, Erklärung) und 25 Aufträge |
 | `022_kantone.sql` | Tabellen `regions` (Kantone mit Farben und Zeichen) und `entry_regions` (Zuordnung mit Hinweis und Vorschlag), Glarus mit 68 Vorschlägen; der Speicher nimmt neu auch PNG an (Kantonszeichen) |
+| `023_glarus_eintraege.sql` | 16 neue Einträge aus dem Kanton Glarus (Berge, Gewässer, Sehenswürdigkeiten, Naturwunder), Glarus zugeordnet, und 6 weitere Vorschläge |
 
 ## Offen und geplant
 
