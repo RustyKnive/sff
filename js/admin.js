@@ -178,7 +178,7 @@ function renderSidebar(){
     </li>`;
   }).join("");
   // Hauptbereiche oben: aktiven markieren, Zahl der offenen Punkte bei «Zu erledigen»
-  const nav = !r.type ? "home" : r.type === "erledigen" ? "todo" : r.type === "werkzeuge" ? "tools"
+  const nav = !r.type ? "home" : r.type === "erledigen" ? "todo" : r.type === "ideen" ? "ideas" : r.type === "werkzeuge" ? "tools"
     : r.type === "kantone" || r.type === "r" ? "regions" : "";
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("active", a.dataset.nav === nav));
   const open = todoCount();
@@ -2125,6 +2125,7 @@ function render(){
   if(task && findCat(task.category_id)) return renderTask(findCat(task.category_id), task);
   if(r.type === "werkzeuge") return renderTools();
   if(r.type === "erledigen") return renderTodo();
+  if(r.type === "ideen") return renderIdeas();
   if(r.type === "kantone") return renderRegions();
   if(r.type === "r" && r.id === "neu") return renderRegion(null, "einstellungen");
   if(r.type === "r" && findRegion(r.id)) return renderRegion(findRegion(r.id), r.extra || "eintraege");
@@ -2265,6 +2266,46 @@ function renderTodo(){
     location.hash = "#/e/" + e.id;
   }));
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
+}
+
+/* «Ideen» (#/ideen, seit 2.23.0): alle vorgemerkten Pendenzen und Ideen an einem Ort, damit nichts verloren geht.
+   Feste Liste hier im Code; bei neuen Ideen oder Erledigtem nachführen, gleich wie docs/WERDEGANG.md «Offen und geplant». */
+const IDEEN = [
+  { title:"Pendenzen der Spielwiese", hint:"Vorgemerkt am 8. Oktober 2026, als Nächstes der Reihe nach.", items:[
+    ["Steckbriefe vorschlagen", "Lernende schlagen einen neuen Eintrag vor (ohne Namen, wie die Textmeldungen); die Lehrperson prüft und übernimmt ihn hier in der Verwaltung."],
+    ["Forscheraufträge draussen", "Aufträge mit eigenen Messungen und Beobachtungen, z. B. Föhn (Temperatur und Wind), Bach (Lebensraum der Bachforelle)."],
+    ["Vorlesen in LernApp und Aufträgen", "Frage, Merksatz und Erklärung vorlesen lassen, wie heute schon die Textseite der Karten."],
+    ["Themenpfade in der Verwaltung bearbeiten", "Heute nur per SQL (Tabelle «paths»). Dazu weitere Pfade, z. B. Wald, Wasser, Glarnerland."],
+    ["Exkursionen und Posten aus der Entdeckungskarte", "Orte auf der Karte auswählen und daraus einen Postenlauf mit QR-Plakaten und Steckbriefen drucken."]
+  ]},
+  { title:"Weitere Ideen", hint:"Noch nicht entschieden.", items:[
+    ["«Welches Tier ruft da?»", "Spiel oder LernApp-Variante mit den Tierstimmen (28 Arten): Stimme hören, Tier wählen."],
+    ["Ideen für die Mittelstufe Glarus und die Oberstufe", "Im Gespräch vom 8. Oktober 2026 besprochen, noch nichts entschieden."],
+    ["Entdeckungskarte erweitern", "Flüsse als Linien statt Punkt (Linth, Rhein, Aare …); bei neuen Einträgen mit festem Ort die Koordinaten gleich im Claude-Auftrag mitliefern lassen."],
+    ["Weitere Kantone", "Weitere Kantone mit eigenem Bereich, Kantonszeichen und vorgeschlagenen Einträgen (heute Glarus, Graubünden, St. Gallen, Zürich, Tessin)."],
+    ["Bildnachweis mit Urheber und Lizenz", "Für Druck und Weitergabe Urheber und Lizenz direkt angeben statt nur den Link zu Commons; 7 Bilder mit GFDL oder Persönlichkeitsrechten ersetzen (Lizenzprüfung vom 30.9.2026). Nur nötig bei Vermarktung."],
+    ["Vermarktung", "Möglichkeiten: Schullizenz oder Freemium, Druckprodukte, Verlag oder Organisation, Anpassungen auf Bestellung, Weiterbildungen. Noch nichts entschieden."],
+    ["Neue App", "Mit Verknüpfung zu Moodle und weiteren Stufen (Kategorie › Thema › Unterthema › Einträge), eigenes Hosting mit MariaDB. Zuerst Architektur beraten."]
+  ]},
+  { title:"Prüfen und Qualität", hint:"Was sich nicht automatisch testen liess oder fachlich bestätigt werden muss.", items:[
+    ["Verwaltung von Hand testen", "Bild über ↻ ersetzen; eigenes Bild hochladen, zuschneiden, Ausschnitt, entfernen; Text und Quelle speichern; Reihenfolge der Einträge; Aufträge bearbeiten, anlegen, löschen; Sicherung herunterladen; Kantone: Vorschläge bestätigen, Hinweis ändern, Zeichen hochladen, Plakat drucken."],
+    ["Seite von Hand testen", "Erster Besuch: Forscherauftrag nach der Einführung; auf dem Handy Kanton wechseln und LernApp-Session im Kanton anlegen; Entdeckungskarte: «Wo bin ich?» und Zoomen mit zwei Fingern."],
+    ["Koordinaten prüfen", "Berglistüber und Bundesgericht fand die Ortssuche von swisstopo nicht: im Eintrag mit «Auf der Karte prüfen» kontrollieren."],
+    ["Anleitung für Lehrpersonen", "Zuordnung der Lernziele zum Lehrplan 21 fachlich prüfen (heute auf Ebene der Kompetenzbereiche)."],
+    ["Vollständige Prüfung der Inhalte", "Alle Einträge mit der Prüfliste durchgehen (Sicherheit zuerst: Pilze, Giftpflanzen, Giftschlangen); die Liste stammt vom 30.9.2026 mit 357 Einträgen und wäre für die heutigen 420 neu zu erzeugen."],
+    ["Erprobung mit Lernenden", "Testszenario mit Aufgaben, Beobachtungsbogen und Fragebogen liegt bereit (Ordner «erprobung»)."],
+    ["Einzelne Bildkorrekturen", "Doppelte oder unpassende Fotos ersetzen; Meldungen kommen unter «Zu erledigen»."]
+  ]}
+];
+function renderIdeas(){
+  const n = IDEEN.reduce((s, g) => s + g.items.length, 0);
+  $("main").innerHTML = `<h2>Ideen</h2>
+    <p class="hint">${n} vorgemerkte Pendenzen und Ideen. Was Arbeit an den Inhalten braucht (Meldungen, fehlende Bilder),
+      steht unter <a href="#/erledigen">Zu erledigen</a>. Neue Ideen oder Entscheide einfach Claude sagen, dann wird diese Liste
+      nachgeführt; was umgesetzt ist, steht im Werdegang.</p>
+    ${IDEEN.map(g => `<h3>${esc(g.title)} <small class="hint">(${g.items.length})</small></h3>
+      <p class="hint">${esc(g.hint)}</p>
+      <ul class="ideas">${g.items.map(([t, d]) => `<li><b>${esc(t)}</b><br>${esc(d)}</li>`).join("")}</ul>`).join("")}`;
 }
 
 /* «Werkzeuge» (#/werkzeuge): selten gebraucht – Bilder aus Liste, Sicherung, Version */

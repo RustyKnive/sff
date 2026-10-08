@@ -78,6 +78,8 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
 ### Verwaltung (admin.html)
 
 - Anmeldung mit E-Mail, Passwort und Code aus einer Authenticator-App (Zwei-Faktor).
+- **Bereiche oben:** Übersicht (Kennzahlen), Zu erledigen (Meldungen, fehlende Bilder, Datenbank-Update), **Ideen** (alle
+  vorgemerkten Pendenzen und Ideen an einem Ort, seit 2.23.0), Kantone und Werkzeuge; links die Kategorien.
 - Kategorien und Einträge anlegen, bearbeiten, sortieren, ein- und ausblenden, löschen.
 - Einträge in eine andere Kategorie verschieben.
 - **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»,
@@ -558,7 +560,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 - Zu finden unter Menü → Hilfe (oben und im Abschnitt «Für Lehrpersonen»). Die Zuordnung zum Lehrplan 21 ist eine Orientierung
   auf Ebene der Kompetenzbereiche; die genauen Kompetenzstufen bitte im Lehrplan nachschlagen.
 
-### 8. Oktober – Entdeckungskarte (Version 2.23.0)
+### 8. Oktober – Entdeckungskarte und Ideen in der Verwaltung (Version 2.23.0)
 
 - Pendenz auf Wunsch des Users (Datenbank-Version 29): **Entdeckungskarte** unter Menü → Entdecken. Berge, Seen, Naturwunder,
   Sehenswürdigkeiten und Orte aus Geschichte und Politik erscheinen als farbige Punkte auf der **Landeskarte von swisstopo**
@@ -573,6 +575,10 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   «Auf der Karte prüfen». Copyright nennt swisstopo als Quelle der Karte.
 - Die Karte braucht Internet (die Kartenbilder kommen direkt von swisstopo); die Liste darunter funktioniert auch offline.
 - Exkursionen und Posten mit QR-Plakaten aus der Karte sind noch offen (QR-Codes pro Eintrag gibt es schon in der Verwaltung).
+- Verwaltung: neuer Bereich **Ideen** neben «Zu erledigen» (Wunsch des Users): alle Pendenzen, weiteren Ideen und offenen
+  Prüfungen an einem Ort, gegliedert in «Pendenzen der Spielwiese», «Weitere Ideen» und «Prüfen und Qualität».
+- Zwischenabschluss: Alles bisher Umgesetzte ist veröffentlicht; die übrigen Pendenzen (als Nächstes «Steckbriefe vorschlagen»)
+  warten in der Verwaltung unter «Ideen».
 
 ---
 
@@ -615,7 +621,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.20.0 | 8.10.2026 | Menü in Gruppen (Lernen, Spielen, Entdecken, Für den Unterricht); neu Vorlesen, Jahreskalender mit Gedenktagen und Bräuchen, Zeitstrahl, Kantone vergleichen, Abzeichen und leichte LernApp |
 | 2.21.0 | 8.10.2026 | Einfach lesen (Kurzfassung in einfacher Sprache für alle 421 Einträge), Themenpfade mit «Klimawandel in der Schweiz» (11 Karten, 6 Aufträge), Abstimmung spielen (Landsgemeinde schätzen, Volk und Stände), neue Abzeichen Entdecker, Unterwegs und Pfadfinder (Datenbank-Version 27) |
 | 2.22.0 | 8.10.2026 | Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) mit Lernzielen zu jeder Möglichkeit, verlinkt unter Hilfe |
-| 2.23.0 | 8.10.2026 | Entdeckungskarte: 85 Orte auf der Landeskarte von swisstopo, «Wo bin ich?» mit Liste nach Entfernung, «Auf der Karte zeigen» auf der Textseite, Koordinaten in der Verwaltung (Datenbank-Version 29) |
+| 2.23.0 | 8.10.2026 | Entdeckungskarte: 85 Orte auf der Landeskarte von swisstopo, «Wo bin ich?» mit Liste nach Entfernung, «Auf der Karte zeigen» auf der Textseite, Koordinaten in der Verwaltung; Verwaltung: neuer Bereich «Ideen» mit allen Pendenzen (Datenbank-Version 29) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -681,6 +687,8 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
 ## Offen und geplant
 
+Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide gleich halten.
+
 - **Noch von Hand zu prüfen** (offener Auftrag vom 2. Oktober 2026): Diese Abläufe liessen sich automatisch nicht testen,
   weil sie die Anmeldung mit zweitem Faktor brauchen oder im Testbrowser nicht auslösen. Nach dem Prüfen hier abhaken.
   - [ ] Verwaltung, Register «Prüfen»: Bild über ↻ durch einen Vorschlag ersetzen (z. B. Eierschwamm, Bild 4 zeigt ein Zelt)
@@ -706,5 +714,14 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
   - [ ] **Vorlesen in LernApp und Aufträgen:** Frage bzw. Merksatz vorlesen lassen.
   - [ ] **Themenpfade in der Verwaltung bearbeiten:** heute nur per SQL (Tabelle `paths`); weitere Pfade, z. B. Wald, Wasser, Glarnerland.
   - [x] **PDF-Anleitung für Lehrpersonen** (2.22.0, gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
-- Weitere Ideen für die LernApp (z. B. Abfrage des lateinischen Namens oder «Welches Tier ruft da?» mit den Tierstimmen).
-- Einzelne Bildkorrekturen, die in der Verwaltung gemacht werden sollen (z. B. doppelte oder falsche Fotos).
+- **Weitere Ideen** (noch nicht entschieden):
+  - «Welches Tier ruft da?» mit den Tierstimmen.
+  - Ideen für die Mittelstufe Glarus und die Oberstufe (Gespräch vom 8. Oktober 2026).
+  - Entdeckungskarte: Flüsse als Linien; Koordinaten bei neuen Orten gleich im Claude-Auftrag.
+  - Weitere Kantone.
+  - Bildnachweis mit Urheber und Lizenz, 7 problematische Bilder ersetzen (nur bei Vermarktung).
+  - Vermarktung (Schullizenz, Druckprodukte, Verlag, Anpassungen, Weiterbildungen).
+  - Neue App mit Moodle und weiteren Stufen (zuerst Architektur beraten).
+- **Prüfen und Qualität:** Koordinaten von Berglistüber und Bundesgericht; Lehrplan-Zuordnung der Anleitung; vollständige
+  Prüfung der Inhalte (Prüfliste neu erzeugen, heute 420 Einträge); Erprobung mit Lernenden; einzelne Bildkorrekturen
+  (doppelte oder falsche Fotos); auf dem Handy «Wo bin ich?» und Zoomen mit zwei Fingern.
