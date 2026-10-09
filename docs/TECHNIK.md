@@ -256,6 +256,15 @@ Verknüpfungen sind ungerichtet: ein Paar steht einmal in `entry_links` (kleiner
 Richtungen. Sie werden separat geladen statt eingebettet, weil eine Tabelle mit zwei Verweisen auf `entries` sich nicht eindeutig
 einbetten lässt; fehlt die Tabelle, zeigt die Seite einfach keine.
 
+### Nahrungsnetz ohne Grafikbibliothek
+
+Das Nahrungsnetz (seit 2.26.0) besteht aus Knöpfen mit fester Grösse, die per `transform` auf einer Fläche liegen, und einer
+SVG-Ebene mit Linien und Pfeilspitzen (`marker`). Eine Linie läuft von Kartenrand zu Kartenrand, damit die Pfeilspitze nicht
+unter der Karte verschwindet. Die Ernährungsstufe ergibt sich aus den Daten: Was im Netz nichts frisst, ist Stufe 0, sonst eine
+Stufe über der höchsten Nahrung. «Was wäre, wenn …» wertet nur die direkten Folgen aus und überlässt das Weiterdenken über mehrere
+Stufen bewusst den Lernenden. Die Netze stehen wie die Themenpfade mit Kategorie und Namen in der Datenbank, damit sie auch nach
+einem neuen Bild oder einer Textänderung stimmen.
+
 ### KI ohne Schnittstelle
 
 Neue Kategorien und Einträge schreibt Claude über **claude.ai im bestehenden Abo**: Die Verwaltung baut einen Auftrag mit

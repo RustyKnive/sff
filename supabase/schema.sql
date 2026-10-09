@@ -315,6 +315,8 @@ grant insert, update, delete on public.regions, public.entry_regions to authenti
 -- ------------------------------------------------------------------
 alter table public.categories add column if not exists checked_at timestamptz;
 
+-- Vorschläge der Lernenden (entry_proposals, propose_entry) und Nahrungsnetze (foodwebs): siehe 031_vorschlaege_nahrungsnetz.sql
+
 -- ------------------------------------------------------------------
 -- Danach: dein Konto zum Admin machen (E-Mail anpassen)
 --   1. Authentication → Users → «Add user» (E-Mail + Passwort, «Auto Confirm»)

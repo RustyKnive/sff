@@ -4,9 +4,9 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 9. Oktober 2026 · Version 2.25.0 (Datenbank 30) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 9. Oktober 2026 · Version 2.26.0 (Datenbank 31) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
-Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge)
+Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge) · 4 Nahrungsnetze
 
 ---
 
@@ -66,6 +66,11 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
   Quiz und Drucken. Auf der Textseite steht bei manchen Einträgen «Im Kanton Glarus: …». Ein Eintrag kann zu mehreren Kantonen gehören.
   Direkter Einstieg über **je-net.ch/sff/glarus**; die Wahl bleibt auf dem Gerät gespeichert, bis man eine andere trifft.
   Führt ein Direktlink (z. B. QR-Code) zu einem Eintrag ausserhalb des Kantons, zeigt die Seite dafür kurz die ganze Schweiz.
+- **Nahrungsnetz** (für die Oberstufe): Menü → «Nahrungsnetz» mit Wald, Gebirge, Bach und Teich, Wiese. Pfeile vom Gefressenen
+  zum Fresser setzen, prüfen (grün/rot), Lösung zeigen, nach Ernährungsstufen ordnen und «Was wäre, wenn … fehlt?» durchspielen.
+- **Eintrag vorschlagen:** Am Ende jeder Kategorie und bei einer Suche ohne Treffer schlagen Lernende einen fehlenden Eintrag vor,
+  ohne Namen, mit Nummer für den Preis.
+- **Vorlesen** auch in der LernApp (Name und Merksatz) und bei den Forscheraufträgen (Frage und Erklärung).
 - **Dazu entdecken:** In der Grossansicht stehen verknüpfte Einträge, z. B. beim Kärpf Gämse, Steinbock und Verrucano, beim
   Tier die Orte, wo es lebt. Ein Tipp öffnet den anderen Eintrag (seit 2.25.0).
 - **Entdeckungskarte:** Menü → «Entdeckungskarte» zeigt Berge, Seen, Naturwunder, Sehenswürdigkeiten und Orte aus Geschichte und
@@ -87,6 +92,7 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
 - **Von Hand geprüft:** Häkchen pro Eintrag (in der Prüf-Tabelle oder im Eintrag) und pro Kategorie, mit Datum; Filter «noch nicht
   geprüft», Stand pro Kategorie und in der Übersicht. Ändert sich danach der Text, fällt das Häkchen weg (seit 2.25.0).
 - **Verknüpfte Einträge:** im Eintrag hinzufügen, mit Hinweis, entfernen; Vorschläge von Claude unter «Zu erledigen» bestätigen.
+- **Vorschläge von Lernenden:** unter «Zu erledigen» mit Nummer, «Als Eintrag anlegen» (Formular mit Name und Text) und «Erledigt».
 - Einträge in eine andere Kategorie verschieben.
 - **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»,
   ein bestimmtes Commons-Bild über seine Adresse oder viele auf einmal über eine Liste), dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
@@ -609,6 +615,21 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Prüfliste als Excel-Datei.
 - Datenbank-Version 30. Beide Punkte sind aus «Ideen» entfernt.
 
+
+### 9. Oktober – Vorschlagen, Vorlesen und Nahrungsnetz (Version 2.26.0)
+
+- Pendenzen auf Wunsch des Users (Datenbank-Version 31):
+- **Eintrag vorschlagen:** Am Ende jeder Kategorie steht eine Kachel «Fehlt etwas?», ebenso bei einer Suche ohne Treffer. Lernende
+  geben Kategorie, Name, was sie wissen und wo sie es gesehen haben ein, ohne Namen, und erhalten eine Nummer (wie bei den
+  Textmeldungen, für den Preis). In der Verwaltung stehen die Vorschläge unter «Zu erledigen»; «Als Eintrag anlegen» öffnet das
+  Formular mit Name und Text.
+- **Vorlesen in LernApp und Aufträgen:** Nach jeder Antwort in der LernApp liest «🔊 Vorlesen» Name und Merksatz vor, bei den
+  Forscheraufträgen die Frage und nach dem Lösen die Erklärung.
+- **Nahrungsnetz** (Idee für die Oberstufe): vier Lebensräume mit 17 bis 20 Pfeilen aus vorhandenen Einträgen (Wald, Gebirge,
+  Bach und Teich, Wiese). Pfeile setzen, prüfen, Lösung zeigen, nach Ernährungsstufen ordnen und «Was wäre, wenn … fehlt?».
+  Die Netze schlug Claude vor; bearbeiten vorerst per SQL (Pendenz unter «Ideen»).
+- Anleitung für Lehrpersonen mit Lernzielen ergänzt (Nahrungsnetz nur in der Fassung Oberstufe).
+
 ---
 
 ## Versionen
@@ -655,6 +676,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.24.0 | 8.10.2026 | Knopf «Kategorie teilen» in jeder Kategorie (bisher liessen sich nur einzelne Einträge teilen) |
 | 2.24.1 | 8.10.2026 | Verwaltung, Ideen: «Einträge verknüpfen» vorgemerkt |
 | 2.25.0 | 9.10.2026 | «Dazu entdecken»: verknüpfte Einträge mit 71 Vorschlägen; Häkchen «von Hand geprüft» für Einträge und Kategorien (Datenbank-Version 30) |
+| 2.26.0 | 9.10.2026 | Eintrag vorschlagen (mit Nummer), Vorlesen in LernApp und Aufträgen, Nahrungsnetz mit vier Lebensräumen (Datenbank-Version 31) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -718,6 +740,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `028_karte.sql` | Spalten `entries.lat` und `entries.lon` (Ort auf der Entdeckungskarte), 85 vorgeschlagene Orte |
 | `029_karte_korrekturen.sql` | 24 Orte nach der Ortssuche von swisstopo korrigiert (nur noch nicht angepasste) |
 | `030_verknuepfungen_geprueft.sql` | Tabelle `entry_links` (verknüpfte Einträge, 71 Vorschläge), Spalten `checked_at` bei Einträgen und Kategorien mit automatischem Zurücksetzen bei Textänderung |
+| `031_vorschlaege_nahrungsnetz.sql` | Tabelle `entry_proposals` mit Funktion `propose_entry` (Vorschläge der Lernenden), Tabelle `foodwebs` mit 4 Nahrungsnetzen |
 
 ## Offen und geplant
 
@@ -741,12 +764,12 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   - [x] **Entdeckungskarte** (2.23.0): Einträge mit Koordinaten auf der Landeskarte von swisstopo, «Wo bin ich?», Liste nach Entfernung.
     Noch offen: daraus Exkursionen und Posten mit QR-Plakaten planen; Berglistüber und Bundesgericht prüfen.
   - [x] **Abstimmungs-Simulation** (2.21.0): Klasse stimmt wie an der Landsgemeinde ab, Volks- und Ständemehr an einem Beispiel durchrechnen (Seite für den Beamer).
-  - [ ] **Steckbriefe vorschlagen:** Lernende schlagen einen Eintrag vor (ohne Namen, wie die Textmeldungen), die Lehrperson übernimmt ihn in der Verwaltung.
+  - [x] **Steckbriefe vorschlagen** (2.26.0): Lernende schlagen einen Eintrag vor (ohne Namen, wie die Textmeldungen), die Lehrperson übernimmt ihn in der Verwaltung.
   - [ ] **Forscheraufträge draussen:** Aufträge mit Messungen (Föhn: Temperatur und Wind, Bach: Lebensraum der Bachforelle) und eigener Beobachtung.
   - [x] **Themenpfad Klimawandel** (2.21.0): Gletscherrückgang, neue Arten (Kastaniengallwespe, Japankäfer), Hitzewellen als zusammenhängende Aufträge mit Rechnen und Begründen.
   - [x] **Abzeichen «Entdecker»** (2.21.0): angesehene Karten zählen (heute zählt nur, was die LernApp, Aufträge und Spiele speichern).
-  - [ ] **Vorlesen in LernApp und Aufträgen:** Frage bzw. Merksatz vorlesen lassen.
-  - [ ] **Themenpfade in der Verwaltung bearbeiten:** heute nur per SQL (Tabelle `paths`); weitere Pfade, z. B. Wald, Wasser, Glarnerland.
+  - [x] **Vorlesen in LernApp und Aufträgen** (2.26.0): Frage bzw. Merksatz vorlesen lassen.
+  - [ ] **Themenpfade und Nahrungsnetze in der Verwaltung bearbeiten:** heute nur per SQL (Tabellen `paths` und `foodwebs`); weitere Pfade (Wald, Wasser, Glarnerland) und Netze (Hecke, Acker, Boden).
   - [x] **PDF-Anleitung für Lehrpersonen** (2.22.0, gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
 - **Weitere Ideen** (noch nicht entschieden):
   - «Welches Tier ruft da?» mit den Tierstimmen.
@@ -757,7 +780,7 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   - Neue App mit Moodle und weiteren Stufen (zuerst Architektur beraten).
 - **Ideen für die Mittelstufe** (Vorschläge von Claude, 8. Oktober 2026): Lebensräume sortieren, «Wie gross ist das?»
   (Grössenvergleich), Mein Steckbrief (Druckvorlage), Naturtagebuch, Glarner Sagen, Bestimmen mit Ja/Nein-Fragen.
-- **Ideen für die Oberstufe** (Vorschläge von Claude, 8. Oktober 2026): Nahrungsnetz bauen, Bestimmungsschlüssel, Neophyten und
+- **Ideen für die Oberstufe** (Vorschläge von Claude, 8. Oktober 2026): Nahrungsnetz bauen (umgesetzt in 2.26.0), Bestimmungsschlüssel, Neophyten und
   Gefährdung (Rote Liste), Berufe in der Natur, Zeitstrahl-Puzzle, Argumente sortieren, Klimadaten auswerten.
 - **Prüfen und Qualität:** 71 vorgeschlagene Verknüpfungen bestätigen; Koordinaten von Berglistüber und Bundesgericht; Lehrplan-Zuordnung der Anleitung; vollständige
   Prüfung der Inhalte mit dem Häkchen «geprüft» (420 Einträge); Erprobung mit Lernenden; einzelne Bildkorrekturen

@@ -378,9 +378,10 @@ dialog.report-dlg::backdrop{background:rgba(0,0,0,.6)}
 .report-dlg img{display:block;width:100%;max-height:200px;object-fit:contain;margin-bottom:12px;border-radius:8px;background:#000}
 .report-dlg p{margin:0 0 12px;font-size:.95rem}
 .report-dlg label{display:block;font-size:.9rem;color:var(--muted)}
-.report-dlg input,.report-dlg textarea{display:block;width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--accent-soft);border-radius:8px;
+.report-dlg input,.report-dlg textarea,.report-dlg select{display:block;width:100%;margin-top:4px;padding:8px 12px;border:1px solid var(--accent-soft);border-radius:8px;
   background:var(--bg);color:var(--ink);font:inherit}
 .report-dlg textarea{resize:vertical;min-height:90px}
+.report-dlg label + label{margin-top:10px}
 .report-nr{font-size:1.4rem!important;font-weight:700;color:var(--accent);text-align:center;padding:10px;border-radius:8px;background:var(--accent-soft)}
 /* Fehler im Text melden (unten auf der Textseite der Grossansicht) */
 .text .text-report{margin:1rem 0 0;text-align:right}
@@ -793,3 +794,44 @@ ul.game-review li{margin:4px 0}
 .map-list small{display:block;color:var(--muted)}
 .map-link{margin:.6rem 0 0}
 .map-link a{font-weight:600;color:var(--accent)}
+
+/* Steckbrief vorschlagen (seit 2.26.0): Kachel am Ende einer Kategorie und bei einer Suche ohne Treffer */
+.propose-card{aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;
+  border:2px dashed var(--accent-soft);border-radius:var(--radius);background:transparent;color:var(--muted);font:inherit;text-align:center;cursor:pointer}
+.propose-card b{color:var(--accent);font-size:1.1rem}
+.propose-card:hover,.propose-card:focus-visible{border-color:var(--accent);color:var(--ink)}
+/* Vorlesen in LernApp und Aufträgen (seit 2.26.0) */
+.say-btn,.page button.say-btn:not(.nav):not(.dot),.intro-dlg button.say-btn{padding:3px 12px;border:1px solid var(--accent);border-radius:99px;background:transparent;color:var(--accent);font:inherit;
+  font-size:.85rem;font-weight:600;cursor:pointer;white-space:nowrap}
+.task-say{margin:-.3rem 0 .6rem}
+.task-expl .say-btn{margin-top:6px}
+
+/* Nahrungsnetz (#/nahrungsnetz, seit 2.26.0): Karten als Knöpfe auf einer Fläche, Pfeile als SVG darüber */
+.page > #nahrungsnetz{max-width:none}
+#nahrungsnetz > *{max-width:760px}
+#nahrungsnetz > .fw-board,#nahrungsnetz > .path-list{max-width:none}
+.fw-tools{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+.fw-status{min-height:1.4em;margin:0 0 10px;font-weight:600;color:var(--accent)}
+.fw-board{position:relative;min-height:300px;border-radius:var(--radius);background:var(--card);margin:0 0 20px;overflow:hidden}
+.fw-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.fw-lines line{stroke-width:2.5}
+.fw-user{stroke:var(--ink)} .fw-head-user{fill:var(--ink)}
+.fw-ok{stroke:var(--accent)} .fw-head-ok{fill:var(--accent)}
+.fw-wrong{stroke:var(--vote-nein)} .fw-head-wrong{fill:var(--vote-nein)}
+.fw-missing{stroke:var(--muted);stroke-dasharray:6 5} .fw-head-missing{fill:var(--muted)}
+.page button.fw-node:not(.nav):not(.dot){position:absolute;left:0;top:0;width:112px;height:100px;padding:0;border-radius:12px;overflow:hidden;
+  background:var(--bg);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.25);display:flex;flex-direction:column;font-weight:600;
+  transition:transform .3s;z-index:1}
+.fw-node img{width:100%;height:64px;object-fit:cover;display:block}
+.fw-node span{flex:1;display:flex;align-items:center;justify-content:center;padding:2px 4px;font-size:.78rem;line-height:1.15;text-align:center}
+.page button.fw-node.sel:not(.nav):not(.dot){outline:3px solid var(--accent);outline-offset:2px}
+.fw-badge{position:absolute;left:4px;right:4px;top:4px;font-style:normal;font-size:.68rem;line-height:1.2;border-radius:6px;padding:1px 4px;display:none}
+.fw-node.gone{opacity:.35} .fw-node.gone .fw-badge,.fw-node.hunger .fw-badge,.fw-node.less .fw-badge,.fw-node.more .fw-badge{display:block}
+.fw-node.gone .fw-badge{background:var(--ink);color:var(--card)}
+.fw-node.hunger .fw-badge{background:#c62828;color:#fff}
+.fw-node.less .fw-badge{background:#ef6c00;color:#fff}
+.fw-node.more .fw-badge{background:#2e7d32;color:#fff}
+.fw-effects{padding-left:1.2em;max-width:760px}
+.fw-effects li{margin:0 0 6px}
+.fw-list{max-width:none;line-height:2.2}
+@media (prefers-reduced-motion:reduce){ .page button.fw-node:not(.nav):not(.dot){transition:none} }

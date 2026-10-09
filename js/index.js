@@ -68,7 +68,7 @@ async function loadLinks(){
   const r = await fetch(CFG.url + "/rest/v1/entry_links?select=a,b,note", { headers:{ apikey:CFG.key } });
   return r.ok ? r.json() : [];
 }
-const loadAll = () => Promise.all([loadCats(), loadRegions(), loadPaths().catch(() => []), loadLinks().catch(() => [])]);
+const loadAll = () => Promise.all([loadCats(), loadRegions(), loadPaths().catch(() => []), loadLinks().catch(() => []), loadFoodwebs().catch(() => [])]);
 
 /* ------------------------------------------------------------------
    VERSIONEN: Website-Version und benötigte Datenbank-Version stehen in js/version.js,
@@ -521,6 +521,67 @@ function openTextReport(item, btn){
   input.focus();
 }
 
+/* ------------------------------------------------------------------
+   STECKBRIEF VORSCHLAGEN (seit 2.26.0): Lernende schlagen einen fehlenden Eintrag vor, ohne Namen. Die Kachel steht am Ende
+   jeder Kategorie und bei einer Suche ohne Treffer. propose_entry() (031) speichert und gibt eine Nummer zurück, die man wie
+   bei den Textmeldungen der Lehrperson vorweisen kann. Die Verwaltung zeigt die Vorschläge unter «Zu erledigen».
+------------------------------------------------------------------- */
+function proposeTile(cat, name = ""){
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "propose-card";
+  b.innerHTML = `<b>+ Fehlt etwas?</b><span>${name ? `«${esc(name)}» gibt es noch nicht.` : "Eine Pflanze, ein Tier oder ein Ort fehlt?"}
+    Schlag einen Eintrag vor.</span>`;
+  b.addEventListener("click", () => openPropose(cat, name));
+  return b;
+}
+function openPropose(cat, name){
+  reportDlg.innerHTML = `
+    <h2 id="reportTitle">Eintrag vorschlagen</h2>
+    <p>Dein Vorschlag geht ohne Namen an die Verwaltung. Wenn er passt, kommt er mit Bildern und Steckbrief auf die Seite.</p>
+    <label>Kategorie <select data-f="cat">${CATS.map(c => `<option value="${esc(c.id)}"${c === cat ? " selected" : ""}>${esc(c.name)}</option>`).join("")}
+      <option value=""${cat ? "" : " selected"}>weiss nicht / neue Kategorie</option></select></label>
+    <label>Name <input type="text" data-f="name" maxlength="80" value="${esc(name)}" placeholder="z. B. Feuersalamander"></label>
+    <label>Was weisst du darüber?
+      <textarea data-f="text" maxlength="600" rows="4" placeholder="z. B. Wie sieht es aus, wo lebt oder wächst es, was ist besonders?"></textarea></label>
+    <label>Wo hast du es gesehen? (freiwillig)
+      <input type="text" data-f="place" maxlength="120" placeholder="z. B. am Klöntalersee"></label>
+    <div class="report-btns">
+      <button type="button" class="ghost" data-act="cancel">Abbrechen</button>
+      <button type="button" data-act="send">Vorschlagen</button>
+    </div>`;
+  const f = k => reportDlg.querySelector(`[data-f="${k}"]`);
+  const send = async () => {
+    const row = { p_category:f("cat").value, p_name:f("name").value.trim(), p_text:f("text").value.trim(), p_place:f("place").value.trim() };
+    if(row.p_name.length < 2){ toast("Bitte den Namen angeben."); f("name").focus(); return; }
+    if(row.p_text.length < 10){ toast("Bitte etwas mehr dazu schreiben (mindestens ein Satz)."); f("text").focus(); return; }
+    const b = reportDlg.querySelector("[data-act=send]");
+    b.disabled = true;
+    try{
+      const r = await fetch(CFG.url + "/rest/v1/rpc/propose_entry", {
+        method:"POST", headers:{ apikey:CFG.key, "Content-Type":"application/json" }, body:JSON.stringify(row)
+      });
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      const nr = await r.json();
+      reportDlg.innerHTML = `
+        <h2 id="reportTitle">Danke!</h2>
+        <p>Dein Vorschlag <b>${esc(row.p_name)}</b> ist angekommen.</p>
+        <p class="report-nr">Vorschlag Nr. ${esc(nr)}</p>
+        <p>Merke dir die Nummer, falls deine Lehrperson danach fragt.</p>
+        <div class="report-btns"><button type="button" data-act="cancel">Schliessen</button></div>`;
+      reportDlg.querySelector("[data-act=cancel]").addEventListener("click", () => reportDlg.close());
+      reportDlg.querySelector("[data-act=cancel]").focus();
+    }catch(e){
+      b.disabled = false;
+      toast(navigator.onLine ? "Vorschlagen hat nicht geklappt. Bitte später nochmals versuchen." : "Vorschlagen geht nur mit Internet.");
+    }
+  };
+  reportDlg.querySelector("[data-act=cancel]").addEventListener("click", () => reportDlg.close());
+  reportDlg.querySelector("[data-act=send]").addEventListener("click", send);
+  reportDlg.showModal();
+  (name ? f("text") : f("name")).focus();
+}
+
 /* Zoomen (Lightbox und LernApp): Mausrad, Doppelklick bzw. doppelt tippen, zwei Finger.
    Vergrössert lässt sich das Bild ziehen; Wischen blättert nur ungezoomt (onSwipe).
    Das Bild wird mit translate/scale (Ursprung oben links, css/index.css) über seiner Seite verschoben.
@@ -844,6 +905,7 @@ const PAGES = {
   abstimmung:{ title:"Abstimmung spielen", intro:"Wie an der Landsgemeinde das Mehr schätzen und ausprobieren, wie Volk und Stände entscheiden." },
   vergleich:{ title:"Kantone vergleichen", intro:"Was zwei Kantone gemeinsam haben und was nur einer kennt." },
   karte:{ title:"Entdeckungskarte", intro:"Orte aus den Karten auf der Landeskarte von swisstopo: antippen, ansehen, hingehen." },
+  nahrungsnetz:{ title:"Nahrungsnetz", intro:"Wer frisst wen? Pfeile setzen, prüfen und ausprobieren, was passiert, wenn eine Art fehlt." },
   quiz:{ title:"Quiz für die Klasse", intro:"Bilder gross zeigen, die Klasse rät, dann die Lösung einblenden." },
   pdf:{ title:"PDF drucken", intro:"Eine Kategorie als PDF speichern oder drucken." },
   hilfe:{ title:"Hilfe", intro:"Was die Seite kann, womit man beginnt, und eine Anleitung zu allen Möglichkeiten." },
@@ -1535,7 +1597,7 @@ function renderLernQuiz(){
     const merksatz = lernMerksatz(item);
     document.getElementById("lernFeedback").innerHTML = `
       <p class="${result ? "ok" : "bad"}">${lead} ${name}.${where}</p>
-      ${merksatz ? `<p class="lern-fact"><b>Merksatz:</b> ${esc(merksatz)}</p>` : ""}
+      ${merksatz ? `<p class="lern-fact"><b>Merksatz:</b> ${esc(merksatz)} ${sayBtn(item.n + ". " + merksatz)}</p>` : ""}
       <button id="lernNext">Weiter</button>`;
     // Bedienelemente sperren; bei der Auswahl die richtige und die gewählte Antwort markieren
     lernEl.querySelectorAll("#lernForm button, #lernChoices button, #lernSkip").forEach(b => { b.disabled = true; });
@@ -1546,7 +1608,7 @@ function renderLernQuiz(){
     });
     card.classList.add("revealed");   // jetzt darf «Quelle» (mit dem Dateinamen) sichtbar sein
     const next = document.getElementById("lernNext");
-    next.addEventListener("click", renderLernQuiz);
+    next.addEventListener("click", () => { speakStop(); renderLernQuiz(); });
     next.focus();
   };
 
@@ -2095,7 +2157,7 @@ function render(){
   if(!id && REGION !== saved) setRegion(saved?.id, false);
   const [first, second] = id.split("/");
   // #/spiele/<spiel> springt zum Spiel, #/pfade/<id> öffnet einen Themenpfad, #/karte/<kat>/<eintrag> zeigt einen Ort
-  const pageId = PAGES[id] ? id : ["spiele", "pfade", "karte"].includes(first) ? first : null;
+  const pageId = PAGES[id] ? id : ["spiele", "pfade", "karte", "nahrungsnetz"].includes(first) ? first : null;
   const page = pageId && PAGES[pageId];
   // Direktlink (z. B. QR-Code) auf eine Kategorie oder einen Eintrag, den es im gewählten Kanton nicht gibt:
   // vorübergehend die ganze Schweiz zeigen (die gespeicherte Wahl bleibt)
@@ -2129,6 +2191,7 @@ function render(){
     if(pageId === "pfade") renderPaths(second);
     if(pageId === "abstimmung") renderVote();
     if(pageId === "karte") renderMap(second, id.split("/")[2]);
+    if(pageId === "nahrungsnetz") renderFoodweb(second);
     lastCat = null;
     return;
   }
@@ -2152,7 +2215,7 @@ function render(){
   setHead(cat.name, cat.goal ? "Lernziel: " + cat.goal
     : "Mit den Pfeilen oder durch Wischen durch Bilder und Steckbrief blättern; ein Tipp aufs Bild vergrössert.");
   if(cat.goal){ introEl.innerHTML = `<b>Lernziel:</b> ${esc(cat.goal)}`; introEl.classList.add("goal"); }
-  grid.append(...cardsOf(cat));
+  grid.append(...cardsOf(cat), proposeTile(cat));
   showCatBar(cat);
   showTaskBar();
   // Direktlink auf einen Eintrag (#/kategorie/eintrag): Karte zeigen und gross öffnen
@@ -2275,6 +2338,7 @@ function taskInterrupt(){
   showTaskBarIfVisible();
 }
 taskDlg.addEventListener("cancel", taskInterrupt);
+taskDlg.addEventListener("close", speakStop);
 taskDlg.addEventListener("click", e => { if(e.target.closest(".task-x")){ taskInterrupt(); taskDlg.close(); } });
 // In die Kategorie wechseln (auch wenn man schon dort ist: neu zeichnen, damit das Band erscheint)
 function taskGoTo(t){
@@ -2295,6 +2359,7 @@ function taskShowStart(t, auto){
   taskDlg.innerHTML = `${taskHead(t)}
     <h2 id="taskTitle">${log.guess || taskStore.active === t.id ? "Dein offener Auftrag" : "Dein Forscherauftrag"}</h2>
     <p class="task-q">${esc(t.q)}</p>
+    <p class="task-say">${sayBtn(t.q)}</p>
     ${t.guess ? `<label class="task-label" for="taskGuess">Was vermutest du? Notiere es kurz, bevor du nachforschst.</label>
       <textarea id="taskGuess" rows="2" maxlength="300" placeholder="Ich glaube …">${esc(log.guess)}</textarea>` : ""}
     <p class="task-tip">Die Antwort findest du in der Kategorie «${esc(t.cat.name)}»: Schau dir die Karten an und lies die Steckbriefe.</p>
@@ -2324,6 +2389,7 @@ function taskShowAnswer(t){
   taskDlg.innerHTML = `${taskHead(t)}
     <h2 id="taskTitle">Deine Antwort</h2>
     <p class="task-q">${esc(t.q)}</p>
+    <p class="task-say">${sayBtn(t.q)}</p>
     ${log.guess ? `<p class="task-guess"><b>Deine Vermutung:</b> ${esc(log.guess)}</p>` : ""}
     <div class="task-answer"></div>
     <p class="task-hint" hidden></p>
@@ -2430,7 +2496,7 @@ function taskShowDone(t, review){
     ${log.answer ? `<p class="task-mine"><b>Deine Antwort:</b> ${esc(log.answer)}${log.typo ? ` <small>(kleiner Tippfehler, gemeint ist «${esc(shownAnswer)}»)</small>` : ""}</p>` : ""}
     ${!log.ok && shownAnswer ? `<p class="task-mine"><b>Richtig ist:</b> ${esc(shownAnswer)}</p>` : ""}
     ${log.guess ? `<p class="task-guess"><b>Deine Vermutung vorher:</b> ${esc(log.guess)}<br><small>Lag sie richtig, oder hast du etwas dazugelernt?</small></p>` : ""}
-    <div class="task-expl"><b>${t.type === "free" ? "Musterlösung" : "Erklärung"}</b><p>${esc(t.expl)}</p></div>
+    <div class="task-expl"><b>${t.type === "free" ? "Musterlösung" : "Erklärung"}</b><p>${esc(t.expl)}</p>${sayBtn(t.expl)}</div>
     ${t.item ? `<p class="task-link"><a href="${esc(entryLink(t.cat, t.item))}">Zum Eintrag «${esc(t.item.n)}» →</a></p>` : ""}
     <p class="task-tip">${solved} von ${list.length} Forscheraufträgen gelöst.${!review && next && !taskStore.off ? " Morgen wartet der nächste Auftrag auf dich." : ""}</p>
     <div class="intro-nav">
@@ -2643,6 +2709,7 @@ function runSearch(){
   setHead("Suche", hits.length ? `${hits.length} ${hits.length === 1 ? "Treffer" : "Treffer"} für «${q}»${hits.length > SEARCH_MAX ? `, die ersten ${SEARCH_MAX}` : ""}.`
     : `Nichts gefunden für «${q}».`);
   grid.append(...hits.slice(0, SEARCH_MAX).map(h => cardOf(h.cat, h.item)));
+  if(!hits.length) grid.append(proposeTile(null, q));
 }
 searchEl.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(runSearch, 200); });
 searchEl.addEventListener("keydown", e => { if(e.key === "Escape"){ searchEl.value = ""; render(); } });
@@ -2754,6 +2821,208 @@ function renderCompare(){
 }
 cmpA.addEventListener("change", renderCompare);
 cmpB.addEventListener("change", renderCompare);
+
+/* ------------------------------------------------------------------
+   NAHRUNGSNETZ (#/nahrungsnetz, #/nahrungsnetz/<id>, seit 2.26.0, für die Oberstufe): Tabelle foodwebs (031), links
+   [{f:[kat, name], e:[kat, name]}] = «f wird von e gefressen». Die Lernenden setzen Pfeile (zuerst das Gefressene, dann den
+   Fresser), prüfen, lassen sich die Lösung zeigen, ordnen nach Ernährungsstufen und spielen «Was wäre, wenn … fehlt?» durch.
+   Karten als Knöpfe auf einer Fläche, Pfeile als SVG-Linien darüber; alles nur im Speicher der Seite.
+------------------------------------------------------------------- */
+let FOODWEBS = [];   // Nahrungsnetze (031)
+async function loadFoodwebs(){
+  const r = await fetch(CFG.url + "/rest/v1/foodwebs?select=id,title,intro,links&order=sort.asc,title.asc", { headers:{ apikey:CFG.key } });
+  return r.ok ? r.json() : [];
+}
+const FW_W = 112, FW_H = 100;   // Grösse einer Karte auf der Fläche (px)
+let fw = null;                  // aktuelles Netz: { web, nodes, truth, user, sel, checked, solution, removed }
+// Netz auflösen: Einträge aus ALL über Kategorie und Namen, fehlende Einträge (ausgeblendet) fallen mit ihren Pfeilen weg
+function fwResolve(web){
+  const find = ([c, n]) => { const cat = ALL.find(x => x.id === c); const item = cat?.items.find(it => it.n === n); return item && { cat, item }; };
+  const nodes = [], idx = new Map(), truth = new Set();
+  const nodeOf = ref => {
+    const hit = find(ref);
+    if(!hit) return -1;
+    if(!idx.has(hit.item.id)){ idx.set(hit.item.id, nodes.length); nodes.push({ ...hit, x:0, y:0 }); }
+    return idx.get(hit.item.id);
+  };
+  for(const l of web.links || []){
+    const a = nodeOf(l.f), b = nodeOf(l.e);
+    if(a >= 0 && b >= 0) truth.add(a + ">" + b);
+  }
+  return { nodes, truth };
+}
+// Ernährungsstufe: 0 = frisst niemanden im Netz (Pflanze, Pilz), sonst 1 + höchste Stufe der Nahrung
+function fwLevels(){
+  const lv = fw.nodes.map(() => 0);
+  for(let round = 0; round < fw.nodes.length; round++){
+    for(const k of fw.truth){ const [a, b] = k.split(">").map(Number); lv[b] = Math.max(lv[b], lv[a] + 1); }
+  }
+  return lv;
+}
+function fwLayout(byLevel){
+  const board = document.getElementById("fwBoard");
+  const W = board.clientWidth || 700, cols = Math.max(3, Math.floor(W / (FW_W + 18)));
+  const gapX = (W - cols * FW_W) / (cols + 1);
+  if(byLevel){
+    const lv = fwLevels(), max = Math.max(...lv);
+    const rows = [];
+    fw.nodes.forEach((n, i) => { (rows[max - lv[i]] ||= []).push(i); });
+    let y = 10;
+    for(const row of rows.filter(Boolean)){
+      for(let s = 0; s < row.length; s += cols){
+        const part = row.slice(s, s + cols), gx = (W - part.length * FW_W) / (part.length + 1);
+        part.forEach((i, k) => { fw.nodes[i].x = gx + k * (FW_W + gx); fw.nodes[i].y = y; });
+        y += FW_H + 46;
+      }
+    }
+    board.style.height = y + "px";
+  }else{
+    const order = shuffled(fw.nodes.map((_, i) => i));
+    order.forEach((i, k) => {
+      const r = Math.floor(k / cols), c = k % cols;
+      fw.nodes[i].x = gapX + c * (FW_W + gapX) + (r % 2 ? gapX / 3 : 0);
+      fw.nodes[i].y = 10 + r * (FW_H + 46);
+    });
+    board.style.height = (10 + Math.ceil(fw.nodes.length / cols) * (FW_H + 46)) + "px";
+  }
+}
+function renderFoodweb(id){
+  const el = document.getElementById("nahrungsnetz");
+  const web = FOODWEBS.find(x => x.id === id);
+  if(!web){
+    fw = null;
+    el.innerHTML = FOODWEBS.length ? `<p class="lern-hint">Wer frisst wen? Wähle einen Lebensraum und verbinde die Karten mit Pfeilen.
+        Der Pfeil zeigt vom Gefressenen zum Fresser, also in die Richtung, in die Nahrung und Energie fliessen.</p>
+      <div class="path-list">${FOODWEBS.map(x => {
+        const r = fwResolve(x);
+        return `<a class="path-tile" href="#/nahrungsnetz/${esc(x.id)}"><b>${esc(x.title)}</b><span>${esc(x.intro)}</span>
+          <small>${r.nodes.length} Arten · ${r.truth.size} Pfeile</small></a>`;
+      }).join("")}</div>` : `<p>Noch keine Nahrungsnetze vorhanden.</p>`;
+    return;
+  }
+  setHead(web.title, web.intro);
+  const r = fwResolve(web);
+  fw = { web, nodes:r.nodes, truth:r.truth, user:new Set(), sel:null, checked:false, solution:false, removed:null };
+  el.innerHTML = `<p><a href="#/nahrungsnetz">← Alle Lebensräume</a></p>
+    <p class="lern-hint">Tippe zuerst auf das, was gefressen wird, dann auf das Tier, das es frisst. So entsteht ein Pfeil.
+      Ein zweites Mal dasselbe Paar entfernt den Pfeil wieder. Ein Tipp auf den Namen unten öffnet die Karte.</p>
+    <div class="fw-tools">
+      <button type="button" id="fwCheck">Prüfen</button>
+      <button type="button" class="ghost" id="fwSolve">Lösung zeigen</button>
+      <button type="button" class="ghost" id="fwLevels">Nach Ernährungsstufen ordnen</button>
+      <button type="button" class="ghost" id="fwReset">Neu beginnen</button>
+    </div>
+    <p class="fw-status" id="fwStatus" aria-live="polite"></p>
+    <div class="fw-board" id="fwBoard">
+      <svg class="fw-lines" id="fwLines" aria-hidden="true"><defs>${["user", "ok", "wrong", "missing"].map(c =>
+        `<marker id="fwHead-${c}" class="fw-head-${c}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>`).join("")}</defs><g></g></svg>
+      ${fw.nodes.map((n, i) => {
+        const img = n.item.img.find(Boolean);
+        return `<button type="button" class="fw-node" data-node="${i}" aria-label="${esc(n.item.n)}">
+          ${img ? `<img src="${esc(img.src)}" alt="" loading="lazy">` : ""}<span>${esc(n.item.n)}</span><i class="fw-badge"></i></button>`;
+      }).join("")}
+    </div>
+    <h2>Was wäre, wenn … fehlt?</h2>
+    <p class="lern-hint">Wähle eine Art, die verschwindet. Die Seite zeigt nach den richtigen Pfeilen, wer weniger zu fressen hat und wer
+      weniger gefressen wird. Überlege zuerst selbst!</p>
+    <div class="offline"><select id="fwRemove" aria-label="Art, die fehlt"><option value="">– keine –</option>
+      ${fw.nodes.map((n, i) => i).sort((a, b) => fw.nodes[a].item.n.localeCompare(fw.nodes[b].item.n))
+        .map(i => `<option value="${i}">${esc(fw.nodes[i].item.n)}</option>`).join("")}</select></div>
+    <div id="fwWhatIf"></div>
+    <h2>Arten in diesem Netz</h2>
+    <p class="fw-list">${fw.nodes.map(n => `<a class="chip" href="${esc(entryLink(n.cat, n.item))}">${esc(n.item.n)}</a>`).join(" ")}</p>`;
+  fwLayout(false);
+  fwDraw();
+  fwWidth = document.getElementById("fwBoard").clientWidth;
+  const board = document.getElementById("fwBoard");
+  board.addEventListener("click", e => {
+    const b = e.target.closest("[data-node]");
+    if(!b) return;
+    const i = +b.dataset.node;
+    if(fw.sel === null){ fw.sel = i; fwDraw(); return; }
+    if(fw.sel !== i){
+      const k = fw.sel + ">" + i;
+      if(fw.user.has(k)) fw.user.delete(k); else fw.user.add(k);
+      fw.checked = false;
+    }
+    fw.sel = null;
+    fwDraw();
+  });
+  document.getElementById("fwCheck").addEventListener("click", () => {
+    fw.checked = true;
+    fwDraw();
+    if(!fw.solution && fw.user.size === fw.truth.size && [...fw.user].every(k => fw.truth.has(k))) confetti();
+  });
+  document.getElementById("fwSolve").addEventListener("click", () => { fw.solution = !fw.solution; fw.checked = true; fwDraw(); });
+  document.getElementById("fwLevels").addEventListener("click", () => { fwLayout(true); fwDraw(); });
+  document.getElementById("fwReset").addEventListener("click", () => renderFoodweb(id));
+  document.getElementById("fwRemove").addEventListener("change", e => { fw.removed = e.target.value === "" ? null : +e.target.value; fwDraw(); });
+}
+function fwDraw(){
+  const lines = document.querySelector("#fwLines g"), board = document.getElementById("fwBoard");
+  if(!lines) return;
+  const c = i => [fw.nodes[i].x + FW_W / 2, fw.nodes[i].y + FW_H / 2];
+  // Linie von Kartenrand zu Kartenrand (Mitte minus halbe Karte in Richtung der Linie)
+  const seg = (a, b) => {
+    const [x1, y1] = c(a), [x2, y2] = c(b), dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
+    const cut = t => Math.min(Math.abs((FW_W / 2 + 4) / (dx / len || 1e-9)), Math.abs((FW_H / 2 + 4) / (dy / len || 1e-9))) * t;
+    const s = cut(1);
+    return [x1 + dx / len * s, y1 + dy / len * s, x2 - dx / len * s, y2 - dy / len * s];
+  };
+  const line = (k, cls) => {
+    const [a, b] = k.split(">").map(Number), [x1, y1, x2, y2] = seg(a, b);
+    return `<line class="fw-${cls}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" marker-end="url(#fwHead-${cls})"/>`;
+  };
+  const right = [...fw.user].filter(k => fw.truth.has(k)), wrong = [...fw.user].filter(k => !fw.truth.has(k));
+  const missing = [...fw.truth].filter(k => !fw.user.has(k));
+  lines.innerHTML = [...fw.user].map(k => line(k, fw.checked ? (fw.truth.has(k) ? "ok" : "wrong") : "user")).join("")
+    + (fw.solution ? missing.map(k => line(k, "missing")).join("") : "");
+  board.querySelectorAll("[data-node]").forEach(b => {
+    const n = fw.nodes[+b.dataset.node];
+    b.style.transform = `translate(${Math.round(n.x)}px,${Math.round(n.y)}px)`;
+    b.classList.toggle("sel", fw.sel === +b.dataset.node);
+  });
+  const st = document.getElementById("fwStatus");
+  st.textContent = fw.sel !== null ? `«${fw.nodes[fw.sel].item.n}» gewählt: Jetzt auf das Tier tippen, das es frisst.`
+    : !fw.checked ? `${fw.user.size} ${fw.user.size === 1 ? "Pfeil" : "Pfeile"} gesetzt. Im ganzen Netz gibt es ${fw.truth.size}.`
+    : `${right.length} von ${fw.truth.size} Pfeilen richtig${wrong.length ? `, ${wrong.length} falsch (rot)` : ""}${
+        missing.length ? `, ${missing.length} fehlen${fw.solution ? " (gestrichelt)" : ""}` : ""}.${
+        !wrong.length && !missing.length ? " Perfekt, das ganze Netz stimmt!" : ""}`;
+  fwWhatIf(board);
+}
+// «Was wäre, wenn … fehlt?»: direkte Folgen nach den richtigen Pfeilen
+function fwWhatIf(board){
+  const out = document.getElementById("fwWhatIf");
+  board.querySelectorAll("[data-node]").forEach(b => { b.classList.remove("gone", "hunger", "less", "more"); b.querySelector(".fw-badge").textContent = ""; });
+  if(fw.removed === null){ out.innerHTML = ""; return; }
+  const x = fw.removed, pairs = [...fw.truth].map(k => k.split(">").map(Number));
+  const foodOf = i => pairs.filter(([, b]) => b === i).map(([a]) => a);
+  const eaters = pairs.filter(([a]) => a === x).map(([, b]) => b);    // fressen x
+  const prey = pairs.filter(([, b]) => b === x).map(([a]) => a);      // werden von x gefressen
+  const mark = (i, cls, text) => { const b = board.querySelector(`[data-node="${i}"]`); b.classList.add(cls); b.querySelector(".fw-badge").textContent = text; };
+  mark(x, "gone", "fehlt");
+  const hunger = eaters.filter(i => foodOf(i).every(a => a === x)), less = eaters.filter(i => !hunger.includes(i));
+  hunger.forEach(i => mark(i, "hunger", "hat nichts mehr zu fressen"));
+  less.forEach(i => mark(i, "less", "weniger Nahrung"));
+  prey.forEach(i => mark(i, "more", "wird weniger gefressen"));
+  const names = list => list.map(i => `<b>${esc(fw.nodes[i].item.n)}</b>`).join(", ");
+  out.innerHTML = `<ul class="fw-effects">
+    ${hunger.length ? `<li class="hunger">${names(hunger)}: ${hunger.length === 1 ? "findet" : "finden"} in diesem Netz nichts mehr zu fressen und ${hunger.length === 1 ? "muss" : "müssen"} abwandern oder verhungern.</li>` : ""}
+    ${less.length ? `<li class="less">${names(less)}: ${less.length === 1 ? "hat" : "haben"} weniger Nahrung und ${less.length === 1 ? "weicht" : "weichen"} auf andere Beute aus.</li>` : ""}
+    ${prey.length ? `<li class="more">${names(prey)}: ${prey.length === 1 ? "wird" : "werden"} weniger gefressen und ${prey.length === 1 ? "kann sich" : "können sich"} stärker ausbreiten – mit Folgen für alles, wovon ${prey.length === 1 ? "diese Art lebt" : "diese Arten leben"}.</li>` : ""}
+    ${!hunger.length && !less.length && !prey.length ? `<li>In diesem Netz hängt keine andere Art direkt von <b>${esc(fw.nodes[x].item.n)}</b> ab.</li>` : ""}
+  </ul>
+  <p class="lern-hint">Überlege weiter: Was geschieht mit den Arten, die von diesen leben? So breiten sich Folgen durch das ganze Netz aus.</p>`;
+}
+// Neu anordnen nur, wenn sich die Breite ändert (auf dem Handy ändert Scrollen die Höhe)
+let fwWidth = 0;
+window.addEventListener("resize", () => {
+  const board = document.getElementById("fwBoard");
+  if(!fw || !board || document.getElementById("page-nahrungsnetz").hidden || board.clientWidth === fwWidth) return;
+  fwWidth = board.clientWidth;
+  fwLayout(false);
+  fwDraw();
+});
 
 /* ------------------------------------------------------------------
    ENTDECKUNGSKARTE (#/karte, #/karte/<kat>/<eintrag>, seit 2.23.0): Einträge mit Ort (entries.lat/lon, 028) als Punkte auf
@@ -3220,15 +3489,21 @@ function renderVote(){
    zum Kanton vor (Sprachausgabe des Browsers, ohne Netz und ohne Kosten). Nochmals tippen hält an.
 ------------------------------------------------------------------- */
 const canSpeak = "speechSynthesis" in window;
+// Knopf «Vorlesen» für einen Text (LernApp, Aufträge); leer, wenn der Browser nicht vorlesen kann
+const sayBtn = text => canSpeak && text ? `<button type="button" class="say-btn" data-say="${esc(text)}">🔊 Vorlesen</button>` : "";
+document.addEventListener("click", e => { const b = e.target.closest("[data-say]"); if(b) speakText(b.dataset.say, b); });
 let speakBtn = null;
 function speakStop(){ if(canSpeak) speechSynthesis.cancel(); if(speakBtn) speakBtn.textContent = "🔊 Vorlesen"; speakBtn = null; }
 function speakItem(cat, item, btn){
+  speakText([item.n + ".", cat.latin ? "" : item.s, descOf(item), ...item.f.map(f => `${f.k}: ${f.v}.`),
+    REGION && item.reg[REGION.id] ? `Im ${REGION.title}: ${item.reg[REGION.id]}` : ""].filter(Boolean).join(" "), btn);
+}
+// Beliebigen Text vorlesen (seit 2.26.0 auch Merksatz der LernApp und Forscheraufträge); nochmals tippen hält an
+function speakText(text, btn){
   const again = speakBtn === btn;
   speakStop();
-  if(again) return;
-  const parts = [item.n + ".", cat.latin ? "" : item.s, descOf(item), ...item.f.map(f => `${f.k}: ${f.v}.`),
-    REGION && item.reg[REGION.id] ? `Im ${REGION.title}: ${item.reg[REGION.id]}` : ""];
-  const u = new SpeechSynthesisUtterance(parts.filter(Boolean).join(" "));
+  if(again || !text) return;
+  const u = new SpeechSynthesisUtterance(text);
   const voices = speechSynthesis.getVoices();
   u.voice = voices.find(v => v.lang === "de-CH") || voices.find(v => v.lang.startsWith("de")) || null;
   u.lang = u.voice?.lang || "de-CH";
@@ -3393,7 +3668,7 @@ async function refresh(){
   const json = JSON.stringify(data);
   if(json === lastData) return;
   lastData = json;
-  [ALL, REGIONS, PATHS, LINKS] = data;
+  [ALL, REGIONS, PATHS, LINKS, FOODWEBS] = data;
   views.clear();
   itemIndex = null;
   linkIndex = null;
@@ -3408,7 +3683,7 @@ document.addEventListener("visibilitychange", () => { if(document.visibilityStat
 document.getElementById("back").addEventListener("click", () => { searchEl.value = ""; if(location.hash.replace(/^#\/?/, "")) location.hash = ""; else render(); });
 introEl.textContent = "Inhalte werden geladen …";
 loadAll().then(data => {
-  [ALL, REGIONS, PATHS, LINKS] = data;
+  [ALL, REGIONS, PATHS, LINKS, FOODWEBS] = data;
   lastData = JSON.stringify(data);
   setRegion(savedRegion(), false);   // gewählter Kanton von früher (sonst ganze Schweiz)
   window.addEventListener("hashchange", () => { searchEl.value = ""; render(); });

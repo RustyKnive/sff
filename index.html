@@ -34,6 +34,7 @@
       <a class="menu-item" href="#/jetzt">Jahreskalender</a>
       <a class="menu-item" href="#/karte">Entdeckungskarte</a>
       <a class="menu-item" href="#/pfade">Themenpfade</a>
+      <a class="menu-item" href="#/nahrungsnetz">Nahrungsnetz</a>
       <a class="menu-item" href="#/zeitstrahl">Zeitstrahl</a>
       <a class="menu-item" href="#/vergleich" id="menuCompare">Kantone vergleichen</a>
       <p class="menu-head">Für den Unterricht</p>
@@ -151,6 +152,10 @@
   <p class="map-tools"><button type="button" id="mapLocate">📍 Wo bin ich?</button>
     <span class="lern-hint">Dein Standort wird nur auf diesem Gerät verwendet und nirgends gespeichert.</span></p>
   <div id="mapList"></div>
+</section>
+<!-- Nahrungsnetz (#/nahrungsnetz, #/nahrungsnetz/<id>, js/index.js renderFoodweb): wer frisst wen, Pfeile setzen und prüfen -->
+<section class="page" id="page-nahrungsnetz" hidden>
+  <div id="nahrungsnetz"></div>
 </section>
 <!-- Themenpfade (#/pfade, #/pfade/<id>, js/index.js renderPaths) -->
 <section class="page" id="page-pfade" hidden>
@@ -284,6 +289,8 @@
       <summary>Suchen</summary>
       <p>Das Suchfeld oben findet Einträge in allen Kategorien, auch über den lateinischen Namen. Umlaute und
         Gross- und Kleinschreibung spielen keine Rolle («Aesche» findet «Äsche»). <kbd>Esc</kbd> leert das Feld.</p>
+      <p><b>Fehlt etwas?</b> Am Ende jeder Kategorie und bei einer Suche ohne Treffer kannst du einen neuen Eintrag vorschlagen,
+        ohne deinen Namen. Du bekommst eine Nummer; merke sie dir, falls deine Lehrperson danach fragt.</p>
     </details>
     <details>
       <summary>Entdeckung des Tages</summary>
@@ -296,6 +303,13 @@
       <p>Menü → «Jahreskalender» zeigt für jeden Monat Gedenktage, Termine und Bräuche (z. B. Fridolinstag, Näfelser Fahrt,
         Landsgemeinde) und was laut Steckbrief blüht, fliegt, wächst oder laicht. Mit ‹ und › blätterst du durch die Monate.
         Eine gute Anregung für einen Ausflug.</p>
+    </details>
+    <details>
+      <summary>Nahrungsnetz</summary>
+      <p>Menü → «Nahrungsnetz»: Wer frisst wen im Wald, im Gebirge, im Bach oder auf der Wiese? Tippe zuerst auf das, was gefressen
+        wird, dann auf das Tier, das es frisst; so entsteht ein Pfeil. «Prüfen» zeigt richtige Pfeile grün und falsche rot,
+        «Lösung zeigen» die fehlenden gestrichelt. «Nach Ernährungsstufen ordnen» stellt Pflanzen unten und Jäger oben hin.
+        Unter «Was wäre, wenn … fehlt?» wählst du eine Art, die verschwindet, und siehst, wen das trifft.</p>
     </details>
     <details>
       <summary>Themenpfade</summary>
@@ -346,6 +360,7 @@
           oder unter dem Bild.</li>
         <li><b>Abzeichen:</b> Menü → «Abzeichen» zeigt, was du geschafft hast: richtige Begriffe, gelöste Aufträge, Spiele,
           Tage in Folge, angesehene Karten, besuchte Kantone, geschaffte Themenpfade und pro Kanton, in Bronze, Silber und Gold.</li>
+        <li><b>Vorlesen:</b> Nach jeder Antwort liest «🔊 Vorlesen» den Namen und den Merksatz vor.</li>
         <li>Der Lernstand bleibt nur auf diesem Gerät gespeichert, es braucht kein Konto.</li>
       </ul>
     </details>
@@ -362,6 +377,7 @@
           Antwort bleiben gespeichert, der Auftrag wartet oben im Band. Nach einem gelösten Auftrag beendet «Fertig für heute».</li>
         <li><b>Weiterarbeiten:</b> Menü → «Forscheraufträge» zeigt alle Aufträge, was du gelöst hast und deine Antworten.
           Dort und unter «Einstellungen» lässt sich der tägliche Auftrag abschalten.</li>
+        <li><b>Vorlesen:</b> «🔊 Vorlesen» liest die Frage und nach dem Lösen die Erklärung vor.</li>
         <li>Deine Antworten bleiben nur auf diesem Gerät gespeichert.</li>
       </ul>
     </details>

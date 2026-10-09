@@ -75,7 +75,7 @@ async function reload(){
   if(r.error) throw new Error(r.error.message);
   cats = r.data;
   cats.forEach(c => c.entries.forEach(e => { e.entry_regions = e.entry_regions || []; }));
-  await Promise.all([loadReports(), loadTasks(), loadRegions(), loadLinks()]);
+  await Promise.all([loadReports(), loadTasks(), loadRegions(), loadLinks(), loadProposals()]);
   renderSidebar();
 }
 async function loadTasks(){
@@ -107,6 +107,14 @@ async function loadReports(){
   const { data, error } = await sb.from("image_reports").select("*").order("last_at", { ascending:false });
   reports = error ? [] : data;
 }
+// Vorschläge der Lernenden für neue Einträge (031); fehlt die Tabelle, leer
+let proposals = [];
+async function loadProposals(){
+  const { data, error } = await sb.from("entry_proposals").select("*").order("created_at");
+  proposals = error ? [] : data;
+}
+// Ein Vorschlag als neuer Eintrag: Name und Text füllen das Formular vor (renderEntry), gelöscht wird er erst mit «Erledigt»
+let entryPrefill = null;
 // Platz 1–4 = Bild, Platz 0 = Fehler im Text (018)
 const slotReports = (e, p) => reports.filter(r => r.entry_id === e.id && r.position === p);
 // Meldung ist veraltet, wenn am Platz inzwischen ein anderes Bild steht
@@ -1067,8 +1075,10 @@ async function downloadBackup(){
   const entryRegions = await selectAll("entry_regions").catch(() => []);
   const pathRows = await selectAll("paths").catch(() => []);              // Themenpfade (026)
   const linkRows = await selectAll("entry_links").catch(() => []);       // verknüpfte Einträge (030)
+  const foodRows = await selectAll("foodwebs").catch(() => []);          // Nahrungsnetze (031)
+  const propRows = await selectAll("entry_proposals").catch(() => []);   // Vorschläge der Lernenden (031)
   const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket,
-    categories, entries, images, tasks:taskRows, regions:regionRows, entry_regions:entryRegions, paths:pathRows, entry_links:linkRows };
+    categories, entries, images, tasks:taskRows, regions:regionRows, entry_regions:entryRegions, paths:pathRows, entry_links:linkRows, foodwebs:foodRows, entry_proposals:propRows };
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
   a.download = `natur-und-schweiz-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
@@ -1122,7 +1132,8 @@ function confRow(name = "", diff = ""){
 
 function renderEntry(cat, entry){
   const isNew = !entry;
-  const e = entry || { name:"", subtitle:"", description:"", visible:true, facts:[], search_terms:["","",""], wp:"", labels:null, images:[] };
+  const e = entry || { name:entryPrefill?.name || "", subtitle:"", description:entryPrefill?.text || "", visible:true, facts:[], search_terms:["","",""], wp:"", labels:null, images:[] };
+  entryPrefill = null;
   const labels = e.labels || cat.labels;
   const terms = [0,1,2].map(i => e.search_terms[i] || "");
   const main = $("main");
@@ -2285,6 +2296,7 @@ function renderDashboard(){
       ${tile(`${all.filter(({ e }) => (e.simple || "").trim()).length}/${all.length}`, "einfache Texte", all.some(({ e }) => !(e.simple || "").trim()) ? `${all.filter(({ e }) => !(e.simple || "").trim()).length} fehlen` : "alle vorhanden", "", all.some(({ e }) => !(e.simple || "").trim()))}
       ${tile(`${all.filter(({ e }) => e.checked_at).length}/${all.length}`, "von Hand geprüft",
         `${cats.filter(c => c.checked_at).length}/${cats.length} Kategorien · ${cats.filter(catAllChecked).length} ganz geprüft`)}
+      ${tile(proposals.length, "Vorschläge von Lernenden", proposals.length ? "neue Einträge prüfen" : "keine offen", proposals.length ? "#/erledigen" : "", proposals.length > 0)}
       ${tile(links.length, "Verknüpfungen", linkProposals().length ? `${linkProposals().length} Vorschläge offen` : "alle bestätigt",
         linkProposals().length ? "#/erledigen" : "", linkProposals().length > 0)}
       ${tile(regions.length, regions.length === 1 ? "Kanton" : "Kantone", proposalCount() ? `${proposalCount()} Vorschläge offen`
@@ -2320,7 +2332,7 @@ function renderTodo(){
     const f = findEntry(r.entry_id);
     return f && { r, cat:f.cat, e:f.entry };
   }).filter(Boolean);
-  const nothing = !schemaMissing() && !reported.length && !textReported.length && !todo.length && !bulk && !proposalCount() && !linkProposals().length;
+  const nothing = !schemaMissing() && !reported.length && !textReported.length && !todo.length && !bulk && !proposalCount() && !linkProposals().length && !proposals.length;
   const propRegions = regions.map(g => ({ g, n:regionLinks(g.id).filter(l => !l.r.confirmed).length })).filter(x => x.n);
   main.innerHTML = `<h2>Zu erledigen</h2>
     <p class="hint">${cats.length} Kategorien · ${total} Einträge · ${imgs} Bilder · ${tasks.length} Forscheraufträge.
@@ -2329,6 +2341,16 @@ function renderTodo(){
       diese Website braucht Version ${VERSION.schema}. Im Supabase-Dashboard unter «SQL Editor» die fehlenden Dateien
       bis <code>supabase/${String(VERSION.schema).padStart(3, "0")}_…</code> der Reihe nach ausführen.</p>` : ""}
     ${nothing ? `<p class="done-box">✓ Alles erledigt: keine Meldungen, keine fehlenden Bilder.</p>` : ""}
+    ${proposals.length ? `<h3>Vorschläge von Lernenden für neue Einträge (${proposals.length})</h3>
+      <p class="hint">Ohne Namen eingereicht, mit Nummer (für den Preis). «Als Eintrag anlegen» öffnet das Formular mit Name und Text;
+        am besten dort «Mit Claude ausfüllen» nutzen. Danach den Vorschlag als erledigt markieren.</p>
+      <ul class="link-proposals">${proposals.map(p => {
+        const cat = findCat(p.category_id);
+        return `<li><b>Nr. ${p.id}: ${esc(p.name)}</b> <small class="hint">${cat ? esc(cat.name) : "ohne Kategorie"} · ${checkedDate(p.created_at)}</small>
+          <br>${esc(p.text)}${p.place ? `<br><small>Gesehen: ${esc(p.place)}</small>` : ""}
+          <span class="slot-actions">${cat ? `<button type="button" class="ghost small" data-pnew="${p.id}">Als Eintrag anlegen</button>` : ""}
+          <button type="button" class="ghost small" data-pdone="${p.id}">Erledigt</button></span></li>`;
+      }).join("")}</ul>` : ""}
     ${linkProposals().length ? `<h3>Vorschläge für verknüpfte Einträge (${linkProposals().length})</h3>
       <p class="hint">Diese Verknüpfungen hat Claude vorgeschlagen; sie stehen schon unter «Dazu entdecken». Bestätigen, entfernen oder
         im Eintrag den Hinweis ändern.</p>
@@ -2389,6 +2411,17 @@ function renderTodo(){
     location.hash = "#/e/" + e.id;
   }));
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
+  // Vorschläge der Lernenden (031): als Eintrag anlegen bzw. erledigt (löschen)
+  main.querySelectorAll("[data-pnew]").forEach(btn => btn.addEventListener("click", () => {
+    const p = proposals.find(x => String(x.id) === btn.dataset.pnew);
+    entryPrefill = { name:p.name, text:p.text };
+    location.hash = "#/e/neu/" + p.category_id;
+  }));
+  main.querySelectorAll("[data-pdone]").forEach(btn => btn.addEventListener("click", async () => {
+    if(!confirm("Vorschlag als erledigt markieren und löschen?")) return;
+    await act(() => must(sb.from("entry_proposals").delete().eq("id", btn.dataset.pdone)), "Vorschlag erledigt.").catch(() => {});
+    render();
+  }));
   // Vorschläge für verknüpfte Einträge (030) bestätigen oder entfernen
   const linkRef = s => { const [a, b] = s.split("|"); return { a, b }; };
   main.querySelectorAll("[data-lok]").forEach(btn => btn.addEventListener("click", async () => {
@@ -2412,10 +2445,8 @@ function renderTodo(){
    Feste Liste hier im Code; bei neuen Ideen oder Erledigtem nachführen, gleich wie docs/WERDEGANG.md «Offen und geplant». */
 const IDEEN = [
   { title:"Pendenzen der Spielwiese", hint:"Vorgemerkt am 8. Oktober 2026, als Nächstes der Reihe nach.", items:[
-    ["Steckbriefe vorschlagen", "Lernende schlagen einen neuen Eintrag vor (ohne Namen, wie die Textmeldungen); die Lehrperson prüft und übernimmt ihn hier in der Verwaltung."],
     ["Forscheraufträge draussen", "Aufträge mit eigenen Messungen und Beobachtungen, z. B. Föhn (Temperatur und Wind), Bach (Lebensraum der Bachforelle)."],
-    ["Vorlesen in LernApp und Aufträgen", "Frage, Merksatz und Erklärung vorlesen lassen, wie heute schon die Textseite der Karten."],
-    ["Themenpfade in der Verwaltung bearbeiten", "Heute nur per SQL (Tabelle «paths»). Dazu weitere Pfade, z. B. Wald, Wasser, Glarnerland."],
+    ["Themenpfade und Nahrungsnetze in der Verwaltung bearbeiten", "Heute nur per SQL (Tabellen «paths» und «foodwebs»). Dazu weitere Pfade (Wald, Wasser, Glarnerland) und Netze (Hecke, Acker, Boden)."],
     ["Exkursionen und Posten aus der Entdeckungskarte", "Orte auf der Karte auswählen und daraus einen Postenlauf mit QR-Plakaten und Steckbriefen drucken."]
   ]},
   { title:"Weitere Ideen", hint:"Noch nicht entschieden.", items:[
@@ -2435,7 +2466,6 @@ const IDEEN = [
     ["Bestimmen mit Ja/Nein-Fragen", "Einfacher Bestimmungsweg für Bäume: Nadeln oder Blätter? Einzeln oder gebündelt? … bis zur Karte."]
   ]},
   { title:"Ideen für die Oberstufe", hint:"Vorschläge von Claude vom 8. Oktober 2026, noch nicht entschieden.", items:[
-    ["Nahrungsnetz bauen", "Wer frisst wen? Aus den Steckbriefen ein Nahrungsnetz für Wald, Bach oder Alp zusammenstellen und überlegen, was fehlt, wenn eine Art verschwindet (NT.9)."],
     ["Bestimmungsschlüssel", "Dichotomer Schlüssel für Amphibien, Nadelbäume oder Pilze, Schritt für Schritt mit Merkmalen; am Schluss Vergleich mit der Verwechslungsgefahr."],
     ["Neophyten und Gefährdung", "Neue Kategorie invasive Pflanzen (Japanischer Knöterich, Drüsiges Springkraut, Goldrute) und pro Art der Status auf der Roten Liste; Diskussion über Schutz und Bekämpfung."],
     ["Berufe in der Natur", "Förster, Wildhüterin, Landwirt, Fischereiaufseher, Geologin: kurze Porträts mit Bezug zu den Karten, passend zur beruflichen Orientierung."],
