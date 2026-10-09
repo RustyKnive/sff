@@ -3,4 +3,4 @@
    datum:  Tag der VerÃ¶ffentlichung
    schema: Datenbank-Version, die diese Website mindestens braucht (= Nummer der letzten SQL-Datei supabase/0NN_â€¦)
    Wird von index.html, admin.html und sw.js geladen (self = window bzw. der Service Worker). */
-self.SFF_VERSION = { app:"2.26.0", datum:"2026-10-09", schema:31 };
+self.SFF_VERSION = { app:"2.27.0", datum:"2026-10-09", schema:31 };

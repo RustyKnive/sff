@@ -4,9 +4,9 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 9. Oktober 2026 · Version 2.26.0 (Datenbank 31) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 9. Oktober 2026 · Version 2.27.0 (Datenbank 32) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
-Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge) · 4 Nahrungsnetze
+Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge) · 4 Nahrungsnetze · 5 Themenpfade (4 zum Glarnerland)
 
 ---
 
@@ -93,6 +93,8 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
   geprüft», Stand pro Kategorie und in der Übersicht. Ändert sich danach der Text, fällt das Häkchen weg (seit 2.25.0).
 - **Verknüpfte Einträge:** im Eintrag hinzufügen, mit Hinweis, entfernen; Vorschläge von Claude unter «Zu erledigen» bestätigen.
 - **Vorschläge von Lernenden:** unter «Zu erledigen» mit Nummer, «Als Eintrag anlegen» (Formular mit Name und Text) und «Erledigt».
+- **Pfade und Netze:** Themenpfade (Schritte mit Leitfrage, Aufträge am Schluss) und Nahrungsnetze (Pfeile) anlegen, bearbeiten,
+  ausblenden und löschen; Einträge aus einer Vorschlagsliste, ⚑ bei Verweisen, die es nicht mehr gibt (seit 2.27.0).
 - Einträge in eine andere Kategorie verschieben.
 - **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»,
   ein bestimmtes Commons-Bild über seine Adresse oder viele auf einmal über eine Liste), dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
@@ -630,6 +632,19 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Die Netze schlug Claude vor; bearbeiten vorerst per SQL (Pendenz unter «Ideen»).
 - Anleitung für Lehrpersonen mit Lernzielen ergänzt (Nahrungsnetz nur in der Fassung Oberstufe).
 
+
+### 9. Oktober – Pfade und Netze in der Verwaltung, Glarner Themenpfade (Version 2.27.0)
+
+- Wunsch des Users: Themenpfade und Nahrungsnetze lassen sich jetzt in der Verwaltung bearbeiten (neuer Bereich **Pfade und Netze**
+  oben in der Navigation). Schritte, Aufträge und Pfeile werden aus Vorschlagslisten gewählt, verschoben und entfernt; Verweise auf
+  Einträge oder Aufträge, die es nicht mehr gibt, sind mit ⚑ markiert.
+- Wunsch des Users: **vier Themenpfade zum Kanton Glarus** (Datenbank-Version 32): «Die Glarner Hauptüberschiebung» (Lochsite,
+  Verrucano, Flysch, Martinsloch, Glärnisch, Schiefer, Landesplattenberg, Bergsturz von Elm), «Wasser im Glarnerland» (vom Tödi über
+  Limmernsee, Pantenbrücke, Linth und Klöntalersee bis zum Escherkanal und Walensee), «Glarner Geschichte und Politik» (Fridolin,
+  Näfels, Freulerpalast, Zwingli, Brand von Glarus, Landsgemeinde, Stimmrecht ab 16, Gemeindereform, Schabziger) und «Tiere und
+  Pflanzen der Glarner Alpen» (Freiberg Kärpf, Gämse, Steinbock, Murmeltier, Steinadler, Alpenschneehuhn, Edelweiss, Alpenrose,
+  Braunwald), zusammen 38 Schritte mit Leitfragen und 11 passenden Forscheraufträgen. Leitfragen von Claude, in der Verwaltung anpassbar.
+
 ---
 
 ## Versionen
@@ -677,6 +692,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.24.1 | 8.10.2026 | Verwaltung, Ideen: «Einträge verknüpfen» vorgemerkt |
 | 2.25.0 | 9.10.2026 | «Dazu entdecken»: verknüpfte Einträge mit 71 Vorschlägen; Häkchen «von Hand geprüft» für Einträge und Kategorien (Datenbank-Version 30) |
 | 2.26.0 | 9.10.2026 | Eintrag vorschlagen (mit Nummer), Vorlesen in LernApp und Aufträgen, Nahrungsnetz mit vier Lebensräumen (Datenbank-Version 31) |
+| 2.27.0 | 9.10.2026 | Verwaltung «Pfade und Netze»: Themenpfade und Nahrungsnetze bearbeiten; vier Glarner Themenpfade (Datenbank-Version 32) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -741,6 +757,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `029_karte_korrekturen.sql` | 24 Orte nach der Ortssuche von swisstopo korrigiert (nur noch nicht angepasste) |
 | `030_verknuepfungen_geprueft.sql` | Tabelle `entry_links` (verknüpfte Einträge, 71 Vorschläge), Spalten `checked_at` bei Einträgen und Kategorien mit automatischem Zurücksetzen bei Textänderung |
 | `031_vorschlaege_nahrungsnetz.sql` | Tabelle `entry_proposals` mit Funktion `propose_entry` (Vorschläge der Lernenden), Tabelle `foodwebs` mit 4 Nahrungsnetzen |
+| `032_glarner_themenpfade.sql` | Vier Themenpfade zum Kanton Glarus mit 38 Schritten und 11 Aufträgen |
 
 ## Offen und geplant
 
@@ -769,7 +786,7 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   - [x] **Themenpfad Klimawandel** (2.21.0): Gletscherrückgang, neue Arten (Kastaniengallwespe, Japankäfer), Hitzewellen als zusammenhängende Aufträge mit Rechnen und Begründen.
   - [x] **Abzeichen «Entdecker»** (2.21.0): angesehene Karten zählen (heute zählt nur, was die LernApp, Aufträge und Spiele speichern).
   - [x] **Vorlesen in LernApp und Aufträgen** (2.26.0): Frage bzw. Merksatz vorlesen lassen.
-  - [ ] **Themenpfade und Nahrungsnetze in der Verwaltung bearbeiten:** heute nur per SQL (Tabellen `paths` und `foodwebs`); weitere Pfade (Wald, Wasser, Glarnerland) und Netze (Hecke, Acker, Boden).
+  - [x] **Themenpfade und Nahrungsnetze in der Verwaltung bearbeiten** (2.27.0), dazu vier Glarner Themenpfade: heute nur per SQL (Tabellen `paths` und `foodwebs`); weitere Pfade (Wald, Wasser, Glarnerland) und Netze (Hecke, Acker, Boden).
   - [x] **PDF-Anleitung für Lehrpersonen** (2.22.0, gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
 - **Weitere Ideen** (noch nicht entschieden):
   - «Welches Tier ruft da?» mit den Tierstimmen.

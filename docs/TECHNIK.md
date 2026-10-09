@@ -263,7 +263,9 @@ SVG-Ebene mit Linien und Pfeilspitzen (`marker`). Eine Linie läuft von Kartenra
 unter der Karte verschwindet. Die Ernährungsstufe ergibt sich aus den Daten: Was im Netz nichts frisst, ist Stufe 0, sonst eine
 Stufe über der höchsten Nahrung. «Was wäre, wenn …» wertet nur die direkten Folgen aus und überlässt das Weiterdenken über mehrere
 Stufen bewusst den Lernenden. Die Netze stehen wie die Themenpfade mit Kategorie und Namen in der Datenbank, damit sie auch nach
-einem neuen Bild oder einer Textänderung stimmen.
+einem neuen Bild oder einer Textänderung stimmen. Seit 2.27.0 lassen sich Pfade und Netze in der Verwaltung
+bearbeiten; ein Eintrag wird dort aus einer Vorschlagsliste «Name · Kategorie» gewählt, und Verweise, die nach einer Umbenennung
+nicht mehr passen, werden markiert statt stillschweigend zu verschwinden.
 
 ### KI ohne Schnittstelle
 

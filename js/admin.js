@@ -75,7 +75,7 @@ async function reload(){
   if(r.error) throw new Error(r.error.message);
   cats = r.data;
   cats.forEach(c => c.entries.forEach(e => { e.entry_regions = e.entry_regions || []; }));
-  await Promise.all([loadReports(), loadTasks(), loadRegions(), loadLinks(), loadProposals()]);
+  await Promise.all([loadReports(), loadTasks(), loadRegions(), loadLinks(), loadProposals(), loadThemes()]);
   renderSidebar();
 }
 async function loadTasks(){
@@ -199,7 +199,7 @@ function renderSidebar(){
     </li>`;
   }).join("");
   // Hauptbereiche oben: aktiven markieren, Zahl der offenen Punkte bei «Zu erledigen»
-  const nav = !r.type ? "home" : r.type === "erledigen" ? "todo" : r.type === "ideen" ? "ideas" : r.type === "werkzeuge" ? "tools"
+  const nav = !r.type ? "home" : r.type === "erledigen" ? "todo" : r.type === "ideen" ? "ideas" : ["themen", "p", "n"].includes(r.type) ? "themes" : r.type === "werkzeuge" ? "tools"
     : r.type === "kantone" || r.type === "r" ? "regions" : "";
   document.querySelectorAll("[data-nav]").forEach(a => a.classList.toggle("active", a.dataset.nav === nav));
   const open = todoCount();
@@ -2243,6 +2243,9 @@ function render(){
   if(r.type === "werkzeuge") return renderTools();
   if(r.type === "erledigen") return renderTodo();
   if(r.type === "ideen") return renderIdeas();
+  if(r.type === "themen") return renderThemes();
+  if(r.type === "p") return r.id === "neu" ? renderPathEdit(null) : paths.some(p => p.id === r.id) ? renderPathEdit(paths.find(p => p.id === r.id)) : renderThemes();
+  if(r.type === "n") return r.id === "neu" ? renderWebEdit(null) : webs.some(w => w.id === r.id) ? renderWebEdit(webs.find(w => w.id === r.id)) : renderThemes();
   if(r.type === "kantone") return renderRegions();
   if(r.type === "r" && r.id === "neu") return renderRegion(null, "einstellungen");
   if(r.type === "r" && findRegion(r.id)) return renderRegion(findRegion(r.id), r.extra || "eintraege");
@@ -2441,12 +2444,187 @@ function renderTodo(){
   });
 }
 
+/* ------------------------------------------------------------------
+   PFADE UND NETZE (#/themen, #/p/<id>, #/n/<id>, seit 2.27.0): Themenpfade (paths, 026) und Nahrungsnetze (foodwebs, 031)
+   bearbeiten. Beide verweisen über Kategorie und Namen auf Einträge; im Formular wählt man sie aus einer Vorschlagsliste
+   «Name · Kategorie». Verweise, die es nicht mehr gibt (Eintrag umbenannt oder gelöscht), werden markiert.
+------------------------------------------------------------------- */
+let paths = [], webs = [];
+async function loadThemes(){
+  const p = await sb.from("paths").select("*").order("sort").order("title");
+  paths = p.error ? [] : p.data;
+  const w = await sb.from("foodwebs").select("*").order("sort").order("title");
+  webs = w.error ? [] : w.data;
+}
+const entryLabel = (c, e) => e.name + " · " + c.name;
+const entryOptionsHtml = () => `<datalist id="entryOptions">${cats.flatMap(c => c.entries.map(e =>
+  `<option value="${esc(entryLabel(c, e))}">`)).join("")}</datalist>`;
+// «Name · Kategorie» bzw. [kat, name] → { cat, entry } oder null
+function entryByLabel(v){
+  for(const c of cats){ const e = c.entries.find(x => entryLabel(c, x) === v.trim()); if(e) return { cat:c, entry:e }; }
+  return null;
+}
+function entryByRef(catId, name){
+  const c = findCat(catId), e = c?.entries.find(x => x.name === name);
+  return e ? { cat:c, entry:e } : null;
+}
+const refLabel = (catId, name) => { const h = entryByRef(catId, name); return h ? entryLabel(h.cat, h.entry) : name + " · " + catId; };
+const pathBroken = p => (p.steps || []).filter(s => !entryByRef(s.cat, s.entry)).length + (p.tasks || []).filter(id => !tasks.some(t => t.id === id)).length;
+const webBroken = w => (w.links || []).filter(l => !entryByRef(...l.f) || !entryByRef(...l.e)).length;
+
+function renderThemes(){
+  const row = (href, x, info, broken) => `<li class="${x.visible ? "" : "off"}"><a href="${href}"><b>${esc(x.title)}</b>
+    <small>${info}${x.visible ? "" : " · ausgeblendet"}</small></a>${broken ? ` <span class="badge warn" title="Verweise auf Einträge oder Aufträge, die es nicht mehr gibt">⚑ ${broken}</span>` : ""}</li>`;
+  $("main").innerHTML = `<h2>Pfade und Netze</h2>
+    <p class="hint">Themenpfade führen Schritt für Schritt durch ein Thema, Nahrungsnetze zeigen, wer wen frisst. Beide bestehen aus
+      vorhandenen Einträgen; ⚑ markiert Verweise, die es nicht mehr gibt.</p>
+    <h3>Themenpfade (${paths.length})</h3>
+    <ul class="list theme-list">${paths.map(p => row(`#/p/${esc(p.id)}`, p, `${(p.steps || []).length} Schritte · ${(p.tasks || []).length} Aufträge`, pathBroken(p))).join("")}</ul>
+    <p><button type="button" class="ghost" id="newPath">+ Neuer Themenpfad</button></p>
+    <h3>Nahrungsnetze (${webs.length})</h3>
+    <ul class="list theme-list">${webs.map(w => row(`#/n/${esc(w.id)}`, w, `${(w.links || []).length} Pfeile`, webBroken(w))).join("")}</ul>
+    <p><button type="button" class="ghost" id="newWeb">+ Neues Nahrungsnetz</button></p>`;
+  $("newPath").addEventListener("click", () => { location.hash = "#/p/neu"; });
+  $("newWeb").addEventListener("click", () => { location.hash = "#/n/neu"; });
+}
+// Gemeinsamer Kopf beider Formulare: Kennung (nur beim Anlegen), Titel, Einleitung, Reihenfolge, sichtbar
+function themeHead(x, isNew, kind){
+  return `<div class="row">
+      <label>Titel <input type="text" name="title" required maxlength="80" value="${esc(x.title)}"></label>
+      <label>Kennung (Adresse #/${kind}/…) <input type="text" name="id" required pattern="[a-z0-9]+(-[a-z0-9]+)*" value="${esc(x.id)}" ${isNew ? "" : "readonly"}></label>
+      <label>Reihenfolge <input type="number" name="sort" value="${x.sort ?? 0}"></label>
+    </div>
+    <label>Einleitung <textarea name="intro" maxlength="600" rows="3">${esc(x.intro || "")}</textarea></label>
+    <label class="inline"><input type="checkbox" name="visible" ${x.visible !== false ? "checked" : ""}> auf der Seite sichtbar</label>`;
+}
+// Zeilen verschieben und entfernen (Schritte, Aufträge, Pfeile)
+function wireRows(list){
+  list.addEventListener("click", ev => {
+    const b = ev.target.closest("button[data-row]");
+    if(!b) return;
+    const li = b.closest("li");
+    if(b.dataset.row === "del") li.remove();
+    if(b.dataset.row === "up" && li.previousElementSibling) li.previousElementSibling.before(li);
+    if(b.dataset.row === "down" && li.nextElementSibling) li.nextElementSibling.after(li);
+  });
+}
+const rowBtns = (move = true) => `${move ? `<button type="button" class="icon" data-row="up" title="Nach oben">↑</button>
+  <button type="button" class="icon" data-row="down" title="Nach unten">↓</button>` : ""}<button type="button" class="icon" data-row="del" title="Entfernen">✕</button>`;
+const refInput = (v, attr) => `<input type="text" ${attr} list="entryOptions" value="${esc(v)}" placeholder="Eintrag: Name eingeben …">`;
+
+function renderPathEdit(p){
+  const isNew = !p;
+  const x = p || { id:"", title:"", intro:"", steps:[], tasks:[], sort:(Math.max(0, ...paths.map(q => q.sort || 0)) + 10), visible:true };
+  const stepRow = s => `<li class="theme-row">${refInput(s ? refLabel(s.cat, s.entry) : "", "data-step")}
+    <textarea data-text rows="2" maxlength="300" placeholder="Leitfrage zum Nachdenken">${esc(s?.text || "")}</textarea>${rowBtns()}</li>`;
+  const taskRow = id => `<li class="theme-row narrow"><input type="text" data-task list="taskOptions" value="${esc(id || "")}" placeholder="Kennung des Auftrags">
+    <small class="hint">${esc(tasks.find(t => t.id === id)?.question || "")}</small>${rowBtns()}</li>`;
+  $("main").innerHTML = `<p class="hint"><a href="#/themen">← Pfade und Netze</a>${isNew ? "" : ` · <a href="index.html#/pfade/${esc(x.id)}" target="_blank" rel="noopener">auf der Seite ansehen ↗</a>`}</p>
+    <h2>${isNew ? "Neuer Themenpfad" : esc(x.title)}</h2>
+    <form id="themeForm">${themeHead(x, isNew, "pfade")}
+      <h3>Schritte</h3>
+      <p class="hint">Jeder Schritt ist eine Karte mit einer Leitfrage. Reihenfolge mit ↑ ↓ ändern.</p>
+      <ol class="theme-rows" id="pSteps">${(x.steps || []).map(stepRow).join("")}</ol>
+      <p><button type="button" class="ghost small" id="addStep">+ Schritt</button></p>
+      <h3>Forscheraufträge am Schluss</h3>
+      <ol class="theme-rows" id="pTasks">${(x.tasks || []).map(taskRow).join("")}</ol>
+      <p><button type="button" class="ghost small" id="addTask">+ Auftrag</button></p>
+      ${entryOptionsHtml()}
+      <datalist id="taskOptions">${tasks.map(t => `<option value="${esc(t.id)}" label="${esc(t.question.slice(0, 90))}">`).join("")}</datalist>
+      <div class="actions sticky"><button>${isNew ? "Anlegen" : "Speichern"}</button>
+        ${isNew ? "" : `<button type="button" class="danger" id="delTheme">Themenpfad löschen</button>`}</div>
+    </form>`;
+  const steps = $("pSteps"), tlist = $("pTasks");
+  wireRows(steps); wireRows(tlist);
+  $("addStep").addEventListener("click", () => { steps.insertAdjacentHTML("beforeend", stepRow(null)); steps.lastElementChild.querySelector("input").focus(); });
+  $("addTask").addEventListener("click", () => { tlist.insertAdjacentHTML("beforeend", taskRow("")); tlist.lastElementChild.querySelector("input").focus(); });
+  tlist.addEventListener("change", ev => { const i = ev.target.closest("[data-task]"); if(i) i.nextElementSibling.textContent = tasks.find(t => t.id === i.value.trim())?.question || "Auftrag nicht gefunden"; });
+  const F = $("themeForm").elements;
+  $("themeForm").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const out = [];
+    for(const li of steps.children){
+      const hit = entryByLabel(li.querySelector("[data-step]").value);
+      if(!hit){ li.querySelector("[data-step]").focus(); msg("Schritt ohne gültigen Eintrag: bitte aus der Vorschlagsliste wählen.", true); return; }
+      out.push({ cat:hit.cat.id, entry:hit.entry.name, text:li.querySelector("[data-text]").value.trim() });
+    }
+    const tids = [...tlist.querySelectorAll("[data-task]")].map(i => i.value.trim()).filter(Boolean);
+    const bad = tids.find(id => !tasks.some(t => t.id === id));
+    if(bad){ msg(`Auftrag «${bad}» gibt es nicht.`, true); return; }
+    if(!out.length){ msg("Ein Themenpfad braucht mindestens einen Schritt.", true); return; }
+    const row = { id:F.id.value.trim(), title:F.title.value.trim(), intro:F.intro.value.trim(), steps:out, tasks:tids,
+      sort:+F.sort.value || 0, visible:F.visible.checked };
+    if(isNew && paths.some(q => q.id === row.id)){ msg("Diese Kennung gibt es schon.", true); F.id.focus(); return; }
+    await act(() => must(isNew ? sb.from("paths").insert(row) : sb.from("paths").update(row).eq("id", x.id)), isNew ? "Themenpfad angelegt." : "Gespeichert.").catch(() => {});
+    if(isNew) location.hash = "#/p/" + row.id; else render();
+  });
+  if(isNew) F.title.addEventListener("input", () => { F.id.value = slug(F.title.value); });
+  $("delTheme")?.addEventListener("click", async () => {
+    if(!confirm(`Themenpfad «${x.title}» löschen? Die Einträge und Aufträge selbst bleiben.`)) return;
+    await act(() => must(sb.from("paths").delete().eq("id", x.id)), "Themenpfad gelöscht.").catch(() => {});
+    location.hash = "#/themen";
+  });
+}
+
+function renderWebEdit(w){
+  const isNew = !w;
+  const x = w || { id:"", title:"", intro:"", links:[], sort:(Math.max(0, ...webs.map(q => q.sort || 0)) + 10), visible:true };
+  const linkRow = l => `<li class="theme-row link3">${refInput(l ? refLabel(...l.f) : "", "data-f")}<span class="arrow" title="wird gefressen von">→</span>
+    ${refInput(l ? refLabel(...l.e) : "", "data-e")}${rowBtns(false)}</li>`;
+  $("main").innerHTML = `<p class="hint"><a href="#/themen">← Pfade und Netze</a>${isNew ? "" : ` · <a href="index.html#/nahrungsnetz/${esc(x.id)}" target="_blank" rel="noopener">auf der Seite ansehen ↗</a>`}</p>
+    <h2>${isNew ? "Neues Nahrungsnetz" : esc(x.title)}</h2>
+    <form id="themeForm">${themeHead(x, isNew, "nahrungsnetz")}
+      <h3>Pfeile: links wird gefressen, rechts frisst</h3>
+      <p class="hint">Ein Pfeil zeigt vom Gefressenen zum Fresser (Richtung des Energieflusses), z. B. «Buche → Reh». Die Arten des Netzes
+        ergeben sich aus den Pfeilen. Mehr als etwa 20 Arten werden auf dem Handy unübersichtlich.</p>
+      <ol class="theme-rows" id="nLinks">${(x.links || []).map(linkRow).join("")}</ol>
+      <p><button type="button" class="ghost small" id="addLink">+ Pfeil</button> <span class="hint" id="webCount"></span></p>
+      ${entryOptionsHtml()}
+      <div class="actions sticky"><button>${isNew ? "Anlegen" : "Speichern"}</button>
+        ${isNew ? "" : `<button type="button" class="danger" id="delTheme">Nahrungsnetz löschen</button>`}</div>
+    </form>`;
+  const list = $("nLinks");
+  wireRows(list);
+  const count = () => {
+    const names = new Set([...list.querySelectorAll("[data-f],[data-e]")].map(i => i.value.trim()).filter(Boolean));
+    $("webCount").textContent = `${list.children.length} Pfeile · ${names.size} Arten`;
+  };
+  count();
+  list.addEventListener("input", count); list.addEventListener("click", () => setTimeout(count));
+  $("addLink").addEventListener("click", () => { list.insertAdjacentHTML("beforeend", linkRow(null)); list.lastElementChild.querySelector("input").focus(); count(); });
+  const F = $("themeForm").elements;
+  $("themeForm").addEventListener("submit", async ev => {
+    ev.preventDefault();
+    const out = [], seen = new Set();
+    for(const li of list.children){
+      const f = entryByLabel(li.querySelector("[data-f]").value), e = entryByLabel(li.querySelector("[data-e]").value);
+      if(!f || !e){ (f ? li.querySelector("[data-e]") : li.querySelector("[data-f]")).focus(); msg("Pfeil ohne gültigen Eintrag: bitte aus der Vorschlagsliste wählen.", true); return; }
+      if(f.entry.id === e.entry.id){ msg(`«${f.entry.name}» kann sich nicht selbst fressen.`, true); return; }
+      const k = f.entry.id + ">" + e.entry.id;
+      if(seen.has(k)) continue;   // doppelte Pfeile still weglassen
+      seen.add(k);
+      out.push({ f:[f.cat.id, f.entry.name], e:[e.cat.id, e.entry.name] });
+    }
+    if(!out.length){ msg("Ein Nahrungsnetz braucht mindestens einen Pfeil.", true); return; }
+    const row = { id:F.id.value.trim(), title:F.title.value.trim(), intro:F.intro.value.trim(), links:out, sort:+F.sort.value || 0, visible:F.visible.checked };
+    if(isNew && webs.some(q => q.id === row.id)){ msg("Diese Kennung gibt es schon.", true); F.id.focus(); return; }
+    await act(() => must(isNew ? sb.from("foodwebs").insert(row) : sb.from("foodwebs").update(row).eq("id", x.id)), isNew ? "Nahrungsnetz angelegt." : "Gespeichert.").catch(() => {});
+    if(isNew) location.hash = "#/n/" + row.id; else render();
+  });
+  if(isNew) F.title.addEventListener("input", () => { F.id.value = slug(F.title.value); });
+  $("delTheme")?.addEventListener("click", async () => {
+    if(!confirm(`Nahrungsnetz «${x.title}» löschen? Die Einträge selbst bleiben.`)) return;
+    await act(() => must(sb.from("foodwebs").delete().eq("id", x.id)), "Nahrungsnetz gelöscht.").catch(() => {});
+    location.hash = "#/themen";
+  });
+}
+
 /* «Ideen» (#/ideen, seit 2.23.0): alle vorgemerkten Pendenzen und Ideen an einem Ort, damit nichts verloren geht.
    Feste Liste hier im Code; bei neuen Ideen oder Erledigtem nachführen, gleich wie docs/WERDEGANG.md «Offen und geplant». */
 const IDEEN = [
   { title:"Pendenzen der Spielwiese", hint:"Vorgemerkt am 8. Oktober 2026, als Nächstes der Reihe nach.", items:[
     ["Forscheraufträge draussen", "Aufträge mit eigenen Messungen und Beobachtungen, z. B. Föhn (Temperatur und Wind), Bach (Lebensraum der Bachforelle)."],
-    ["Themenpfade und Nahrungsnetze in der Verwaltung bearbeiten", "Heute nur per SQL (Tabellen «paths» und «foodwebs»). Dazu weitere Pfade (Wald, Wasser, Glarnerland) und Netze (Hecke, Acker, Boden)."],
+    ["Weitere Themenpfade und Nahrungsnetze", "In der Verwaltung unter «Pfade und Netze» anlegen, z. B. Netze für Hecke, Acker und Boden oder Pfade zu weiteren Kantonen."],
     ["Exkursionen und Posten aus der Entdeckungskarte", "Orte auf der Karte auswählen und daraus einen Postenlauf mit QR-Plakaten und Steckbriefen drucken."]
   ]},
   { title:"Weitere Ideen", hint:"Noch nicht entschieden.", items:[
