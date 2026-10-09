@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 9. Oktober 2026 · Version 2.27.0 (Datenbank 32) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 9. Oktober 2026 · Version 2.27.1 (Datenbank 32), vorläufig abgeschlossen · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
 Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge) · 4 Nahrungsnetze · 5 Themenpfade (4 zum Glarnerland)
 
@@ -645,6 +645,13 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Pflanzen der Glarner Alpen» (Freiberg Kärpf, Gämse, Steinbock, Murmeltier, Steinadler, Alpenschneehuhn, Edelweiss, Alpenrose,
   Braunwald), zusammen 38 Schritte mit Leitfragen und 11 passenden Forscheraufträgen. Leitfragen von Claude, in der Verwaltung anpassbar.
 
+
+### 9. Oktober – Abschluss (Version 2.27.1)
+
+- Auf Wunsch des Users ist die App mit Version 2.27.0 vorläufig abgeschlossen. Dokumentation, Anleitung für Lehrpersonen und das
+  Dossier der Modulabschlussarbeit (52 Seiten) sind auf diesem Stand. Was noch offen ist, steht in der Verwaltung unter «Ideen»
+  und hier unter «Offen und geplant», darunter die Liste der Abläufe, die noch von Hand mit Anmeldung zu prüfen sind.
+
 ---
 
 ## Versionen
@@ -693,6 +700,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.25.0 | 9.10.2026 | «Dazu entdecken»: verknüpfte Einträge mit 71 Vorschlägen; Häkchen «von Hand geprüft» für Einträge und Kategorien (Datenbank-Version 30) |
 | 2.26.0 | 9.10.2026 | Eintrag vorschlagen (mit Nummer), Vorlesen in LernApp und Aufträgen, Nahrungsnetz mit vier Lebensräumen (Datenbank-Version 31) |
 | 2.27.0 | 9.10.2026 | Verwaltung «Pfade und Netze»: Themenpfade und Nahrungsnetze bearbeiten; vier Glarner Themenpfade (Datenbank-Version 32) |
+| 2.27.1 | 9.10.2026 | Abschluss: offene Handprüfungen ergänzt, Dokumentation und Dossier auf dem Stand 2.27.0 |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -775,6 +783,10 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   - [x] Kantone: je-net.ch/sff/glarus öffnet den Kanton Glarus (Weiterleitung in .htaccess, geprüft am 8.10.2026, auch mit Grossbuchstaben und «/» am Schluss)
   - [ ] Kantone, Verwaltung: Vorschläge bestätigen und entfernen, Hinweis ändern, Kantonszeichen hochladen, Plakat drucken (mit echter Anmeldung)
   - [ ] Kantone: auf dem Handy den Kanton wechseln, LernApp-Session im Kanton anlegen
+  - [ ] Verwaltung (2.25.0): Häkchen «geprüft» in der Prüf-Tabelle und im Eintrag setzen, Text ändern (Häkchen fällt weg), Verknüpfung bestätigen, hinzufügen, entfernen
+  - [ ] Verwaltung (2.26.0): Vorschlag einer Schülerin «Als Eintrag anlegen» und «Erledigt»; Seite: echten Vorschlag abschicken, Vorlesen in LernApp und Auftrag anhören
+  - [ ] Verwaltung (2.27.0): Themenpfad und Nahrungsnetz bearbeiten, speichern, neu anlegen und löschen
+  - [ ] Seite: Entdeckungskarte auf dem Handy («Wo bin ich?», Zoomen mit zwei Fingern)
 
 - **Pendenzen der Spielwiese** (vorgemerkt am 8. Oktober 2026, noch nicht umgesetzt):
   - [x] **Einfacher Lesemodus** (2.21.0): pro Eintrag eine Kurzfassung in einfacher Sprache (Mittelstufe, Deutsch als Zweitsprache), umschaltbar; braucht ein neues Feld und Texte für alle Einträge (mit Claude über claude.ai).

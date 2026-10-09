@@ -2652,7 +2652,7 @@ const IDEEN = [
     ["Klimadaten auswerten", "Forscherauftrag mit echten Messreihen (z. B. Temperatur Glarus seit 1900) als Tabelle: Diagramm zeichnen, Trend beschreiben, mit dem Themenpfad Klimawandel verbinden."]
   ]},
   { title:"Prüfen und Qualität", hint:"Was sich nicht automatisch testen liess oder fachlich bestätigt werden muss.", items:[
-    ["Verwaltung von Hand testen", "Bild über ↻ ersetzen; eigenes Bild hochladen, zuschneiden, Ausschnitt, entfernen; Text und Quelle speichern; Reihenfolge der Einträge; Aufträge bearbeiten, anlegen, löschen; Sicherung herunterladen; Kantone: Vorschläge bestätigen, Hinweis ändern, Zeichen hochladen, Plakat drucken."],
+    ["Verwaltung von Hand testen", "Bild über ↻ ersetzen; eigenes Bild hochladen, zuschneiden, Ausschnitt, entfernen; Text und Quelle speichern; Reihenfolge der Einträge; Aufträge bearbeiten, anlegen, löschen; Sicherung herunterladen; Kantone: Vorschläge bestätigen, Hinweis ändern, Zeichen hochladen, Plakat drucken. Neu dazu: Häkchen «geprüft» und Verknüpfungen (2.25.0), Vorschläge der Lernenden (2.26.0), Pfade und Netze speichern, anlegen, löschen (2.27.0)."],
     ["Seite von Hand testen", "Erster Besuch: Forscherauftrag nach der Einführung; auf dem Handy Kanton wechseln und LernApp-Session im Kanton anlegen; Entdeckungskarte: «Wo bin ich?» und Zoomen mit zwei Fingern."],
     ["Koordinaten prüfen", "Berglistüber und Bundesgericht fand die Ortssuche von swisstopo nicht: im Eintrag mit «Auf der Karte prüfen» kontrollieren."],
     ["Anleitung für Lehrpersonen", "Zuordnung der Lernziele zum Lehrplan 21 fachlich prüfen (heute auf Ebene der Kompetenzbereiche)."],
