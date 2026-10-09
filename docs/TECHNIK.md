@@ -245,6 +245,17 @@ Die Koordinaten stehen pro Eintrag in `lat`/`lon` (WGS84). Claude schlug sie vor
 (`api3.geo.admin.ch`, SearchServer) zeigte bei kleinen Orten Abweichungen bis 4 km, die 029 korrigiert. Bei neuen Orten darum
 immer auf map.geo.admin.ch prüfen.
 
+### Von Hand geprüft und verknüpfte Einträge
+
+Das Häkchen «geprüft» (seit 2.25.0) ist ein Datum pro Eintrag und Kategorie. Damit es nie eine ältere Fassung bestätigt, setzt
+ein Trigger in der Datenbank es zurück, sobald sich der Text ändert, egal ob über die Verwaltung, ein SQL-Skript oder einen
+Claude-Auftrag. Nur wenn die Änderung selbst ein neues Datum mitbringt (Bearbeiten mit angehaktem Kästchen), bleibt es stehen.
+Bildänderungen setzen es bewusst nicht zurück; die Bilder werden in der Prüf-Tabelle zusammen mit dem Text angesehen.
+
+Verknüpfungen sind ungerichtet: ein Paar steht einmal in `entry_links` (kleinere Kennung zuerst), die Anzeige baut daraus beide
+Richtungen. Sie werden separat geladen statt eingebettet, weil eine Tabelle mit zwei Verweisen auf `entries` sich nicht eindeutig
+einbetten lässt; fehlt die Tabelle, zeigt die Seite einfach keine.
+
 ### KI ohne Schnittstelle
 
 Neue Kategorien und Einträge schreibt Claude über **claude.ai im bestehenden Abo**: Die Verwaltung baut einen Auftrag mit

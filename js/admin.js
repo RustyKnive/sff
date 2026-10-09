@@ -75,7 +75,7 @@ async function reload(){
   if(r.error) throw new Error(r.error.message);
   cats = r.data;
   cats.forEach(c => c.entries.forEach(e => { e.entry_regions = e.entry_regions || []; }));
-  await Promise.all([loadReports(), loadTasks(), loadRegions()]);
+  await Promise.all([loadReports(), loadTasks(), loadRegions(), loadLinks()]);
   renderSidebar();
 }
 async function loadTasks(){
@@ -86,6 +86,19 @@ async function loadRegions(){
   const { data, error } = await sb.from("regions").select("*").order("sort").order("name");
   regions = error ? [] : data;
 }
+// Verknüpfte Einträge (030), a < b; fehlt die Tabelle, leer
+let links = [];
+async function loadLinks(){
+  const { data, error } = await sb.from("entry_links").select("*");
+  links = error ? [] : data;
+}
+// Verknüpfungen eines Eintrags: [{other:{cat, entry}, note, confirmed}] (andere Seite ausgeblendet oder gelöscht: weggelassen)
+const linksOfEntry = id => links.filter(l => l.a === id || l.b === id)
+  .map(l => ({ other:findEntry(l.a === id ? l.b : l.a), note:l.note, confirmed:l.confirmed })).filter(l => l.other);
+const linkKey = (x, y) => x < y ? { a:x, b:y } : { a:y, b:x };   // gleiche Ordnung wie uuid in Postgres (kleingeschrieben)
+const linkProposals = () => links.filter(l => !l.confirmed && findEntry(l.a) && findEntry(l.b));
+// Von Hand geprüft (030): Datum für die Anzeige
+const checkedDate = iso => iso ? new Date(iso).toLocaleDateString("de-CH") : "";
 
 /* Gemeldete Bilder (016) und Textfehler (018): Meldungen aus der Anzeige («Melden» bzw. «Fehler im Text melden» in der Grossansicht).
    Fehlt die Tabelle (Datenbank älter als 016), bleibt die Liste einfach leer. */
@@ -172,7 +185,7 @@ function renderSidebar(){
     return `
     <li class="${c.id === activeCat ? "active" : ""} ${c.visible ? "" : "off"}">
       <input type="checkbox" data-vis="${esc(c.id)}" ${c.visible ? "checked" : ""} title="Auf der Seite sichtbar">
-      <a href="#/k/${esc(c.id)}">${esc(c.name)} <small>(${c.entries.length})</small>${n ? ` <span class="badge warn" title="Offene Meldungen">⚑ ${n}</span>` : ""}</a>
+      <a href="#/k/${esc(c.id)}">${esc(c.name)} <small>(${c.entries.length})</small>${catAllChecked(c) ? ` <span class="badge ok" title="Kategorie und alle Einträge von Hand geprüft">✓</span>` : ""}${n ? ` <span class="badge warn" title="Offene Meldungen">⚑ ${n}</span>` : ""}</a>
       <button class="icon" data-move="${i}" data-dir="-1" title="Nach oben" ${i ? "" : "disabled"}>↑</button>
       <button class="icon" data-move="${i}" data-dir="1" title="Nach unten" ${i < cats.length - 1 ? "" : "disabled"}>↓</button>
     </li>`;
@@ -188,6 +201,8 @@ function renderSidebar(){
   $("regionCount").textContent = prop;
   $("regionCount").hidden = !prop;
 }
+// Von Hand geprüft (030): Kategorie selbst und alle ihre Einträge
+const catAllChecked = c => !!c.checked_at && c.entries.length > 0 && c.entries.every(e => e.checked_at);
 // Hinweise pro Kategorie: offene Meldungen (Bild und Text), fehlende Bilder, Bilder ohne Quelle
 function catIssues(c){
   const ids = new Set(c.entries.map(e => e.id));
@@ -255,6 +270,8 @@ function renderCategory(cat, host = $("main")){
       <label>Lernziel (steht oben in der Kategorie, ein Satz ohne Anzahl) <textarea name="goal" maxlength="300" rows="2">${esc(c.goal || "")}</textarea></label>
       <label class="inline"><input type="checkbox" name="visible" ${c.visible ? "checked" : ""}> Kategorie auf der Seite sichtbar</label>
       <label class="inline"><input type="checkbox" name="latin" ${c.latin ? "checked" : ""}> Untertitel der Einträge ist ein lateinischer Name (kursiv)</label>
+      ${isNew ? "" : `<label class="inline checked-box"><input type="checkbox" name="checked" ${c.checked_at ? "checked" : ""}> Kategorie von Hand geprüft
+        (Name, Beschreibung, Lernziel, Bildbeschriftungen)${c.checked_at ? ` <small class="hint">am ${checkedDate(c.checked_at)}</small>` : ""}</label>`}
       <h3>Bildbeschriftungen (Standard für alle Einträge)</h3>
       <div class="row">${c.labels.map((l, i) => `<label>Bild ${i + 1} <input type="text" name="label${i}" required value="${esc(l)}"></label>`).join("")}</div>
       ${isNew ? "" : `<label>Titelbild der Kachel (Hauptbild von …)
@@ -292,6 +309,9 @@ function renderCategory(cat, host = $("main")){
       await act(() => must(sb.from("categories").insert(row)), "Kategorie angelegt.");
     }else{
       row.cover_entry_id = F.cover.value || null;
+      // Von Hand geprüft (030): wie beim Eintrag, Textänderung bei angehaktem Kästchen = jetzt neu geprüft
+      const textOf = x => JSON.stringify([x.name, x.description, x.goal || "", x.labels]);
+      row.checked_at = !F.checked.checked ? null : c.checked_at && textOf(row) === textOf(c) ? c.checked_at : new Date().toISOString();
       await act(() => must(sb.from("categories").update(row).eq("id", c.id)), "Gespeichert.");
     }
     const back = "#/k/" + row.id + (isNew ? "" : "/einstellungen");
@@ -326,6 +346,7 @@ function renderCatPage(cat, tab){
   $("main").innerHTML = `<h2>${esc(cat.name)}</h2>
     <p class="hint">${cat.visible ? "" : `<span class="badge">ausgeblendet</span> `}${n} Einträge · ${imgs} Bilder${
       is.missing ? ` · <span class="warn">${is.missing} Bilder fehlen</span>` : ""}${is.reports ? ` · <span class="warn">⚑ ${is.reports} offene Meldungen</span>` : ""}
+      · <span id="chkCount">${cat.entries.filter(e => e.checked_at).length}/${n} geprüft</span>${cat.checked_at ? ` · Kategorie geprüft am ${checkedDate(cat.checked_at)}` : ""}
       · <a href="index.html#/${esc(cat.id)}" target="_blank" rel="noopener">auf der Seite ansehen ↗</a></p>
     <nav class="tabs">${CAT_TABS.map(([id, label]) => `<a href="#/k/${esc(cat.id)}${id === "pruefen" ? "" : "/" + id}"
       class="${id === tab ? "active" : ""}">${label}${id === "eintraege" ? ` <small>${n}</small>` : id === "auftraege" && nTasks ? ` <small>${nTasks}</small>` : ""}</a>`).join("")}</nav>
@@ -365,17 +386,19 @@ function renderEntriesTab(cat, body){
 
 /* Register «Prüfen»: eine Zeile pro Eintrag mit Name, Beschreibung und Steckbrief, daneben die 4 Bilder mit
    Werkzeugen (imgTools). Vorschläge von Commons öffnen sich als eigene Zeile direkt unter dem Eintrag. */
-let checkFilter = "alle";   // «alle» oder «hinweise» (Meldungen, fehlende Bilder, ohne Quelle, ausgeblendet)
+let checkFilter = "alle";   // «alle», «hinweise» (Meldungen, fehlende Bilder, ohne Quelle, ausgeblendet) oder «offen» (nicht von Hand geprüft)
 const entryHasIssues = e => !e.visible || reports.some(r => r.entry_id === e.id) || openSlots(e).length > 0
   || e.images.some(i => !i.source_page && !i.source_file);
 function renderCheck(cat, body){
   const withIssues = cat.entries.filter(entryHasIssues);
-  const rows = checkFilter === "hinweise" ? withIssues : cat.entries;
+  const unchecked = cat.entries.filter(e => !e.checked_at);
+  const rows = checkFilter === "hinweise" ? withIssues : checkFilter === "offen" ? unchecked : cat.entries;
   const todo = cat.entries.filter(e => openSlots(e).length).map(e => ({ cat, e }));
   const missing = todo.reduce((s, x) => s + openSlots(x.e).length, 0);
   body.innerHTML = `<div class="check-bar">
       <label class="inline"><input type="radio" name="checkFilter" value="alle" ${checkFilter === "alle" ? "checked" : ""}> alle Einträge (${cat.entries.length})</label>
       <label class="inline"><input type="radio" name="checkFilter" value="hinweise" ${checkFilter === "hinweise" ? "checked" : ""}> nur mit Hinweisen (${withIssues.length})</label>
+      <label class="inline"><input type="radio" name="checkFilter" value="offen" ${checkFilter === "offen" ? "checked" : ""}> noch nicht geprüft (${unchecked.length})</label>
       ${missing && !bulk ? `<button type="button" class="ghost small" id="checkImport">Fehlende Bilder übernehmen (${missing})</button>` : ""}
     </div>
     <p class="hint legend">↻ Vorschläge von Commons · ⬆ eigenes Bild hochladen · ✂ zuschneiden · ◎ Ausschnitt der Vorschau ·
@@ -384,10 +407,23 @@ function renderCheck(cat, body){
     <div class="check-wrap"><table class="check">
       <thead><tr><th>Eintrag und Text</th>${cat.labels.map((l, i) => `<th>${i + 1} · ${esc(l)}</th>`).join("")}</tr></thead>
       <tbody>${rows.map(e => checkRow(cat, e)).join("")
-        || `<tr><td colspan="5" class="hint">Keine Einträge mit Hinweisen. Alles in Ordnung.</td></tr>`}</tbody>
+        || `<tr><td colspan="5" class="hint">${checkFilter === "offen" ? "Alle Einträge sind von Hand geprüft." : "Keine Einträge mit Hinweisen. Alles in Ordnung."}</td></tr>`}</tbody>
     </table></div>`;
   showBulk();
   body.querySelectorAll("[name=checkFilter]").forEach(r => r.addEventListener("change", () => { checkFilter = r.value; render(); }));
+  // Häkchen «geprüft» direkt in der Tabelle: speichern ohne alles neu zu zeichnen (Bilder bleiben, Bildlauf bleibt)
+  body.querySelectorAll("[data-chk]").forEach(box => box.addEventListener("change", async () => {
+    const e = cat.entries.find(x => x.id === box.dataset.chk);
+    const at = box.checked ? new Date().toISOString() : null;
+    try{
+      await must(sb.from("entries").update({ checked_at:at }).eq("id", e.id));
+      e.checked_at = at;
+      box.closest("label").title = at ? "Von Hand geprüft am " + checkedDate(at) : "Noch nicht von Hand geprüft";
+      $("chkCount").textContent = `${cat.entries.filter(x => x.checked_at).length}/${cat.entries.length} geprüft`;
+      renderSidebar();
+      msg(at ? `«${e.name}» als geprüft markiert.` : `Häkchen bei «${e.name}» entfernt.`);
+    }catch(err){ box.checked = !box.checked; msg("Fehler: " + err.message, true); }
+  }));
   $("checkImport")?.addEventListener("click", ev => { ev.target.disabled = true; $("importMsg").hidden = false; importAll(todo); });
   body.querySelectorAll("tr[data-entry]").forEach(tr => {
     const e = cat.entries.find(x => x.id === tr.dataset.entry);
@@ -413,6 +449,7 @@ function checkRow(cat, e){
       <div class="check-name"><a href="#/e/${esc(e.id)}" title="Eintrag bearbeiten"><b>${esc(e.name)}</b></a>
         ${e.subtitle ? `<i>${esc(e.subtitle)}</i>` : ""}
         ${e.visible ? "" : `<span class="badge">ausgeblendet</span>`}
+        <label class="chk" title="${e.checked_at ? "Von Hand geprüft am " + checkedDate(e.checked_at) : "Noch nicht von Hand geprüft"}"><input type="checkbox" data-chk="${esc(e.id)}" ${e.checked_at ? "checked" : ""}> geprüft</label>
         <a class="ext" href="${esc(entryUrl(cat, e))}" target="_blank" rel="noopener" title="Auf der Seite ansehen">↗</a></div>
       ${textRep.map(r => `<p class="report-note">⚑ Textfehler gemeldet (Nr. ${r.id}): ${esc(reportText(r))}</p>`).join("")}
       <p class="check-desc">${esc(e.description)}</p>
@@ -1029,8 +1066,9 @@ async function downloadBackup(){
   const regionRows = await selectAll("regions").catch(() => []);         // Kantone (022)
   const entryRegions = await selectAll("entry_regions").catch(() => []);
   const pathRows = await selectAll("paths").catch(() => []);              // Themenpfade (026)
+  const linkRows = await selectAll("entry_links").catch(() => []);       // verknüpfte Einträge (030)
   const data = { erstellt:new Date().toISOString(), website:VERSION.app, datenbank:dbSchema, projekt:CFG.url, bucket:CFG.bucket,
-    categories, entries, images, tasks:taskRows, regions:regionRows, entry_regions:entryRegions, paths:pathRows };
+    categories, entries, images, tasks:taskRows, regions:regionRows, entry_regions:entryRegions, paths:pathRows, entry_links:linkRows };
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:"application/json" }));
   a.download = `natur-und-schweiz-sicherung-${new Date().toISOString().slice(0, 10)}.json`;
@@ -1126,6 +1164,8 @@ function renderEntry(cat, entry){
           <select name="category">${cats.map(c => `<option value="${esc(c.id)}" ${c.id === cat.id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>`}
       </div>
       <label class="inline"><input type="checkbox" name="visible" ${e.visible ? "checked" : ""}> Eintrag auf der Seite sichtbar</label>
+      <label class="inline checked-box"><input type="checkbox" name="checked" ${e.checked_at ? "checked" : ""}> Von Hand geprüft (Text, Steckbrief und Bilder)${
+        e.checked_at ? ` <small class="hint">am ${checkedDate(e.checked_at)}</small>` : ""}</label>
       <label>Beschreibung <textarea name="description">${esc(e.description)}</textarea></label>
       <p class="hint">3–4 Sätze, sachlich und für Sek I verständlich. Schweizer Rechtschreibung: immer «ss», nie Eszett.</p>
       <label>Einfache Fassung (für die Mittelstufe und «Einfach lesen»: 2–3 kurze Sätze, wenig Fachwörter)
@@ -1156,6 +1196,7 @@ function renderEntry(cat, entry){
       </details>
 
       ${entryRegionsHtml(e, isNew ? route().more : null)}
+      ${isNew ? "" : entryLinksHtml(e)}
 
       ${isNew ? "" : `<details class="sec" ${e.sound_path ? "open" : ""}><summary>Tierstimme${e.sound_path ? " ✓" : ""}</summary>
       ${e.sound_path ? `<audio controls preload="none" src="${esc(publicUrl(e.sound_path))}"></audio>
@@ -1238,6 +1279,8 @@ function renderEntry(cat, entry){
     render();
   });
 
+  if(!isNew) wireEntryLinks(form, e);
+
   // Ort auf der Entdeckungskarte (028): «Auf der Karte prüfen» zeigt die eingetragenen Koordinaten auf map.geo.admin.ch
   $("geoCheck").addEventListener("click", ev => {
     const g = parseGeo(F.geo.value);
@@ -1265,6 +1308,11 @@ function renderEntry(cat, entry){
       wp:F.wp.value.trim() || null,
       labels:F.ownLabels.checked ? [0,1,2,3].map(i => F["label" + i].value.trim()) : null
     };
+    // Von Hand geprüft (030): neu angehakt oder Text geändert = jetzt geprüft; unverändert = Datum bleibt; abgehakt = leer
+    const textOf = x => JSON.stringify([x.name, x.subtitle, x.description, x.simple || "",
+      (x.facts || []).map(f => [f.k, f.v]), (x.confusions || []).map(c => [c.name, c.diff])]);
+    row.checked_at = !F.checked.checked ? null
+      : !isNew && e.checked_at && textOf(row) === textOf(e) ? e.checked_at : new Date().toISOString();
     if(isNew){
       row.sort = cat.entries.length;
       if(aiFilled || aiPhoto){ await createEntryWithAi(form, cat, row); return; }
@@ -1295,6 +1343,7 @@ function renderEntry(cat, entry){
       await must(sb.from("entries").update(row).eq("id", e.id));
       if(imgRows.length) await must(sb.from("images").upsert(imgRows));
       await saveEntryRegions(e.id, form, e.entry_regions);
+      await saveEntryLinks(e.id, form);
       // War er das Titelbild der alten Kategorie, nimmt diese wieder ihren ersten Eintrag
       if(moving && cat.cover_entry_id === e.id) await must(sb.from("categories").update({ cover_entry_id:null }).eq("id", cat.id));
     }, moving ? `Nach «${target.name}» verschoben.` : "Gespeichert.");
@@ -2096,6 +2145,63 @@ function entryRegionsHtml(e, preset){
     }).join("")}
   </details>`;
 }
+/* Verknüpfte Einträge (030) im Formular: eine Zeile pro Verknüpfung mit Hinweis; hinzufügen über ein Suchfeld mit Vorschlägen.
+   Gespeichert wird mit dem Eintrag (saveEntryLinks); gespeichert = bestätigt, wie bei den Kantonen. */
+function entryLinksHtml(e){
+  const list = linksOfEntry(e.id);
+  const open = list.filter(l => !l.confirmed).length;
+  return `<details class="sec" ${list.length ? "open" : ""}><summary>Verknüpfte Einträge${list.length ? ` (${list.length}${open ? `, ${open} Vorschläge` : ""})` : ""}</summary>
+    <p class="hint">Erscheinen auf der Textseite unter «Dazu entdecken», bei beiden Einträgen, z. B. ein Berg und die Tiere, die dort
+      leben. Der Hinweis gilt für beide Seiten. Vorschläge werden beim Speichern bestätigt.</p>
+    <div id="linkRows">${list.map(l => linkRow(l.other, l.note, l.confirmed)).join("")}</div>
+    <div class="row link-add">
+      <label>Eintrag hinzufügen <input type="text" id="linkPick" list="linkOptions" placeholder="Name eingeben, z. B. Gämse"></label>
+      <button type="button" class="ghost small" id="linkAdd">Hinzufügen</button>
+    </div>
+    <datalist id="linkOptions">${cats.flatMap(c => c.entries.filter(x => x.id !== e.id)
+      .map(x => `<option value="${esc(x.name + " · " + c.name)}">`)).join("")}</datalist>
+  </details>`;
+}
+function linkRow(other, note, confirmed){
+  return `<div class="link-row" data-link="${esc(other.entry.id)}">
+    <span><a href="#/e/${esc(other.entry.id)}">${esc(other.entry.name)}</a> <small class="hint">${esc(other.cat.name)}</small>
+      ${confirmed === false ? `<span class="badge warn" title="Wird beim Speichern bestätigt">Vorschlag</span>` : ""}</span>
+    <input type="text" data-linknote maxlength="160" value="${esc(note || "")}" placeholder="Hinweis (freiwillig), z. B. «Im Wildschutzgebiet Freiberg Kärpf»">
+    <button type="button" class="icon" data-linkdel title="Verknüpfung entfernen" aria-label="Verknüpfung entfernen">✕</button>
+  </div>`;
+}
+function wireEntryLinks(form, e){
+  const rows = $("linkRows"), pick = $("linkPick");
+  if(!rows) return;
+  rows.addEventListener("click", ev => { ev.target.closest("[data-linkdel]")?.closest(".link-row").remove(); });
+  const add = () => {
+    const v = pick.value.trim();
+    const hit = cats.flatMap(c => c.entries.map(x => ({ cat:c, entry:x }))).find(x => x.entry.name + " · " + x.cat.name === v)
+      || cats.flatMap(c => c.entries.map(x => ({ cat:c, entry:x }))).find(x => x.entry.name.toLowerCase() === v.toLowerCase());
+    if(!hit){ msg("Eintrag nicht gefunden: bitte einen Vorschlag aus der Liste wählen.", true); return; }
+    if(hit.entry.id === e.id){ msg("Ein Eintrag kann nicht mit sich selbst verknüpft werden.", true); return; }
+    if(rows.querySelector(`[data-link="${CSS.escape(hit.entry.id)}"]`)){ msg("Diese Verknüpfung gibt es schon.", true); return; }
+    rows.insertAdjacentHTML("beforeend", linkRow(hit, "", true));
+    pick.value = "";
+    rows.lastElementChild.querySelector("[data-linknote]").focus();
+  };
+  $("linkAdd").addEventListener("click", add);
+  pick.addEventListener("keydown", ev => { if(ev.key === "Enter"){ ev.preventDefault(); add(); } });
+}
+async function saveEntryLinks(entryId, form){
+  if(!$("linkRows")) return;
+  const want = new Map([...form.querySelectorAll(".link-row")].map(r => [r.dataset.link, r.querySelector("[data-linknote]").value.trim()]));
+  const old = links.filter(l => l.a === entryId || l.b === entryId);
+  const up = [...want].filter(([id, note]) => {
+    const k = linkKey(entryId, id), o = old.find(l => l.a === k.a && l.b === k.b);
+    return !o || o.note !== note || !o.confirmed;
+  }).map(([id, note]) => ({ ...linkKey(entryId, id), note, confirmed:true }));
+  if(up.length) await must(sb.from("entry_links").upsert(up));
+  for(const l of old.filter(l => !want.has(l.a === entryId ? l.b : l.a))){
+    await must(sb.from("entry_links").delete().eq("a", l.a).eq("b", l.b));
+  }
+}
+
 // Kantone eines Eintrags speichern (Eintrag gespeichert = vom Menschen geprüft, darum confirmed)
 async function saveEntryRegions(entryId, form, links = []){
   const up = [], del = [];
@@ -2159,7 +2265,9 @@ function renderDashboard(){
       <td><a href="#/k/${esc(c.id)}">${esc(c.name)}</a>${c.visible ? "" : ` <span class="badge">ausgeblendet</span>`}</td>
       <td class="num">${n}</td><td class="num">${im}/${n * 4}</td>${cell(miss, true)}${cell(ns, true)}${cell(rep, true)}
       ${cell(sounds(c))}${cell(tasks.filter(x => x.category_id === c.id).length)}
-      <td class="num">${(c.goal || "").trim() ? "✓" : `<span class="warn">fehlt</span>`}</td></tr>`;
+      <td class="num">${(c.goal || "").trim() ? "✓" : `<span class="warn">fehlt</span>`}</td>
+      <td class="num" title="${c.checked_at ? "Kategorie geprüft am " + checkedDate(c.checked_at) : "Kategorie noch nicht geprüft"}">${
+        c.entries.filter(e => e.checked_at).length}/${n}${c.checked_at ? " ✓" : ""}</td></tr>`;
   };
   $("main").innerHTML = `<h2>Übersicht</h2>
     ${schemaMissing() ? `<p class="warn box"><b>Datenbank-Update fehlt:</b> Details unter <a href="#/erledigen">Zu erledigen</a>.</p>` : ""}
@@ -2175,6 +2283,10 @@ function renderDashboard(){
       ${tile(`${goals}/${cats.length}`, "Lernziele", goals < cats.length ? `${cats.length - goals} fehlen` : "alle gesetzt", "", goals < cats.length)}
       ${tile(tasks.length, "Forscheraufträge", `${tasks.filter(x => x.visible).length} sichtbar`)}
       ${tile(`${all.filter(({ e }) => (e.simple || "").trim()).length}/${all.length}`, "einfache Texte", all.some(({ e }) => !(e.simple || "").trim()) ? `${all.filter(({ e }) => !(e.simple || "").trim()).length} fehlen` : "alle vorhanden", "", all.some(({ e }) => !(e.simple || "").trim()))}
+      ${tile(`${all.filter(({ e }) => e.checked_at).length}/${all.length}`, "von Hand geprüft",
+        `${cats.filter(c => c.checked_at).length}/${cats.length} Kategorien · ${cats.filter(catAllChecked).length} ganz geprüft`)}
+      ${tile(links.length, "Verknüpfungen", linkProposals().length ? `${linkProposals().length} Vorschläge offen` : "alle bestätigt",
+        linkProposals().length ? "#/erledigen" : "", linkProposals().length > 0)}
       ${tile(regions.length, regions.length === 1 ? "Kanton" : "Kantone", proposalCount() ? `${proposalCount()} Vorschläge offen`
         : regions.map(g => `${esc(g.code || g.name)}: ${regionLinks(g.id).length}`).join(" · ") || "noch keiner", "#/kantone", proposalCount() > 0)}
       ${tile(esc(VERSION.app), "Website", `Datenbank ${dbSchema ?? "?"}${schemaMissing() ? ` (benötigt ${VERSION.schema})` : ""}`, "#/werkzeuge", schemaMissing())}
@@ -2182,12 +2294,12 @@ function renderDashboard(){
     <h3>Pro Kategorie</h3>
     <div class="check-wrap"><table class="overview">
       <thead><tr><th>Kategorie</th><th>Einträge</th><th>Bilder</th><th>fehlen</th><th>ohne Quelle</th><th>Meldungen</th>
-        <th>Stimmen</th><th>Aufträge</th><th>Lernziel</th></tr></thead>
+        <th>Stimmen</th><th>Aufträge</th><th>Lernziel</th><th>geprüft</th></tr></thead>
       <tbody>${cats.map(row).join("")}</tbody>
       <tfoot><tr><td>Total</td><td class="num">${all.length}</td><td class="num">${imgs.length}/${all.length * 4}</td>
         <td class="num">${missing || "–"}</td><td class="num">${imgs.filter(noSource).length || "–"}</td><td class="num">${reports.length || "–"}</td>
         <td class="num">${cats.reduce((s, c) => s + sounds(c), 0)}</td><td class="num">${tasks.length}</td>
-        <td class="num">${goals}/${cats.length}</td></tr></tfoot>
+        <td class="num">${goals}/${cats.length}</td><td class="num">${all.filter(({ e }) => e.checked_at).length}/${all.length}</td></tr></tfoot>
     </table></div>
     <p class="hint">Ein Klick auf eine Kategorie öffnet sie im Register «Prüfen». Die Übersicht ist über «Übersicht» oben oder
       den Titel von jeder Seite aus erreichbar.</p>`;
@@ -2208,7 +2320,7 @@ function renderTodo(){
     const f = findEntry(r.entry_id);
     return f && { r, cat:f.cat, e:f.entry };
   }).filter(Boolean);
-  const nothing = !schemaMissing() && !reported.length && !textReported.length && !todo.length && !bulk && !proposalCount();
+  const nothing = !schemaMissing() && !reported.length && !textReported.length && !todo.length && !bulk && !proposalCount() && !linkProposals().length;
   const propRegions = regions.map(g => ({ g, n:regionLinks(g.id).filter(l => !l.r.confirmed).length })).filter(x => x.n);
   main.innerHTML = `<h2>Zu erledigen</h2>
     <p class="hint">${cats.length} Kategorien · ${total} Einträge · ${imgs} Bilder · ${tasks.length} Forscheraufträge.
@@ -2217,6 +2329,17 @@ function renderTodo(){
       diese Website braucht Version ${VERSION.schema}. Im Supabase-Dashboard unter «SQL Editor» die fehlenden Dateien
       bis <code>supabase/${String(VERSION.schema).padStart(3, "0")}_…</code> der Reihe nach ausführen.</p>` : ""}
     ${nothing ? `<p class="done-box">✓ Alles erledigt: keine Meldungen, keine fehlenden Bilder.</p>` : ""}
+    ${linkProposals().length ? `<h3>Vorschläge für verknüpfte Einträge (${linkProposals().length})</h3>
+      <p class="hint">Diese Verknüpfungen hat Claude vorgeschlagen; sie stehen schon unter «Dazu entdecken». Bestätigen, entfernen oder
+        im Eintrag den Hinweis ändern.</p>
+      <ul class="link-proposals">${linkProposals().map(l => {
+        const a = findEntry(l.a), b = findEntry(l.b);
+        return `<li><a href="#/e/${esc(a.entry.id)}">${esc(a.entry.name)}</a> <small class="hint">${esc(a.cat.name)}</small> ↔
+          <a href="#/e/${esc(b.entry.id)}">${esc(b.entry.name)}</a> <small class="hint">${esc(b.cat.name)}</small>${l.note ? `<br><small>${esc(l.note)}</small>` : ""}
+          <span class="slot-actions"><button type="button" class="ghost small" data-lok="${l.a}|${l.b}">Bestätigen</button>
+          <button type="button" class="ghost small" data-ldel="${l.a}|${l.b}">Entfernen</button></span></li>`;
+      }).join("")}</ul>
+      <p><button type="button" class="ghost small" id="linksAllOk">Alle ${linkProposals().length} Vorschläge bestätigen</button></p>` : ""}
     ${propRegions.length ? `<h3>Vorschläge für Kantone prüfen</h3>
       <p class="hint">Diese Einträge sind einem Kanton vorgeschlagen und dort schon sichtbar. Bestätigen oder entfernen.</p>
       <ul>${propRegions.map(({ g, n }) => `<li><a href="#/r/${esc(g.id)}">${esc(regionTitle(g))}</a>: ${n} ${n === 1 ? "Vorschlag" : "Vorschläge"}</li>`).join("")}</ul>` : ""}
@@ -2266,6 +2389,23 @@ function renderTodo(){
     location.hash = "#/e/" + e.id;
   }));
   $("importAll")?.addEventListener("click", ev => { ev.target.disabled = true; importAll(todo); });
+  // Vorschläge für verknüpfte Einträge (030) bestätigen oder entfernen
+  const linkRef = s => { const [a, b] = s.split("|"); return { a, b }; };
+  main.querySelectorAll("[data-lok]").forEach(btn => btn.addEventListener("click", async () => {
+    const { a, b } = linkRef(btn.dataset.lok);
+    await act(() => must(sb.from("entry_links").update({ confirmed:true }).eq("a", a).eq("b", b)), "Verknüpfung bestätigt.").catch(() => {});
+    render();
+  }));
+  main.querySelectorAll("[data-ldel]").forEach(btn => btn.addEventListener("click", async () => {
+    const { a, b } = linkRef(btn.dataset.ldel);
+    await act(() => must(sb.from("entry_links").delete().eq("a", a).eq("b", b)), "Verknüpfung entfernt.").catch(() => {});
+    render();
+  }));
+  $("linksAllOk")?.addEventListener("click", async () => {
+    if(!confirm(`Alle ${linkProposals().length} vorgeschlagenen Verknüpfungen bestätigen?`)) return;
+    await act(() => must(sb.from("entry_links").update({ confirmed:true }).eq("confirmed", false)), "Alle Verknüpfungen bestätigt.").catch(() => {});
+    render();
+  });
 }
 
 /* «Ideen» (#/ideen, seit 2.23.0): alle vorgemerkten Pendenzen und Ideen an einem Ort, damit nichts verloren geht.
@@ -2279,7 +2419,6 @@ const IDEEN = [
     ["Exkursionen und Posten aus der Entdeckungskarte", "Orte auf der Karte auswählen und daraus einen Postenlauf mit QR-Plakaten und Steckbriefen drucken."]
   ]},
   { title:"Weitere Ideen", hint:"Noch nicht entschieden.", items:[
-    ["Einträge verknüpfen", "Idee des Users: Zu einem Eintrag passende andere Einträge zeigen, z. B. beim Glärnisch die Tiere, Pflanzen und Steine, die man dort findet («Hier lebt …», «Hier wächst …»), und umgekehrt beim Steinbock, wo man ihn sehen kann. Auf der Textseite als Links, in der Verwaltung zuordnen, Claude schlägt Verknüpfungen vor (sofort sichtbar, später bestätigen wie bei den Kantonen). Braucht eine neue Tabelle für die Verknüpfungen. Grundlage auch für Exkursionen, Themenpfade und die Entdeckungskarte."],
     ["«Welches Tier ruft da?»","Spiel oder LernApp-Variante mit den Tierstimmen (28 Arten): Stimme hören, Tier wählen."],
     ["Entdeckungskarte erweitern", "Flüsse als Linien statt Punkt (Linth, Rhein, Aare …); bei neuen Einträgen mit festem Ort die Koordinaten gleich im Claude-Auftrag mitliefern lassen."],
     ["Weitere Kantone", "Weitere Kantone mit eigenem Bereich, Kantonszeichen und vorgeschlagenen Einträgen (heute Glarus, Graubünden, St. Gallen, Zürich, Tessin)."],
@@ -2305,12 +2444,12 @@ const IDEEN = [
     ["Klimadaten auswerten", "Forscherauftrag mit echten Messreihen (z. B. Temperatur Glarus seit 1900) als Tabelle: Diagramm zeichnen, Trend beschreiben, mit dem Themenpfad Klimawandel verbinden."]
   ]},
   { title:"Prüfen und Qualität", hint:"Was sich nicht automatisch testen liess oder fachlich bestätigt werden muss.", items:[
-    ["Häkchen «von Hand geprüft» für Kategorien und Einträge", "Idee des Users: Im Eintrag ein Kontrollkästchen «geprüft» mit Datum, in der Kategorie «12 von 16 geprüft», in der Übersicht eine Kachel mit dem Gesamtstand und ein Filter «noch nicht geprüft». Ersetzt die Prüfliste als Excel-Datei. Vorschlag: Ändert sich danach der Text eines Eintrags, fällt das Häkchen weg, damit «geprüft» immer zum aktuellen Stand passt. Braucht eine kleine Datenbank-Änderung (Datum der Prüfung pro Eintrag)."],
     ["Verwaltung von Hand testen", "Bild über ↻ ersetzen; eigenes Bild hochladen, zuschneiden, Ausschnitt, entfernen; Text und Quelle speichern; Reihenfolge der Einträge; Aufträge bearbeiten, anlegen, löschen; Sicherung herunterladen; Kantone: Vorschläge bestätigen, Hinweis ändern, Zeichen hochladen, Plakat drucken."],
     ["Seite von Hand testen", "Erster Besuch: Forscherauftrag nach der Einführung; auf dem Handy Kanton wechseln und LernApp-Session im Kanton anlegen; Entdeckungskarte: «Wo bin ich?» und Zoomen mit zwei Fingern."],
     ["Koordinaten prüfen", "Berglistüber und Bundesgericht fand die Ortssuche von swisstopo nicht: im Eintrag mit «Auf der Karte prüfen» kontrollieren."],
     ["Anleitung für Lehrpersonen", "Zuordnung der Lernziele zum Lehrplan 21 fachlich prüfen (heute auf Ebene der Kompetenzbereiche)."],
-    ["Vollständige Prüfung der Inhalte", "Alle Einträge mit der Prüfliste durchgehen (Sicherheit zuerst: Pilze, Giftpflanzen, Giftschlangen); die Liste stammt vom 30.9.2026 mit 357 Einträgen und wäre für die heutigen 420 neu zu erzeugen."],
+    ["Vollständige Prüfung der Inhalte", "Alle Einträge von Hand prüfen und mit dem Häkchen «geprüft» markieren (Register «Prüfen», Filter «noch nicht geprüft»); Sicherheit zuerst: Pilze, Giftpflanzen, Giftschlangen. Den Stand zeigt die Übersicht."],
+    ["Verknüpfungen bestätigen", "71 Vorschläge von Claude unter «Zu erledigen» durchsehen; weitere Verknüpfungen im Eintrag ergänzen, z. B. Berge und ihre Tiere und Pflanzen."],
     ["Erprobung mit Lernenden", "Testszenario mit Aufgaben, Beobachtungsbogen und Fragebogen liegt bereit (Ordner «erprobung»)."],
     ["Einzelne Bildkorrekturen", "Doppelte oder unpassende Fotos ersetzen; Meldungen kommen unter «Zu erledigen»."]
   ]}

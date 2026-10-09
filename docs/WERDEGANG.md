@@ -4,9 +4,9 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 8. Oktober 2026 · Version 2.24.1 (Datenbank 29) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 9. Oktober 2026 · Version 2.25.0 (Datenbank 30) · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
-Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23)
+Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge)
 
 ---
 
@@ -66,6 +66,8 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
   Quiz und Drucken. Auf der Textseite steht bei manchen Einträgen «Im Kanton Glarus: …». Ein Eintrag kann zu mehreren Kantonen gehören.
   Direkter Einstieg über **je-net.ch/sff/glarus**; die Wahl bleibt auf dem Gerät gespeichert, bis man eine andere trifft.
   Führt ein Direktlink (z. B. QR-Code) zu einem Eintrag ausserhalb des Kantons, zeigt die Seite dafür kurz die ganze Schweiz.
+- **Dazu entdecken:** In der Grossansicht stehen verknüpfte Einträge, z. B. beim Kärpf Gämse, Steinbock und Verrucano, beim
+  Tier die Orte, wo es lebt. Ein Tipp öffnet den anderen Eintrag (seit 2.25.0).
 - **Entdeckungskarte:** Menü → «Entdeckungskarte» zeigt Berge, Seen, Naturwunder, Sehenswürdigkeiten und Orte aus Geschichte und
   Politik als Punkte auf der Landeskarte von swisstopo (zoomen, verschieben, Kategorien ausblenden, im Kanton nur seine Orte).
   Ein Punkt zeigt Bild und Name und öffnet die Karte. «Wo bin ich?» sortiert die Orte nach Entfernung; der Standort bleibt auf
@@ -82,6 +84,9 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
 - **Bereiche oben:** Übersicht (Kennzahlen), Zu erledigen (Meldungen, fehlende Bilder, Datenbank-Update), **Ideen** (alle
   vorgemerkten Pendenzen und Ideen an einem Ort, seit 2.23.0), Kantone und Werkzeuge; links die Kategorien.
 - Kategorien und Einträge anlegen, bearbeiten, sortieren, ein- und ausblenden, löschen.
+- **Von Hand geprüft:** Häkchen pro Eintrag (in der Prüf-Tabelle oder im Eintrag) und pro Kategorie, mit Datum; Filter «noch nicht
+  geprüft», Stand pro Kategorie und in der Übersicht. Ändert sich danach der Text, fällt das Häkchen weg (seit 2.25.0).
+- **Verknüpfte Einträge:** im Eintrag hinzufügen, mit Hinweis, entfernen; Vorschläge von Claude unter «Zu erledigen» bestätigen.
 - Einträge in eine andere Kategorie verschieben.
 - **Bilder:** hochladen, von Wikimedia Commons übernehmen («Fehlende Bilder übernehmen», «Anderes Bild suchen»,
   ein bestimmtes Commons-Bild über seine Adresse oder viele auf einmal über eine Liste), dauerhaft zuschneiden und den Ausschnitt für die kleine Vorschau festlegen.
@@ -589,6 +594,21 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   jeder Kategorie rechts neben «Spiele zu …» der Knopf **«Kategorie teilen»** (auf dem Handy das Teilen-Menü, sonst Link in die
   Zwischenablage). Hilfe und Anleitung für Lehrpersonen sind ergänzt.
 
+
+### 9. Oktober – Verknüpfte Einträge und Häkchen «von Hand geprüft» (Version 2.25.0)
+
+- Wunsch des Users: **Einträge verknüpfen**. Auf der Textseite der Grossansicht steht neu **«Dazu entdecken»** mit den
+  verknüpften Einträgen, in beiden Richtungen: beim Kärpf Gämse, Steinbock, Murmeltier und Verrucano, bei der Gämse der Kärpf und
+  der Creux du Van. Claude hat 71 Verknüpfungen vorgeschlagen (Glarnerland, Flüsse und Seen, Gletscher, Schädlinge und ihre Bäume,
+  Politik und Bundeshaus); sie sind sofort sichtbar und unter «Zu erledigen» zu bestätigen oder zu entfernen. Im Eintrag lassen
+  sich Verknüpfungen mit Hinweis hinzufügen und entfernen.
+- Wunsch des Users: **Häkchen «von Hand geprüft»** für Einträge und Kategorien, mit Datum. In der Prüf-Tabelle direkt anklickbar,
+  dazu der Filter «noch nicht geprüft» und der Stand «12/16 geprüft»; die Übersicht zeigt den Gesamtstand und eine Spalte pro
+  Kategorie, die Seitenleiste ein ✓ bei ganz geprüften Kategorien. Ändert sich der Text später (auch über SQL oder Claude),
+  fällt das Häkchen automatisch weg; wer beim Bearbeiten das Häkchen stehen lässt, bestätigt die neue Fassung. Ersetzt die
+  Prüfliste als Excel-Datei.
+- Datenbank-Version 30. Beide Punkte sind aus «Ideen» entfernt.
+
 ---
 
 ## Versionen
@@ -634,6 +654,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.23.1 | 8.10.2026 | Verwaltung, Ideen: neue Ideen für Mittelstufe und Oberstufe und das Häkchen «von Hand geprüft» vorgemerkt |
 | 2.24.0 | 8.10.2026 | Knopf «Kategorie teilen» in jeder Kategorie (bisher liessen sich nur einzelne Einträge teilen) |
 | 2.24.1 | 8.10.2026 | Verwaltung, Ideen: «Einträge verknüpfen» vorgemerkt |
+| 2.25.0 | 9.10.2026 | «Dazu entdecken»: verknüpfte Einträge mit 71 Vorschlägen; Häkchen «von Hand geprüft» für Einträge und Kategorien (Datenbank-Version 30) |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -696,6 +717,7 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 | `027_einfache_texte.sql` | Kurzfassungen in einfacher Sprache für alle 421 Einträge |
 | `028_karte.sql` | Spalten `entries.lat` und `entries.lon` (Ort auf der Entdeckungskarte), 85 vorgeschlagene Orte |
 | `029_karte_korrekturen.sql` | 24 Orte nach der Ortssuche von swisstopo korrigiert (nur noch nicht angepasste) |
+| `030_verknuepfungen_geprueft.sql` | Tabelle `entry_links` (verknüpfte Einträge, 71 Vorschläge), Spalten `checked_at` bei Einträgen und Kategorien mit automatischem Zurücksetzen bei Textänderung |
 
 ## Offen und geplant
 
@@ -727,8 +749,6 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   - [ ] **Themenpfade in der Verwaltung bearbeiten:** heute nur per SQL (Tabelle `paths`); weitere Pfade, z. B. Wald, Wasser, Glarnerland.
   - [x] **PDF-Anleitung für Lehrpersonen** (2.22.0, gewünscht am 8. Oktober 2026): Wie man mit der App im Unterricht arbeitet, getrennt für Mittelstufe und Oberstufe; zu jeder Möglichkeit (Karten, LernApp, Aufträge, Spiele, Themenpfade, Abstimmung, Quiz, Druck) immer die Lernziele.
 - **Weitere Ideen** (noch nicht entschieden):
-  - Einträge verknüpfen (Idee des Users): zu einem Ort passende Tiere, Pflanzen und Steine zeigen und umgekehrt, z. B. Glärnisch
-    und Steinbock; Links auf der Textseite, Zuordnung in der Verwaltung, Vorschläge von Claude.
   - «Welches Tier ruft da?» mit den Tierstimmen.
   - Entdeckungskarte: Flüsse als Linien; Koordinaten bei neuen Orten gleich im Claude-Auftrag.
   - Weitere Kantone.
@@ -739,7 +759,6 @@ Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide glei
   (Grössenvergleich), Mein Steckbrief (Druckvorlage), Naturtagebuch, Glarner Sagen, Bestimmen mit Ja/Nein-Fragen.
 - **Ideen für die Oberstufe** (Vorschläge von Claude, 8. Oktober 2026): Nahrungsnetz bauen, Bestimmungsschlüssel, Neophyten und
   Gefährdung (Rote Liste), Berufe in der Natur, Zeitstrahl-Puzzle, Argumente sortieren, Klimadaten auswerten.
-- **Prüfen und Qualität:** Häkchen «von Hand geprüft» für Kategorien und Einträge (Idee des Users: mit Datum,
-  Stand pro Kategorie und in der Übersicht, fällt bei Textänderung weg; ersetzt die Prüfliste als Excel-Datei); Koordinaten von Berglistüber und Bundesgericht; Lehrplan-Zuordnung der Anleitung; vollständige
-  Prüfung der Inhalte (Prüfliste neu erzeugen, heute 420 Einträge); Erprobung mit Lernenden; einzelne Bildkorrekturen
+- **Prüfen und Qualität:** 71 vorgeschlagene Verknüpfungen bestätigen; Koordinaten von Berglistüber und Bundesgericht; Lehrplan-Zuordnung der Anleitung; vollständige
+  Prüfung der Inhalte mit dem Häkchen «geprüft» (420 Einträge); Erprobung mit Lernenden; einzelne Bildkorrekturen
   (doppelte oder falsche Fotos); auf dem Handy «Wo bin ich?» und Zoomen mit zwei Fingern.

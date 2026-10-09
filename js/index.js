@@ -7,6 +7,7 @@ let CATS = [];      // was gerade gezeigt wird: ALL oder nur die Einträge des g
 let REGIONS = [];   // Kantone mit eigenem Bereich (022)
 let REGION = null;  // gewählter Kanton oder null = ganze Schweiz
 let PATHS = [];     // Themenpfade (026)
+let LINKS = [];     // verknüpfte Einträge [{a, b, note}] (030)
 
 /* Kategorien mit Einträgen und Bildern in einer Anfrage laden (REST, ohne Bibliothek)
    und in die Form bringen, mit der der Rest der Seite arbeitet:
@@ -62,7 +63,12 @@ async function loadPaths(){
   const r = await fetch(CFG.url + "/rest/v1/paths?select=id,title,intro,steps,tasks&order=sort.asc,title.asc", { headers:{ apikey:CFG.key } });
   return r.ok ? r.json() : [];
 }
-const loadAll = () => Promise.all([loadCats(), loadRegions(), loadPaths().catch(() => [])]);
+// Verknüpfte Einträge (030): beide Richtungen; fehlt die Tabelle (Datenbank älter), einfach keine
+async function loadLinks(){
+  const r = await fetch(CFG.url + "/rest/v1/entry_links?select=a,b,note", { headers:{ apikey:CFG.key } });
+  return r.ok ? r.json() : [];
+}
+const loadAll = () => Promise.all([loadCats(), loadRegions(), loadPaths().catch(() => []), loadLinks().catch(() => [])]);
 
 /* ------------------------------------------------------------------
    VERSIONEN: Website-Version und benötigte Datenbank-Version stehen in js/version.js,
@@ -230,6 +236,7 @@ function slidesHtml(cat, item, labels, big){
         const hit = findByName(c.name);
         return `<p>${hit ? `<a href="${entryLink(hit.cat, hit.item)}">${esc(c.name)}</a>` : `<b>${esc(c.name)}</b>`}: ${esc(c.diff)}</p>`;
       }).join("")}</div>` : ""}
+      ${big ? linksHtml(item) : ""}
       ${big && canSpeak ? `<p class="speak"><button class="speak-btn" data-speak>🔊 Vorlesen</button></p>` : ""}
       ${big ? `<p class="text-report"><button class="report-text" data-report-text title="Stimmt etwas im Text nicht? Hier melden.">${
         reported.has(item.id + "-t") ? "✓ Fehler gemeldet" : "⚑ Fehler im Text melden"}</button></p>` : ""}
@@ -744,6 +751,30 @@ const itemById = id => {
   if(!itemIndex) itemIndex = new Map(ALL.flatMap(c => c.items.map(it => [it.id, it])));
   return itemIndex.get(id);
 };
+// Verknüpfte Einträge (030): pro Eintrag [{cat, item, note}] aus allen Kategorien (ALL), in der Reihenfolge der Kategorien
+let linkIndex = null;   // bei neuen Daten verworfen
+function linksOf(item){
+  if(!linkIndex){
+    const where = new Map(ALL.flatMap((cat, ci) => cat.items.map(it => [it.id, { cat, item:it, ci }])));
+    linkIndex = new Map();
+    for(const l of LINKS){
+      const a = where.get(l.a), b = where.get(l.b);
+      if(!a || !b) continue;   // ausgeblendeter Eintrag
+      for(const [from, to] of [[a, b], [b, a]]){
+        if(!linkIndex.has(from.item.id)) linkIndex.set(from.item.id, []);
+        linkIndex.get(from.item.id).push({ cat:to.cat, item:to.item, note:l.note || "", ci:to.ci });
+      }
+    }
+    for(const list of linkIndex.values()) list.sort((x, y) => x.ci - y.ci || x.item.n.localeCompare(y.item.n));
+  }
+  return linkIndex.get(item.id) || [];
+}
+function linksHtml(item){
+  const list = linksOf(item);
+  return list.length ? `<div class="links"><b>Dazu entdecken:</b>${list.map(l =>
+    `<p><a href="${esc(entryLink(l.cat, l.item))}">${esc(l.item.n)}</a> <small>${esc(l.cat.name)}</small>${
+      l.note ? ` – ${esc(l.note)}` : ""}</p>`).join("")}</div>` : "";
+}
 const easyLabel = on => on ? "Ausführlich lesen" : "Einfach lesen";
 function setEasy(on){
   try{ if(on) localStorage.setItem(EASY_KEY, "1"); else localStorage.removeItem(EASY_KEY); }catch(e){}
@@ -3362,9 +3393,10 @@ async function refresh(){
   const json = JSON.stringify(data);
   if(json === lastData) return;
   lastData = json;
-  [ALL, REGIONS, PATHS] = data;
+  [ALL, REGIONS, PATHS, LINKS] = data;
   views.clear();
   itemIndex = null;
+  linkIndex = null;
   setRegion(REGION?.id, false);   // verwirft auch die gebauten Karten
   const id = location.hash.replace(/^#\/?/, "");
   if(id === "copyright") buildCredits();
@@ -3376,7 +3408,7 @@ document.addEventListener("visibilitychange", () => { if(document.visibilityStat
 document.getElementById("back").addEventListener("click", () => { searchEl.value = ""; if(location.hash.replace(/^#\/?/, "")) location.hash = ""; else render(); });
 introEl.textContent = "Inhalte werden geladen …";
 loadAll().then(data => {
-  [ALL, REGIONS, PATHS] = data;
+  [ALL, REGIONS, PATHS, LINKS] = data;
   lastData = JSON.stringify(data);
   setRegion(savedRegion(), false);   // gewählter Kanton von früher (sonst ganze Schweiz)
   window.addEventListener("hashchange", () => { searchEl.value = ""; render(); });

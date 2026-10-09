@@ -74,6 +74,8 @@ create table if not exists public.entries (
   lat          double precision,
   lon          double precision,
   constraint entries_geo_check check ((lat is null and lon is null) or (lat between 45.0 and 48.5 and lon between 5.0 and 11.5)),
+  -- von Hand geprüft am (030); eine spätere Textänderung setzt es per Trigger zurück
+  checked_at   timestamptz,
   sort         integer not null default 0,
   created_at   timestamptz not null default now(),
   updated_at   timestamptz not null default now()
@@ -305,6 +307,13 @@ drop policy if exists "admin_schreiben" on public.entry_regions;
 create policy "admin_schreiben" on public.entry_regions for all to authenticated using (public.is_admin()) with check (public.is_admin());
 grant select on public.regions, public.entry_regions to anon, authenticated;
 grant insert, update, delete on public.regions, public.entry_regions to authenticated;
+
+
+-- ------------------------------------------------------------------
+-- Von Hand geprüft und verknüpfte Einträge (030): Trigger und Tabelle siehe 030_verknuepfungen_geprueft.sql
+-- (categories.checked_at, entries_check_reset, categories_check_reset, entry_links a < b mit note und confirmed)
+-- ------------------------------------------------------------------
+alter table public.categories add column if not exists checked_at timestamptz;
 
 -- ------------------------------------------------------------------
 -- Danach: dein Konto zum Admin machen (E-Mail anpassen)
