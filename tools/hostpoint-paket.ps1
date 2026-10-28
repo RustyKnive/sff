@@ -1,4 +1,4 @@
-# Stellt die Dateien für den Webspace zusammen (Hostpoint, https://je-net.ch/sff/).
+# Stellt die Dateien für den Webspace zusammen (Hostpoint, https://sff.je-net.ch/).
 # Ergebnis: Ordner «sff-upload» neben dem Repo. Seinen Inhalt per SFTP in den Ordner sff/ auf dem Webspace hochladen
 # (bestehende Dateien überschreiben). Nicht dabei: Git, Dokumentation, SQL, dieses Skript.
 $repo = Split-Path $PSScriptRoot -Parent

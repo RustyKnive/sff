@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 9. Oktober 2026 · Version 2.27.1 (Datenbank 32), vorläufig abgeschlossen · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 28. Oktober 2026 · Version 2.28.0 (Datenbank 32), neue Adresse https://sff.je-net.ch/ · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
 Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge) · 4 Nahrungsnetze · 5 Themenpfade (4 zum Glarnerland)
 
@@ -64,7 +64,7 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
   nur seine Einträge, in den Farben seines Wappens (Farbband oben, Knöpfe, Kantonszeichen), mit eigener Startzeile und Einleitung.
   Alles funktioniert gleich: Kategorien, Suche, LernApp (Lernsessions gehören zum Kanton), Forscheraufträge, Spiele (eigene Rekorde),
   Quiz und Drucken. Auf der Textseite steht bei manchen Einträgen «Im Kanton Glarus: …». Ein Eintrag kann zu mehreren Kantonen gehören.
-  Direkter Einstieg über **je-net.ch/sff/glarus**; die Wahl bleibt auf dem Gerät gespeichert, bis man eine andere trifft.
+  Direkter Einstieg über **sff.je-net.ch/glarus**; die Wahl bleibt auf dem Gerät gespeichert, bis man eine andere trifft.
   Führt ein Direktlink (z. B. QR-Code) zu einem Eintrag ausserhalb des Kantons, zeigt die Seite dafür kurz die ganze Schweiz.
 - **Nahrungsnetz** (für die Oberstufe): Menü → «Nahrungsnetz» mit Wald, Gebirge, Bach und Teich, Wiese. Pfeile vom Gefressenen
   zum Fresser setzen, prüfen (grün/rot), Lösung zeigen, nach Ernährungsstufen ordnen und «Was wäre, wenn … fehlt?» durchspielen.
@@ -122,7 +122,7 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
 ### Technik in Kürze
 
 - Reines HTML, CSS und JavaScript ohne Build; die Anzeige kommt ohne Bibliotheken aus.
-- Daten und Bilder in **Supabase** (Postgres-Datenbank und Speicher); seit 30.9.2026 auf dem eigenen Webspace bei Hostpoint (https://je-net.ch/sff/), vorher auf GitHub Pages.
+- Daten und Bilder in **Supabase** (Postgres-Datenbank und Speicher); seit 28.10.2026 unter https://sff.je-net.ch/ auf dem eigenen Webspace bei Hostpoint (vorher je-net.ch/sff, davor GitHub Pages).
 - Schreiben dürfen nur Admins mit zweitem Faktor (Row Level Security). Strenge Content-Security-Policy:
   Die Seiten laden nur eigene Dateien und die erlaubten Quellen.
 - **Wachhalten:** Ein kostenloses Supabase-Projekt schläft nach etwa einer Woche ohne Zugriff ein. Eine automatische
@@ -652,6 +652,16 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   Dossier der Modulabschlussarbeit (52 Seiten) sind auf diesem Stand. Was noch offen ist, steht in der Verwaltung unter «Ideen»
   und hier unter «Offen und geplant», darunter die Liste der Abläufe, die noch von Hand mit Anmeldung zu prüfen sind.
 
+### 28. Oktober – Eigene Subdomain (Version 2.28.0)
+
+- **Neue Adresse:** Die Seite läuft neu unter https://sff.je-net.ch/, weil je-net.ch eine eigene Website für alle Projekte
+  von toj-apps bekommt. Die Datenbank bleibt in Supabase.
+- **Nichts geht verloren:** Wer die alte Adresse je-net.ch/sff öffnet, wird weitergeleitet. Dabei nimmt die Seite einmal
+  mit, was auf dem Gerät gespeichert ist (Lernstand der LernApp, Rekorde, Forscheraufträge, gesehene Einträge, Kanton und
+  Einstellungen), denn der Browser trennt den Speicher nach Adresse. Übernommen wird nur, was unter der neuen Adresse
+  noch fehlt. Direktlinks, gedruckte QR-Codes und Kantonsadressen wie je-net.ch/sff/glarus führen an dieselbe Stelle.
+- Anleitung für Lehrpersonen mit den neuen Adressen und QR-Codes.
+
 ---
 
 ## Versionen
@@ -701,6 +711,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.26.0 | 9.10.2026 | Eintrag vorschlagen (mit Nummer), Vorlesen in LernApp und Aufträgen, Nahrungsnetz mit vier Lebensräumen (Datenbank-Version 31) |
 | 2.27.0 | 9.10.2026 | Verwaltung «Pfade und Netze»: Themenpfade und Nahrungsnetze bearbeiten; vier Glarner Themenpfade (Datenbank-Version 32) |
 | 2.27.1 | 9.10.2026 | Abschluss: offene Handprüfungen ergänzt, Dokumentation und Dossier auf dem Stand 2.27.0 |
+| 2.28.0 | 28.10.2026 | Umzug auf https://sff.je-net.ch/, alte Adresse je-net.ch/sff leitet weiter und übergibt den Speicher des Geräts |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 

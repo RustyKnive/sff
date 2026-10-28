@@ -1,4 +1,4 @@
-# Einstellungen für den Webspace bei Hostpoint (Apache), gilt nur für den Ordner /sff/.
+# Einstellungen für den Webspace bei Hostpoint (Apache), gilt für die Subdomain sff.je-net.ch.
 # GitHub Pages beachtet diese Datei nicht.
 
 Options -Indexes

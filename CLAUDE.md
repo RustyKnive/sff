@@ -209,11 +209,12 @@ Die Antwort (`{passt, pruefung, entry}`, gelesen mit `aiParseEntry()`) füllt da
 
 ## Veröffentlichen (seit 2.4.1, Hostpoint)
 
-- Die Seite läuft auf dem Webspace des Users bei Hostpoint: **https://je-net.ch/sff/** (Ordner `sff/`, Apache). Supabase bleibt Datenbank und Bildspeicher; alle Pfade im Code sind relativ, darum ist keine Adresse fest eingetragen.
+- Die Seite läuft auf dem Webspace des Users bei Hostpoint: **https://sff.je-net.ch/** (eigene Subdomain seit 2.28.0, Apache; vorher Ordner `sff/` unter je-net.ch). Supabase bleibt Datenbank und Bildspeicher; alle Pfade im Code sind relativ, darum ist keine Adresse fest eingetragen.
 - Ablauf: committen und pushen (Repo = Quelle und Sicherung), dann `powershell -File tools/hostpoint-paket.ps1` → Ordner `..\sff-upload` (neben dem Repo, nicht im Repo). Der User lädt dessen Inhalt selbst per SFTP hoch (Dateien überschreiben); keine Zugangsdaten in dieser Sitzung oder im Repo. Danach die Version auf der Seite prüfen (Einstellungen → Version).
 - Hochgeladen werden nur `index.html`, `admin.html`, `config.js`, `sw.js`, `manifest.webmanifest`, `.htaccess`, `css/`, `js/`, `icons/`, `anleitung/`. Neue Datei oder neuer Ordner, den die Seite braucht → im Skript ergänzen. Gelöschte Dateien auf dem Webspace von Hand entfernen.
 - `.htaccess`: HTTPS erzwingen, keine Ordnerlisten, `nosniff`, nicht einbettbar (`frame-ancestors` geht nicht im Meta-CSP), `no-cache` für HTML/JS/CSS, Symbole 30 Tage.
 - GitHub Pages (`https://rustyknive.github.io/sff/`) liefert seit dem Umzug den Branch `gh-pages` aus: nur eine Weiterleitung auf die neue Adresse (mit `#/…`, damit Direktlinks und gedruckte QR-Codes weiter funktionieren) und eine `sw.js`, die den alten Service Worker samt Speicher entfernt. Der Branch `main` wird nicht mehr von GitHub Pages ausgeliefert.
+- Alte Adresse **je-net.ch/sff/** (seit 2.28.0): gehört zur Website je-net.ch (Ordner `je-net-website`, `public/sff/`). Dort liegen nur `index.html` + `umzug.js` (liest alle «sff-…»-Schlüssel aus localStorage und leitet weiter nach `https://sff.je-net.ch/#umzug=<base64url JSON>&ziel=<#-Adresse>`), eine `sw.js`, die den alten Service Worker samt Speicher entfernt, und eine `.htaccess`, die alles andere (z. B. `/sff/glarus`, `/sff/admin.html`) mit 301 auf dieselbe Adresse unter sff.je-net.ch umleitet. Die Gegenseite ist `umzug()` ganz oben in `js/index.js`: übernimmt nur Schlüssel, die noch fehlen, und setzt die Adresse auf `ziel` zurück.
 
 ## Versionierung (seit 2.0.0)
 

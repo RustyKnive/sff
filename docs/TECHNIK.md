@@ -31,7 +31,7 @@ Vier Vorgaben haben fast jeden technischen Entscheid geprägt:
               Supabase (Gratis-Stufe)
               Postgres · Storage «bilder» · Auth (TOTP)
                        ▲
- Webspace Hostpoint (je-net.ch/sff/) ─ liefert die statischen Dateien aus
+ Webspace Hostpoint (sff.je-net.ch/) ─ liefert die statischen Dateien aus
  GitHub Actions ─ fragt die Datenbank täglich ab (Wachhalten)
  Wikimedia Commons ─ Quelle für Bilder und Tierstimmen
  claude.ai ─ Texte für neue Inhalte (Kopieren und Einfügen)

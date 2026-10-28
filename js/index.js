@@ -1,4 +1,24 @@
 /* ------------------------------------------------------------------
+   UMZUG (seit 2.28.0): Die alte Adresse je-net.ch/sff schickt den Speicher des Geräts einmal mit,
+   als #umzug=<base64url von JSON {schlüssel: wert}>&ziel=<ursprüngliche #-Adresse>.
+   Übernommen werden nur «sff-…»-Schlüssel, die hier noch fehlen (was hier schon gelernt wurde, bleibt).
+   Läuft vor allem anderen, damit LernApp, Rekorde usw. den übernommenen Stand schon beim Start lesen.
+------------------------------------------------------------------- */
+(function umzug(){
+  const m = location.hash.match(/^#umzug=([A-Za-z0-9_-]*)(?:&ziel=(.*))?$/);
+  if(!m) return;
+  try{
+    const bin = atob(m[1].replace(/-/g, "+").replace(/_/g, "/"));
+    const data = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+    for(const [k, v] of Object.entries(data))
+      if(k.startsWith("sff-") && typeof v === "string" && localStorage.getItem(k) === null) localStorage.setItem(k, v);
+  }catch(e){}
+  let ziel = "";
+  try{ ziel = decodeURIComponent(m[2] || ""); }catch(e){}
+  history.replaceState(null, "", location.pathname + location.search + (ziel.startsWith("#") ? ziel : ""));
+})();
+
+/* ------------------------------------------------------------------
    DATEN (aus Supabase, siehe loadCats)
 ------------------------------------------------------------------- */
 const CFG = window.SFF_CONFIG;
@@ -2145,7 +2165,7 @@ document.getElementById("introAgain").addEventListener("click", openIntro);
 
 function render(){
   let id = location.hash.replace(/^#\/?/, "");
-  // Einstieg über einen Kanton (#/glarus, auch je-net.ch/sff/glarus über .htaccess) oder #/schweiz:
+  // Einstieg über einen Kanton (#/glarus, auch sff.je-net.ch/glarus über .htaccess) oder #/schweiz:
   // Bereich wählen und merken, dann die Übersicht (die Adresse wird zu #/, damit «Zurück» nicht nochmals wählt)
   if(id.toLowerCase() === "schweiz" || findRegion(id)){
     setRegion(id.toLowerCase() === "schweiz" ? null : id);
