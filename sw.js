@@ -12,7 +12,7 @@ const DATA = "sff-daten";
 const IMAGES = "sff-bilder";   // wird auch von js/index.js gefüllt (Knopf «Für offline speichern»)
 const FILES = [
   "./", "index.html", "config.js", "manifest.webmanifest",
-  "css/basis.css", "css/index.css", "js/version.js", "js/wikimedia.js", "js/index.js",
+  "css/basis.css", "css/index.css", "css/lmsw.css", "js/version.js", "js/wikimedia.js", "js/index.js",
   "icons/steinbock.svg", "icons/steinbock-192.png", "icons/steinbock-512.png", "icons/kanton-glarus.svg",
   "icons/kanton-graubuenden.svg", "icons/kanton-st-gallen.svg", "icons/kanton-zuerich.svg", "icons/kanton-tessin.svg"
 ];

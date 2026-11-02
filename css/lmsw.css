@@ -1,0 +1,25 @@
+/* Werbeblock lms.je-net.ch (Quelle: lms/unterlagen/werbung/sff-werbeblock.html, Stand 2.11.2026).
+   Stile unverändert übernommen; weil die CSP von sff kein <style> und kein style="…" erlaubt, stehen sie hier,
+   und die Kartenfarbe (--f) kommt über die Klassen lmsw-f1 bis lmsw-f3 statt über style="--f:…".
+   «Bis 31. Dezember 2026 kostenlos» steht in index.html (#lmsWerbung): ab Januar 2027 anpassen oder entfernen. */
+.lmsw{font-family:"Segoe UI",Arial,sans-serif;color:#1d2a30;background:#eef3f6;border-radius:14px;padding:20px 18px;margin:24px auto;max-width:1100px;box-sizing:border-box}
+.lmsw *{box-sizing:border-box}
+.lmsw-kopf{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 16px;margin-bottom:14px}
+.lmsw-kopf h2{margin:0;font-size:1.35rem;line-height:1.25}
+.lmsw-kopf p{margin:0;font-size:.95rem;color:#3d4b52}
+.lmsw-raster{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.lmsw-karte{background:#fff;border-radius:10px;padding:16px;display:flex;flex-direction:column;border-top:6px solid var(--f);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.lmsw-mark{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--f);margin:0 0 4px}
+.lmsw-karte h3{font-size:1.05rem;margin:0 0 8px;line-height:1.3}
+.lmsw-karte p.lmsw-text{flex-grow:1;margin:0 0 12px;font-size:.92rem;line-height:1.45}
+.lmsw-knopf{display:inline-block;align-self:flex-start;background:var(--f);color:#fff!important;text-decoration:none;font-weight:600;font-size:.9rem;padding:8px 14px;border-radius:8px}
+.lmsw-knopf:hover,.lmsw-knopf:focus{filter:brightness(.92);text-decoration:none}
+.lmsw-fuss{margin:12px 0 0;font-size:.8rem;color:#52616a}
+.lmsw-fuss a{color:#1F6F8B}
+.lmsw-f1{--f:#b07d00}
+.lmsw-f2{--f:#2E7D5B}
+.lmsw-f3{--f:#1F6F8B}
+/* Einbettung in sff: seitlicher Rand wie das Raster, nur auf der Übersicht (js/index.js), nie im Druck */
+.lmsw-platz{padding:0 16px}
+.lmsw-platz[hidden]{display:none}
+@media print{.lmsw-platz{display:none!important}}

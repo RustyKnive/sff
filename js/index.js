@@ -892,6 +892,8 @@ const titleEl = document.getElementById("title");
 const introEl = document.getElementById("intro");
 const catCards = new Map();   // bereits gebaute Karten pro Kategorie (Bilder werden nur einmal geladen)
 let overviewCards = null;
+const OVERVIEW_MAX = 9;      // so viele Kategorien zeigt die Übersicht zuerst, der Rest über «Weitere Kategorien»
+let overviewAll = false;     // «Weitere Kategorien» gewählt: gilt bis zum Neuladen
 
 function buildOverview(){
   return CATS.map(cat => {
@@ -2033,7 +2035,7 @@ const cardOf = (cat, item) => cardsOf(cat)[cat.items.indexOf(item)];
 // Ansicht vorbereiten: Lightbox zu, Hinweise der Übersicht weg, Menüseiten ausblenden
 function resetView(pageId){
   if(lightbox.open) lightbox.close();
-  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily"), document.getElementById("regionHero"), catBar, taskBar]) if(el) el.hidden = true;
+  for(const el of [document.getElementById("lernBanner"), document.getElementById("daily"), document.getElementById("regionHero"), catBar, taskBar, document.getElementById("lmsWerbung")]) if(el) el.hidden = true;
   setRegionMenu(false);
   quickLearn.hidden = false;
   closeHelp();
@@ -2223,7 +2225,22 @@ function render(){
     // Kategorie des Tages (dieselbe wie bei der Entdeckung des Tages) steht zuerst und trägt ein Schild
     const di = CATS.some(c => c.items.length) ? CATS.indexOf(dailyPick(dayNumber()).cat) : -1;
     overviewCards.forEach((b, i) => { b.querySelector(".cat-day").hidden = i !== di; b.classList.toggle("today", i === di); });
-    grid.append(...(di < 0 ? overviewCards : [overviewCards[di], ...overviewCards.filter((_, i) => i !== di)]));
+    const order = di < 0 ? overviewCards : [overviewCards[di], ...overviewCards.filter((_, i) => i !== di)];
+    if(overviewAll || order.length <= OVERVIEW_MAX) grid.append(...order);
+    else {
+      // Zuerst nur OVERVIEW_MAX Kategorien, damit die Startseite kurz bleibt; der Knopf hängt die übrigen an
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "more-cats";
+      more.textContent = `Weitere Kategorien (${order.length - OVERVIEW_MAX})`;
+      more.addEventListener("click", () => {
+        overviewAll = true;
+        more.replaceWith(...order.slice(OVERVIEW_MAX));
+        order[OVERVIEW_MAX].focus();
+      });
+      grid.append(...order.slice(0, OVERVIEW_MAX), more);
+    }
+    document.getElementById("lmsWerbung").hidden = false;
     showCatProgress();
     showRegionHero();
     showLernBanner();

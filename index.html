@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" href="icons/steinbock-180.png">
 <link rel="stylesheet" href="css/basis.css">
 <link rel="stylesheet" href="css/index.css">
+<link rel="stylesheet" href="css/lmsw.css">
 <!-- Verbindung zu Supabase (URL und öffentlicher Schlüssel) -->
 <script src="config.js"></script>
 <script src="js/version.js"></script>
@@ -74,6 +75,37 @@
   <div class="daily" id="daily" hidden><a class="daily-link" id="dailyLink"></a><button type="button" class="daily-next" id="dailyNext" title="Einen anderen zufälligen Eintrag zeigen">Noch eine</button></div>
 </header>
 <main id="grid"></main>
+
+<!-- Werbeblock lms.je-net.ch (seit 2.29.0, css/lmsw.css), nur auf der Übersicht. «Bis 31. Dezember 2026 kostenlos» ab Januar 2027 anpassen oder entfernen. -->
+<div class="lmsw-platz" id="lmsWerbung" hidden>
+  <section class="lmsw" aria-label="Angebote von lms.je-net.ch">
+    <div class="lmsw-kopf">
+      <h2>Mehr lernen mit lms.je-net.ch</h2>
+      <p><strong>Bis 31. Dezember 2026 kostenlos</strong> · Server in der Schweiz</p>
+    </div>
+    <div class="lmsw-raster">
+      <div class="lmsw-karte lmsw-f1">
+        <p class="lmsw-mark">Office-Kurse</p>
+        <h3>Word, Excel, PowerPoint, Outlook und Teams</h3>
+        <p class="lmsw-text">Aufbauende Kurse mit Übungsdateien, Tests und Diplom – für die Schule, die Lehre und den Beruf. Im eigenen Tempo, auch am Handy.</p>
+        <a class="lmsw-knopf" href="https://lms.je-net.ch/enrol/index.php?id=55" target="_blank" rel="noopener">Office-Kurse starten</a>
+      </div>
+      <div class="lmsw-karte lmsw-f2">
+        <p class="lmsw-mark">Nachhilfe</p>
+        <h3>Mathematik, NT, RZG und MI zu Hause üben</h3>
+        <p class="lmsw-text">Lerntexte, Übungen mit sofortiger Rückmeldung und Kurztests nach Lehrplan 21 – genau dort, wo es noch hakt. Auf Wunsch Online-Sitzungen für Mathematik und IT.</p>
+        <a class="lmsw-knopf" href="https://lms.je-net.ch/enrol/index.php?id=61" target="_blank" rel="noopener">Nachhilfe starten</a>
+      </div>
+      <div class="lmsw-karte lmsw-f3">
+        <p class="lmsw-mark">Kanti-Vorbereitung</p>
+        <h3>Fit für die Aufnahmeprüfung Glarus</h3>
+        <p class="lmsw-text">Mathematik, Deutsch (Sprachkunde und Aufsatz) und das Prüfungsgespräch gezielt vorbereiten, aus der 2. und 3. Oberstufe: Übungen mit Lösungsweg und Probeprüfungen.</p>
+        <a class="lmsw-knopf" href="https://lms.je-net.ch/enrol/index.php?id=63" target="_blank" rel="noopener">Kanti-Vorbereitung ansehen</a>
+      </div>
+    </div>
+    <p class="lmsw-fuss">Alles in einem Monatsabo: <a href="https://lms.je-net.ch/enrol/index.php?id=62" target="_blank" rel="noopener">Jugend-Abo</a> · Fragen: <a href="mailto:info@je-net.ch">info@je-net.ch</a></p>
+  </section>
+</div>
 
 <!-- Seiten aus dem Menü (Adresse #/lernapp, #/spiele, #/quiz, #/pdf, #/hilfe, #/einstellungen, #/admin, #/copyright; #/jetzt nutzt das Raster) -->
 <section class="page" id="page-lernapp" hidden>

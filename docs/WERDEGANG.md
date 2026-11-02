@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 28. Oktober 2026 · Version 2.28.0 (Datenbank 32), neue Adresse https://sff.je-net.ch/ · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 2. November 2026 · Version 2.29.0 (Datenbank 32), neue Adresse https://sff.je-net.ch/ · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
 Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge) · 4 Nahrungsnetze · 5 Themenpfade (4 zum Glarnerland)
 
@@ -17,6 +17,9 @@ Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungska
 - **Übersicht** mit einer Kachel pro Kategorie (Titelbild, Anzahl Einträge), bei Kategorien in einer Lernsession mit **Lernfortschritt** (Ring und «6/16», ganz gelernt «✓ gelernt»), und der **Entdeckung des Tages**
   (jeden Tag ein anderer Eintrag aus wechselnden Kategorien, für alle gleich; «Noch eine» zeigt einen weiteren zufälligen Eintrag).
   Die Kategorie dieser Entdeckung ist die **Kategorie des Tages**: Sie steht an diesem Tag als erste Kachel, mit dem Schild «Kategorie des Tages».
+  Die Übersicht zeigt zuerst **9 Kategorien**; «Weitere Kategorien» blendet die übrigen ein (seit 2.29.0).
+- **Angebote von lms.je-net.ch** unter den Kategorien der Übersicht (seit 2.29.0): Office-Kurse, Nachhilfe und Kanti-Vorbereitung,
+  die Links öffnen sich in einem neuen Tab.
 - **Suche** über alle Kategorien: deutscher Name, lateinischer Name oder Kategorie, ohne Rücksicht auf Umlaute und Grossschreibung.
 - **Knöpfe «Lernen», «Spielen» und «Drucken»** gleich neben der Suche (Übersicht und Kategorien): führen direkt zur LernApp, zu den Spielen und zum PDF-Druck, damit man diese auch ohne Menü findet. Ein «?» daneben erklärt kurz, was die Seite kann.
 - **Einführung beim ersten Besuch:** vier kurze Schritte (Ansehen – Lernen – Spielen – Womit beginnen?), überspringbar, erscheint danach nicht mehr von selbst.
@@ -662,6 +665,15 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
   noch fehlt. Direktlinks, gedruckte QR-Codes und Kantonsadressen wie je-net.ch/sff/glarus führen an dieselbe Stelle.
 - Anleitung für Lehrpersonen mit den neuen Adressen und QR-Codes.
 
+### 2. November – Kürzere Startseite und Angebote von lms.je-net.ch (Version 2.29.0)
+
+- Die Übersicht zeigt zuerst 9 Kategorien (die Kategorie des Tages zuerst); der Knopf «Weitere Kategorien» zeigt die übrigen.
+  So bleibt die Startseite kurz, vor allem auf dem Handy.
+- Unter den Kategorien stehen die Angebote der Lernplattform lms.je-net.ch: Office-Kurse, Nachhilfe und Kanti-Vorbereitung.
+  Der Block kommt fertig aus dem Projekt lms und wurde unverändert übernommen; nur die Stile liegen in einer eigenen Datei,
+  weil die Seite aus Sicherheitsgründen keine eingebetteten Stile erlaubt. Er erscheint nur auf der Übersicht, nicht im Druck.
+- **Wichtig:** Der Block sagt «Bis 31. Dezember 2026 kostenlos». Ab Januar 2027 anpassen oder entfernen (steht auch unter «Offen und geplant»).
+
 ---
 
 ## Versionen
@@ -712,6 +724,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.27.0 | 9.10.2026 | Verwaltung «Pfade und Netze»: Themenpfade und Nahrungsnetze bearbeiten; vier Glarner Themenpfade (Datenbank-Version 32) |
 | 2.27.1 | 9.10.2026 | Abschluss: offene Handprüfungen ergänzt, Dokumentation und Dossier auf dem Stand 2.27.0 |
 | 2.28.0 | 28.10.2026 | Umzug auf https://sff.je-net.ch/, alte Adresse je-net.ch/sff leitet weiter und übergibt den Speicher des Geräts |
+| 2.29.0 | 2.11.2026 | Übersicht zeigt zuerst 9 Kategorien («Weitere Kategorien»); Angebote von lms.je-net.ch auf der Startseite |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
@@ -782,6 +795,8 @@ Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
 Dieselbe Liste steht in der Verwaltung unter **Ideen** (seit 2.23.0); beide gleich halten.
 
+- **Ab Januar 2027:** Im Werbeblock von lms.je-net.ch auf der Startseite (`index.html`, `#lmsWerbung`) den Satz
+  «Bis 31. Dezember 2026 kostenlos» anpassen oder entfernen; gleich in der Vorlage `lms/unterlagen/werbung/sff-werbeblock.html`.
 - **Noch von Hand zu prüfen** (offener Auftrag vom 2. Oktober 2026): Diese Abläufe liessen sich automatisch nicht testen,
   weil sie die Anmeldung mit zweitem Faktor brauchen oder im Testbrowser nicht auslösen. Nach dem Prüfen hier abhaken.
   - [ ] Verwaltung, Register «Prüfen»: Bild über ↻ durch einen Vorschlag ersetzen (z. B. Eierschwamm, Bild 4 zeigt ein Zelt)

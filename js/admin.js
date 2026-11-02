@@ -2622,6 +2622,9 @@ function renderWebEdit(w){
 /* «Ideen» (#/ideen, seit 2.23.0): alle vorgemerkten Pendenzen und Ideen an einem Ort, damit nichts verloren geht.
    Feste Liste hier im Code; bei neuen Ideen oder Erledigtem nachführen, gleich wie docs/WERDEGANG.md «Offen und geplant». */
 const IDEEN = [
+  { title:"Termin", hint:"Seit 2.29.0 vorgemerkt.", items:[
+    ["Ab Januar 2027: Werbeblock lms.je-net.ch", "Auf der Startseite steht «Bis 31. Dezember 2026 kostenlos» (index.html, #lmsWerbung). Ab Januar 2027 anpassen oder entfernen, ebenso in der Vorlage im Projekt lms."]
+  ]},
   { title:"Pendenzen der Spielwiese", hint:"Vorgemerkt am 8. Oktober 2026, als Nächstes der Reihe nach.", items:[
     ["Forscheraufträge draussen", "Aufträge mit eigenen Messungen und Beobachtungen, z. B. Föhn (Temperatur und Wind), Bach (Lebensraum der Bachforelle)."],
     ["Weitere Themenpfade und Nahrungsnetze", "In der Verwaltung unter «Pfade und Netze» anlegen, z. B. Netze für Hecke, Acker und Boden oder Pfade zu weiteren Kantonen."],
