@@ -20,6 +20,7 @@
 .lmsw-f2{--f:#2E7D5B}
 .lmsw-f3{--f:#1F6F8B}
 /* Einbettung in sff: seitlicher Rand wie das Raster, nur auf der Übersicht (js/index.js), nie im Druck */
-.lmsw-platz{padding:0 16px}
+.lmsw-platz{max-width:1200px;margin:0 auto;padding:0 16px}
+.lmsw-platz .lmsw{max-width:none}   /* so breit wie das Raster (main: 1200 px, Rand 16 px) statt 1100 px */
 .lmsw-platz[hidden]{display:none}
 @media print{.lmsw-platz{display:none!important}}

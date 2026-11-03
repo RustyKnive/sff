@@ -4,7 +4,7 @@ Lern- und Nachschlageseite für die Sekundarstufe I: Kategorien wie Bäume, Amph
 je bis zu 4 Bilder, Beschreibung und Steckbrief. Diese Datei hält fest, was die Seite kann und wie sie dahin gekommen ist.
 Sie wird bei jeder neuen Möglichkeit ergänzt.
 
-**Stand:** 2. November 2026 · Version 2.29.0 (Datenbank 32), neue Adresse https://sff.je-net.ch/ · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
+**Stand:** 3. November 2026 · Version 2.29.1 (Datenbank 32), neue Adresse https://sff.je-net.ch/ · 25 Kategorien mit 420 sichtbaren Einträgen · rund 1420 eigene Bilder (davon 19 KI-Infografiken) ·
 73 Verwechslungspaare (71 im Duell) · Tierstimmen für 28 Arten · 54 Forscheraufträge · 5 Kantone (Glarus 101 Einträge; Graubünden, St. Gallen, Zürich, Tessin mit Vorschlägen) ·
 Anleitung für Lehrpersonen als PDF (Mittelstufe und Oberstufe) · Entdeckungskarte mit 85 Orten (Glarus 23) · 71 verknüpfte Einträge (Vorschläge) · 4 Nahrungsnetze · 5 Themenpfade (4 zum Glarnerland)
 
@@ -725,6 +725,7 @@ sind der allererste Kontakt und das Finden der Erklärungen. Die Spiele entdeckt
 | 2.27.1 | 9.10.2026 | Abschluss: offene Handprüfungen ergänzt, Dokumentation und Dossier auf dem Stand 2.27.0 |
 | 2.28.0 | 28.10.2026 | Umzug auf https://sff.je-net.ch/, alte Adresse je-net.ch/sff leitet weiter und übergibt den Speicher des Geräts |
 | 2.29.0 | 2.11.2026 | Übersicht zeigt zuerst 9 Kategorien («Weitere Kategorien»); Angebote von lms.je-net.ch auf der Startseite |
+| 2.29.1 | 3.11.2026 | Kasten mit den Angeboten von lms.je-net.ch so breit wie die Kacheln der Übersicht |
 
 Ab 2.0.0 bekommt jede Veröffentlichung hier eine Zeile.
 
